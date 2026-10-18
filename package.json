@@ -52,5 +52,8 @@
         "releaseType": "release"
       }
     ]
+  },
+  "allowScripts": {
+    "electron@31.7.7": true
   }
 }
