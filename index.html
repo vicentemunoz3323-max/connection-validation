@@ -1,0 +1,3188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CONNECTION_VALIDATION</title>
+  <link rel="icon" type="image/png" href="icons/32x32.png">
+  <style>
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f4f4f4;
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --line: #d2d2d7;
+  --blue: #0071e3;
+  --green: #28a745;
+  --red: #d93025;
+  --yellow: #f5a623;
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Helvetica, Arial, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; }
+body { display: flex; flex-direction: column; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
+
+.nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(255,255,255,.95);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.nav-inner {
+  max-width: 1400px; height: 56px; margin: 0 auto; padding: 0 32px;
+  display: flex; align-items: center; justify-content: center; position: relative;
+}
+.brand { 
+  position: absolute; left: 32px;
+  display: flex; align-items: center; gap: 10px;
+  font-weight: 700; font-size: 17px; letter-spacing: -.01em; color: var(--text); white-space: nowrap; 
+}
+.brand-logo {
+  height: 32px; width: 32px; display: block;
+  object-fit: contain; border-radius: 8px;
+}
+.nav nav { display: flex; gap: 24px; overflow-x: auto; white-space: nowrap; scrollbar-width: none; align-items: center; }
+.nav nav::-webkit-scrollbar { display: none; }
+.nav-link { 
+  color: var(--muted); text-decoration: none; font-size: 13px; font-weight: 500; 
+  padding: 6px 12px; border-radius: 0px; transition: color .2s, background .2s; 
+}
+.nav-link:hover { color: var(--text); background: var(--bg-soft); }
+.nav-link.active { color: var(--blue); background: rgba(0,113,227,.08); font-weight: 600; }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; border-radius: 0px; }
+
+main {
+  flex: 1; min-height: 0; width: 100%; max-width: 1400px; margin: 0 auto;
+  padding: clamp(10px, 2vh, 20px) clamp(24px, 3vw, 32px);
+  text-align: left; overflow-y: auto; scrollbar-width: thin;
+  display: flex; flex-direction: column; justify-content: flex-start;
+}
+.section { display: none; }
+.section.active { display: block; width: 100%; }
+h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spacing: -.03em; line-height: 1.05; }
+
+.sec-head { 
+  display: flex; flex-direction: column; align-items: flex-start; gap: clamp(6px, 1vh, 12px); margin-bottom: 8px; width: 100%;
+}
+
+/* Encabezado reorganizado: Fila superior con tarjeta de estado y título a la derecha */
+.connection-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 65%;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.lead { margin-top: 0; margin-bottom: 12px; font-size: clamp(13px, min(1.8vw, 2.2vh), 17px); color: var(--muted); letter-spacing: -.01em; }
+
+/* Tarjeta de estado alineada arriba a la izquierda */
+.status-card {
+  margin: 0; width: 100%; max-width: 380px;
+  padding: 10px 14px;
+  background: var(--bg-soft); border-radius: 4px;
+  display: flex; flex-direction: column; gap: 8px;
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,.08);
+  text-align: left;
+}
+.status-row-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%;
+}
+.status-info-group {
+  display: flex; align-items: center; gap: 8px; min-width: 0;
+}
+.status-title { font-weight: 600; letter-spacing: -.01em; color: var(--text); }
+.ip { color: var(--muted); font-variant-numeric: tabular-nums; font-family: SFMono-Regular, Consolas, monospace; font-size: 16px; }
+.ip:empty { display: none; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line); flex: none; }
+.dot.online { background: var(--green); }
+.dot.offline { background: var(--red); }
+.dot.busy { background: var(--yellow); animation: parpadeo 1s ease-in-out infinite; }
+
+.status-actions {
+  display: flex; gap: 8px; width: 100%; margin-top: 2px;
+}
+.status-actions .btn {
+  flex: 1; text-align: center;
+}
+
+.btn {
+  font: inherit; font-size: 12px; color: #fff; background: var(--blue);
+  border: 0; border-radius: 2px; padding: 6px 12px; cursor: pointer;
+  transition: background .2s, transform .1s;
+}
+.btn:hover { background: #0077ed; }
+.btn:active { transform: scale(.98); }
+.btn:disabled { background: var(--line); cursor: default; }
+
+.btn-secundario {
+  background: #e5e5ea; color: var(--text); border: 1px solid var(--line);
+}
+.btn-secundario:hover { background: #d1d1d6; }
+
+.validation-layout {
+  display: flex; gap: 16px; align-items: flex-start; justify-content: center; width: 100%;
+}
+
+.panels {
+  --rect-w: clamp(26px, min(4.8vw, 5.8vh), 56px);
+  --gap: clamp(5px, .5vw, 8px);
+  --row-gap: clamp(8px, 1.8vw, 22px);
+  --panel-w: calc((8 * var(--rect-w) + 6 * var(--gap) + var(--row-gap)) * 1.25);
+  display: flex; flex-direction: column; align-items: center;
+  gap: clamp(8px, 2vh, 20px);
+  flex: 1; min-width: 0;
+}
+
+.panel-title { font-size: clamp(15px, 2.4vh, 20px); font-weight: 700; letter-spacing: -.02em; line-height: 1; margin-bottom: calc(var(--gap) * -1); }
+
+.rect-grid { display: grid; gap: var(--gap); width: var(--panel-w); max-width: 100%; }
+.rect-row { display: flex; justify-content: space-between; gap: var(--row-gap); }
+.rect-group { flex: 1 1 0; min-width: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--gap); }
+.rect {
+  background: var(--bg-soft); border-radius: 2px; border: 1px solid var(--line);
+  padding: calc(var(--rect-w) * .08) calc(var(--rect-w) * .1);
+  display: flex; flex-direction: column; justify-content: space-between; gap: calc(var(--rect-w) * .04);
+}
+.rect-top { display: flex; align-items: center; justify-content: space-between; }
+.rect-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.rect-name { font-size: max(8px, calc(var(--rect-w) * .17)); font-weight: 600; color: var(--muted); }
+.rect-val { font-size: max(8px, calc(var(--rect-w) * .20)); font-weight: 700; color: var(--text); font-family: SFMono-Regular, Consolas, monospace; letter-spacing: -.03em; }
+
+.led-frame {
+  background: #e1e1e6;
+  border: 1px solid #aeaeb2;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.led, .izumi-led {
+  width: 9px; height: 9px; border-radius: 50%; background: #aeaeb2; flex: none; transition: background .3s;
+}
+
+.fan {
+  width: max(10px, calc(var(--rect-w) * .35)); height: max(10px, calc(var(--rect-w) * .35));
+  color: #8e8e93; flex: none;
+}
+.rect { transition: background .25s, border-color .25s; }
+
+.rect.ok {
+  background: var(--bg-soft); border-color: var(--line);
+}
+.rect.ok .led {
+  background: var(--green);
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.4);
+  animation: pulso-suave 2s ease-in-out infinite;
+}
+.rect.ok .fan { color: var(--green); animation: giro 1s linear infinite; }
+
+.rect.bad {
+  background: rgba(217, 48, 37, 0.06); border-color: var(--red);
+}
+.rect.bad .led { background: var(--red); box-shadow: 0 0 5px rgba(217, 48, 37, 0.5); animation: parpadeo 0.6s ease-in-out infinite; }
+.rect.bad .fan { color: var(--red); }
+
+@keyframes parpadeo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes pulso-suave {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+@keyframes giro { to { transform: rotate(360deg); } }
+
+.izumi-grid {
+  width: var(--panel-w); max-width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(8, auto);
+  grid-auto-flow: column;
+  gap: clamp(5px, 0.9vh, 9px) calc(var(--row-gap) * 1.4);
+}
+.izumi {
+  background: var(--bg-soft);
+  border-left: 3px solid #8e8e93;
+  border-radius: 2px;
+  border-top: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: clamp(5px, 0.8vh, 8px) clamp(10px, 1.2vw, 16px);
+  display: flex; align-items: center; justify-content: space-between; text-align: left;
+}
+.izumi-info-col {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.izumi-name { font-size: clamp(11px, 1.7vh, 13px); font-weight: 600; letter-spacing: -.01em; line-height: 1.1; }
+.izumi-status-text {
+  font-size: 9px; font-family: SFMono-Regular, Consolas, monospace; font-weight: 700;
+  color: var(--muted); text-transform: uppercase; letter-spacing: .04em;
+}
+
+.izumi { transition: background .25s, border-color .25s; }
+
+.izumi.ok {
+  background: var(--bg-soft); border-left-color: var(--green); border-color: var(--line); border-left-width: 3px;
+}
+.izumi.ok .izumi-led {
+  background: var(--green);
+  box-shadow: 0 0 5px rgba(40, 167, 69, 0.4);
+  animation: pulso-suave 2s ease-in-out infinite;
+}
+.izumi.ok .izumi-status-text {
+  color: var(--green);
+}
+
+.izumi.bad {
+  background: rgba(217, 48, 37, 0.06); border-left-color: var(--red); border-color: rgba(217, 48, 37, 0.3); border-left-width: 3px;
+}
+.izumi.bad .izumi-led {
+  background: var(--red);
+  box-shadow: 0 0 5px rgba(217, 48, 37, 0.6);
+  animation: parpadeo 0.6s ease-in-out infinite;
+}
+.izumi.bad .izumi-status-text {
+  color: var(--red);
+}
+
+.console-container {
+  width: 320px; flex-shrink: 0; display: none; flex-direction: column;
+  background: #1e1e1e; color: #d4d4d4;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-size: 11px; border-radius: 0px; overflow: hidden; border: 1px solid var(--line);
+  box-shadow: 0 4px 12px rgba(0,0,0,.08); text-align: left;
+  height: 480px;
+}
+.console-container.open { display: flex; }
+.console-header {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #2d2d2d; padding: 6px 10px; font-size: 10px; color: #9cdcfe; border-bottom: 1px solid #3c3c3c;
+}
+.console-body {
+  padding: 8px; overflow-y: auto; flex: 1; white-space: pre-wrap; word-break: break-all;
+  font-size: 10px; line-height: 1.3;
+}
+
+.dhcp-layout {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 100%; text-align: left; margin-top: 12px;
+}
+.dhcp-box {
+  background: #1e1e1e; color: #d4d4d4; border-radius: 0px; border: 1px solid var(--line);
+  display: flex; flex-direction: column; height: 500px; overflow: hidden;
+  font-family: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+}
+.dhcp-box-header {
+  background: #2d2d2d; padding: 8px 12px; font-size: 12px; color: #9cdcfe; border-bottom: 1px solid #3c3c3c; font-weight: 600;
+}
+.dhcp-box-body {
+  padding: 12px; overflow-y: auto; flex: 1; white-space: pre-wrap; word-break: break-all;
+  font-size: 11px; line-height: 1.4;
+}
+
+/* ===== Sección Instrumentos (diseño ejecutivo) ===== */
+.inst-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  width: 100%; padding-bottom: 16px; border-bottom: 2px solid var(--text);
+}
+.inst-header-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.inst-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--blue); }
+.inst-header .lead { margin: 0; }
+
+#connection-validation .instruments-list { gap: 12px; margin-top: 18px; }
+#connection-validation .instrument-row {
+  background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--blue);
+  padding: 14px 18px; gap: 18px;
+  box-shadow: 0 1px 2px rgba(0,0,0,.04);
+  transition: box-shadow .2s, transform .2s;
+}
+#connection-validation .instrument-row:hover { background: #fff; box-shadow: 0 6px 18px rgba(0,0,0,.08); transform: translateY(-1px); }
+#connection-validation .instrument-icon { width: 40px; height: 40px; padding: 8px; background: rgba(0,113,227,.08); }
+#connection-validation .instrument-name { font-size: 15px; }
+#connection-validation .instrument-desc { margin-top: 2px; }
+
+.status-pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-width: 118px; padding: 6px 12px; flex: none;
+  border: 1px solid var(--line); background: var(--bg-soft);
+  font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--muted);
+}
+.status-pill.online  { color: var(--green); background: rgba(40,167,69,.08);  border-color: rgba(40,167,69,.35); }
+.status-pill.offline { color: var(--red);   background: rgba(217,48,37,.07);  border-color: rgba(217,48,37,.35); }
+.status-pill.busy    { color: #b7791f;      background: rgba(245,166,35,.10); border-color: rgba(245,166,35,.45); }
+@media (max-width: 700px) { .status-pill { min-width: 0; } }
+
+.instruments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 900px;
+  margin: 16px auto 0 auto;
+  text-align: left;
+}
+.instrument-row {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 0px;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: transform .15s, box-shadow .15s;
+}
+.instrument-row:hover {
+  background: #ececee;
+}
+.instrument-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+}
+.instrument-icon svg {
+  width: 100%;
+  height: 100%;
+}
+.instrument-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.instrument-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.instrument-name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--text);
+}
+.instrument-type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: .04em;
+}
+.instrument-desc {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.instrument-ip {
+  font-size: 11px;
+  font-family: SFMono-Regular, Consolas, monospace;
+  color: var(--muted);
+  background: rgba(0,0,0,.04);
+  padding: 1px 6px;
+  border-radius: 0px;
+}
+
+.empty {
+  margin-top: 36px; padding: 36px 24px; text-align: center;
+  background: var(--bg-soft); border-radius: 0px; color: var(--muted); font-size: 15px; border: 1px solid var(--line);
+}
+
+.firma { text-align: center; padding: 4px 24px clamp(6px, 1vh, 12px); font-size: 12px; color: var(--muted); }
+.firma .version { display: block; margin-top: 1px; font-size: 10px; letter-spacing: .04em; opacity: .7; }
+
+@media (max-width: 900px) {
+  .validation-layout { flex-direction: column; align-items: center; }
+  .console-container { width: 100%; height: 180px; }
+  .dhcp-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) { .brand { display: none; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } .fan, .led, .izumi-led { animation-duration: 3s; } }
+  
+/* ===== Estilo ejecutivo: secciones generales ===== */
+.inst-header > .status-card { flex: 0 1 380px; }
+.inst-header { flex-wrap: wrap; }
+
+/* Connection validation */
+.panel-title {
+  display: flex; align-items: center; gap: 14px;
+  width: var(--panel-w); max-width: 100%;
+  font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
+}
+.panel-title::before, .panel-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.group-label {
+  display: flex; align-items: baseline; justify-content: space-between;
+  width: var(--panel-w); max-width: 100%;
+  margin-bottom: calc(var(--gap) * -.5);
+  font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text);
+}
+.group-label span:last-child { color: var(--muted); font-weight: 500; letter-spacing: .02em; text-transform: none; }
+.rect, .rect.ok, .izumi, .izumi.ok { background: #fff; }
+.rect, .izumi { box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.status-card { background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.console-container { box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+
+/* Files DHCP */
+.dhcp-layout { gap: 24px; margin-top: 18px; }
+.dhcp-box { height: min(560px, calc(100vh - 330px)); min-height: 320px; box-shadow: 0 6px 18px rgba(0,0,0,.10); }
+.dhcp-box-header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 10px 14px; border-bottom: 1px solid #3c3c3c; border-top: 2px solid var(--blue);
+}
+.dhcp-box-header .tag {
+  font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: #9a9a9a; border: 1px solid #4a4a4a; padding: 2px 7px;
+}
+.dhcp-box-body { padding: 10px 0; counter-reset: ln; white-space: normal; word-break: normal; }
+.ln { display: flex; counter-increment: ln; padding-right: 14px; }
+.ln::before {
+  content: counter(ln); flex: none; width: 46px; padding-right: 14px; text-align: right;
+  color: #5c5c5c; user-select: none;
+}
+.ln-text { flex: 1; min-width: 0; white-space: pre-wrap; word-break: break-all; }
+.ln-text.cmt { color: #6a9955; }
+
+/* Estado vacío */
+.empty {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  margin-top: 28px; padding: 56px 24px;
+  background: #fff; border: 1px dashed var(--line);
+}
+.empty svg { width: 40px; height: 40px; color: var(--blue); opacity: .75; margin-bottom: 6px; }
+.empty-title { font-size: 16px; font-weight: 600; color: var(--text); letter-spacing: -.01em; }
+.empty-text { font-size: 13px; color: var(--muted); }
+  
+/* ===== Actualización de rectificadores ===== */
+.card { background: #fff; border: 1px solid var(--line); box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 16px 18px; }
+.card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+.card-title { font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--text); }
+.card-count { font-size: 11px; color: var(--muted); }
+.upd-top { display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 16px; margin-top: 16px; align-items: stretch; }
+.prog-card, .upd-console { margin-top: 16px; }
+.btn-mini { font-size: 10px; padding: 3px 9px; }
+.btn.btn-secundario.is-on { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+/* Lista de comandos */
+.cmd-add { display: flex; gap: 8px; align-items: stretch; }
+.cmd-input {
+  flex: 1; min-width: 0; resize: none; padding: 8px 10px;
+  font: 12px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  color: var(--text); background: #fff; border: 1px solid var(--line); border-radius: 2px;
+}
+.cmd-input:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+.cmd-input:disabled { background: var(--bg-soft); }
+.cmd-list { list-style: none; padding: 0; margin: 12px 0; max-height: 230px; overflow-y: auto; }
+.cmd-item {
+  display: flex; align-items: center; gap: 10px; padding: 7px 10px; margin-bottom: 6px;
+  background: #fafafa; border: 1px solid var(--line); border-left: 3px solid var(--line);
+}
+.cmd-item.ejecutando { border-left-color: var(--yellow); background: rgba(245,166,35,.07); }
+.cmd-item.ok { border-left-color: var(--green); }
+.cmd-item.fallo { border-left-color: var(--red); background: rgba(217,48,37,.05); }
+.cmd-item.detenido { border-left-color: var(--yellow); }
+.cmd-n { flex: none; width: 20px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cmd-text { flex: 1; min-width: 0; font: 12px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cmd-st { flex: none; width: 18px; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); }
+.cmd-item.ok .cmd-st { color: var(--green); }
+.cmd-item.fallo .cmd-st { color: var(--red); }
+.cmd-item.detenido .cmd-st { color: var(--yellow); }
+.cmd-st .spin { display: inline-block; width: 11px; height: 11px; border: 2px solid rgba(245,166,35,.3); border-top-color: var(--yellow); border-radius: 50%; animation: giro .8s linear infinite; }
+.cmd-del { flex: none; border: 0; background: transparent; color: var(--muted); font-size: 16px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.cmd-del:hover:not(:disabled) { color: var(--red); }
+.cmd-del:disabled { opacity: .35; cursor: default; }
+.cmd-empty { padding: 18px 10px; text-align: center; font-size: 12px; color: var(--muted); border: 1px dashed var(--line); }
+.cmd-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.chk { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text); cursor: pointer; }
+
+/* Palanca tipo avión */
+.lever-card { background: linear-gradient(180deg, #2a2c31, #1b1c1f); border-color: #0e0e10; color: #d6d6da; display: flex; flex-direction: column; align-items: center; }
+.lever-card .card-head { width: 100%; }
+.lever-card .card-title { color: #cfd0d6; }
+.lever-status { display: inline-flex; align-items: center; gap: 7px; font-size: 10px; font-weight: 700; letter-spacing: .12em; color: #8b8d94; }
+.lever-led { width: 9px; height: 9px; border-radius: 50%; background: #55575d; box-shadow: inset 0 0 2px rgba(0,0,0,.7); }
+.lever-card.on .lever-led { background: #2ecc71; box-shadow: 0 0 8px rgba(46,204,113,.85); animation: pulso-suave 1.2s ease-in-out infinite; }
+.lever-card.on .lever-status { color: #2ecc71; }
+.lever-wrap { display: flex; align-items: stretch; justify-content: center; gap: 14px; margin-top: 4px; }
+.lever-labels { display: flex; flex-direction: column; justify-content: space-between; height: 200px; padding: 8px 0; text-align: right; font-size: 9px; font-weight: 700; letter-spacing: .14em; color: #6f7178; }
+.lever-card:not(.on) #lv-top { color: #e6e6ea; }
+.lever-card.on #lv-bot { color: #2ecc71; }
+.lever-track { position: relative; width: 92px; height: 200px; touch-action: none; user-select: none; }
+.lever-ticks { position: absolute; left: 4px; right: 4px; top: 8px; bottom: 8px; background: repeating-linear-gradient(to bottom, #54565d 0, #54565d 1px, transparent 1px, transparent 16px); opacity: .8; }
+.lever-slot {
+  position: absolute; left: 50%; top: 0; bottom: 0; width: 16px; margin-left: -8px; border-radius: 8px;
+  background: linear-gradient(90deg, #060607, #1a1b1e 50%, #060607);
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.95), 0 0 0 2px #3b3d43, 0 0 0 3px #0b0b0d;
+}
+.lever-handle {
+  position: absolute; left: 50%; top: var(--y, 0px); width: 78px; height: 56px; margin-left: -39px;
+  cursor: grab; outline: none; transition: top .34s cubic-bezier(.3, 1.5, .5, 1);
+}
+.lever-track.dragging .lever-handle { transition: none; cursor: grabbing; }
+.lever-knob {
+  position: absolute; inset: 0; border-radius: 9px;
+  background: linear-gradient(180deg, #ff6256 0%, #d6372a 48%, #9c1d14 100%);
+  border: 1px solid #5a0e09;
+  box-shadow: 0 7px 12px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.4), inset 0 -3px 5px rgba(0,0,0,.35);
+}
+.lever-knob::before {
+  content: ""; position: absolute; left: 12px; right: 12px; top: 11px; bottom: 11px; border-radius: 3px;
+  background: repeating-linear-gradient(to bottom, rgba(0,0,0,.30) 0 2px, rgba(255,255,255,.20) 2px 4px);
+}
+.lever-handle:focus-visible .lever-knob { outline: 2px solid #4da3ff; outline-offset: 3px; }
+.lever-handle.shake { animation: sacudir .38s; }
+@keyframes sacudir { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+.lever-hint { margin-top: 10px; min-height: 30px; text-align: center; font-size: 11px; line-height: 1.4; color: #a5a7ae; }
+
+/* Progreso */
+.prog-top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+.prog-state { display: block; font-size: 14px; font-weight: 600; letter-spacing: -.01em; }
+.prog-sub { display: block; margin-top: 2px; font-size: 12px; color: var(--muted); }
+.prog-pct { font-size: 36px; font-weight: 700; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.prog-bar { position: relative; height: 14px; background: #e9e9ee; border: 1px solid var(--line); overflow: hidden; }
+.prog-done { position: absolute; left: 0; top: 0; bottom: 0; width: 0; background: var(--blue); transition: width .4s ease; }
+.prog-active {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0; opacity: 0; transition: width .4s ease, opacity .2s;
+  background-image: linear-gradient(45deg, rgba(0,113,227,.40) 25%, rgba(0,113,227,.16) 25%, rgba(0,113,227,.16) 50%, rgba(0,113,227,.40) 50%, rgba(0,113,227,.40) 75%, rgba(0,113,227,.16) 75%);
+  background-size: 28px 28px; animation: franjas 1s linear infinite;
+}
+.prog-card.running .prog-active { opacity: 1; }
+.prog-card.ok .prog-done { background: var(--green); }
+.prog-card.err .prog-done { background: var(--red); }
+.prog-card.stop .prog-done { background: var(--yellow); }
+.prog-card.ok .prog-pct { color: var(--green); }
+.prog-card.err .prog-pct { color: var(--red); }
+@keyframes franjas { to { background-position: 28px 0; } }
+.prog-meta { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.prog-meta span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Mini consola (preparada para salidas enormes) */
+.upd-console { background: #1e1e1e; border: 1px solid var(--line); box-shadow: 0 6px 18px rgba(0,0,0,.10); }
+.uc-head { display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: #2d2d2d; color: #9cdcfe; border-top: 2px solid var(--blue); border-bottom: 1px solid #3c3c3c; font-size: 12px; font-weight: 600; }
+.uc-meta { flex: 1; font-size: 11px; font-weight: 500; color: #8f8f8f; font-variant-numeric: tabular-nums; }
+.uc-actions { display: flex; gap: 6px; }
+.uc-body {
+  height: clamp(260px, 42vh, 480px); overflow-y: auto; overflow-anchor: none; padding: 10px 14px;
+  font: 11px/1.5 SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; color: #d4d4d4; background: #1e1e1e;
+}
+.cl { white-space: pre-wrap; word-break: break-all; }
+.cl.err { color: #f48771; }
+.cl.sys { color: #9cdcfe; }
+.cl.omit { color: #8a8a8a; font-style: italic; }
+@media (max-width: 900px) { .upd-top { grid-template-columns: 1fr; } }
+  
+/* ===== Remplazar Izumi ===== */
+.izu-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 16px; margin-top: 16px; align-items: start; }
+.izu-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
+.izu-files { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.izu-file { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #fafafa; border: 1px solid var(--line); border-left: 3px solid var(--blue); font: 12px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; }
+.izu-file small { margin-left: auto; font: 700 10px var(--font); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.btn-grande { width: 100%; padding: 12px 16px; font-size: 13px; font-weight: 600; }
+.izu-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.izu-res { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.izu-res div { padding: 7px 10px; border: 1px solid var(--line); border-left-width: 3px; word-break: break-word; }
+.izu-res .ok { border-left-color: var(--green); background: rgba(40,167,69,.06); }
+.izu-res .bad { border-left-color: var(--red); background: rgba(217,48,37,.05); }
+.izu-note { margin-top: 14px; font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+/* Calculadora hexadecimal */
+.hex-screen { background: #1e1e1e; color: #d4d4d4; padding: 12px 14px; border-top: 2px solid var(--blue); margin-bottom: 12px; min-height: 92px; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-end; gap: 4px; }
+.hex-expr { min-height: 15px; font: 11px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; color: #8f8f8f; word-break: break-all; text-align: right; }
+.hex-disp { font: 600 28px/1.15 SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; color: #fff; word-break: break-all; text-align: right; }
+.hex-disp.error { color: #f48771; font-size: 15px; }
+.hex-conv { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.hex-row { display: flex; align-items: center; gap: 10px; padding: 5px 10px; background: #fafafa; border: 1px solid var(--line); }
+.hex-row b { flex: none; width: 34px; font-size: 10px; letter-spacing: .1em; color: var(--muted); }
+.hex-row code { flex: 1; min-width: 0; font: 11px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; word-break: break-all; }
+.hex-row button { flex: none; border: 1px solid var(--line); background: #fff; color: var(--text); font: inherit; font-size: 10px; padding: 2px 8px; cursor: pointer; }
+.hex-row button:hover { background: var(--bg-soft); }
+.hex-keys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.hex-key { height: 42px; border: 1px solid var(--line); background: #fff; color: var(--text); font: 600 14px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; cursor: pointer; border-radius: 2px; transition: background .15s, transform .08s; }
+.hex-key:hover { background: #f0f0f3; }
+.hex-key:active { transform: scale(.97); }
+.hex-key.letra { background: rgba(0,113,227,.07); color: var(--blue); }
+.hex-key.letra:hover { background: rgba(0,113,227,.14); }
+.hex-key.op { background: #e5e5ea; }
+.hex-key.op:hover { background: #d8d8de; }
+.hex-key.op.on { background: var(--text); color: #fff; }
+.hex-key.clr { background: rgba(217,48,37,.08); color: var(--red); }
+.hex-key.eq { grid-column: 4; grid-row: 6 / span 3; height: auto; background: var(--blue); border-color: var(--blue); color: #fff; font-size: 22px; }
+.hex-key.eq:hover { background: #0077ed; }
+.hex-key.cero { grid-column: span 3; }
+@media (max-width: 900px) { .izu-grid { grid-template-columns: 1fr; } }
+/* Connection validation: accesos rápidos y progreso */
+.status-links { display: flex; gap: 8px; width: 100%; }
+.link-btn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0;
+  font: inherit; font-size: 12px; font-weight: 600; letter-spacing: -.01em; color: var(--text);
+  background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--accent, var(--blue));
+  border-radius: 2px; padding: 6px 10px; cursor: pointer; white-space: nowrap;
+  transition: background .15s, box-shadow .15s, transform .1s;
+}
+.link-btn svg { width: 14px; height: 14px; flex: none; color: var(--accent, var(--blue)); }
+.link-btn .lb-ext { width: 11px; height: 11px; color: var(--muted); opacity: .7; transition: transform .15s, opacity .15s; }
+.link-btn:hover { background: #f7faff; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+.link-btn:hover .lb-ext { transform: translate(1px, -1px); opacity: 1; }
+.link-btn:active { transform: scale(.98); }
+.lb-ot { --accent: #0071e3; }
+.lb-ch { --accent: #0aa5a5; }
+.cv-prog { width: 100%; }
+.cv-prog[hidden] { display: none; }
+.cv-prog-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+.cv-prog.err .cv-prog-top span:first-child { color: var(--red); }
+.cv-prog.ok .cv-prog-top span:first-child { color: var(--green); }
+.cv-bar { height: 8px; }
+.cv-prog.running .prog-active { opacity: 1; }
+.cv-prog.ok .prog-done { background: var(--green); }
+.cv-prog.err .prog-done { background: var(--red); }
+/* Instrumentos dentro de Connection validation */
+#connection-validation .instruments-list.cv-instr { width: var(--panel-w); max-width: 100%; margin: 0; gap: 8px; }
+.cv-instr .instrument-ip { white-space: nowrap; }
+#connection-validation .cv-instr .instrument-row { padding: 10px 14px; }
+
+/* CFG-INICIO */
+/* ===== Configuración ===== */
+.cfg-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 12px; margin-top: 10px; align-items: start; }
+.cfg-devs { display: flex; flex-direction: column; gap: 6px; }
+.cfg-dev {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 14px; text-align: left;
+  font: inherit; font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--text);
+  background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--line); cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.cfg-dev:hover { background: var(--bg-soft); }
+.cfg-dev.sel { border-left-color: var(--blue); background: rgba(0,113,227,.06); }
+.cfg-dev .n { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--muted); }
+.cfg-main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+.cfg-add-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cfg-add-hint { font-size: 12px; color: var(--muted); }
+.cfg-files { list-style: none; padding: 0; margin: 14px 0 0; display: flex; flex-direction: column; gap: 8px; max-height: clamp(150px, 22vh, 230px); overflow-y: auto; }
+.cfg-empty { padding: 22px 10px; text-align: center; font-size: 12px; color: var(--muted); border: 1px dashed var(--line); }
+
+.cfg-file {
+  display: flex; align-items: center; gap: 12px; padding: 9px 12px;
+  background: #fafafa; border: 1px solid var(--line); border-left: 3px solid var(--line);
+}
+.cfg-file.run { border-left-color: var(--yellow); background: rgba(245,166,35,.07); }
+.cfg-file.ok { border-left-color: var(--green); }
+.cfg-file.fail { border-left-color: var(--red); background: rgba(217,48,37,.04); }
+.cfg-file.missing { border-left-color: var(--red); opacity: .7; }
+.cfg-ext {
+  flex: none; min-width: 46px; text-align: center; padding: 4px 6px;
+  font: 700 10px var(--font); letter-spacing: .08em; text-transform: uppercase;
+  color: var(--blue); background: rgba(0,113,227,.08); border: 1px solid rgba(0,113,227,.25);
+}
+.cfg-ext.py { color: #2c7a43; background: rgba(40,167,69,.09); border-color: rgba(40,167,69,.3); }
+.cfg-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.cfg-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cfg-meta { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cfg-acts { display: flex; align-items: center; gap: 6px; flex: none; }
+.cfg-noexec { flex: none; width: 60px; text-align: center; font-size: 10px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+
+/* Switch tipo "cola de rata" (palanca de interruptor) */
+.rat-wrap { flex: none; width: 60px; display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.rat { position: relative; width: 40px; height: 46px; padding: 0; border: 0; background: transparent; cursor: pointer; }
+.rat:disabled { opacity: .45; cursor: default; }
+.rat:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+.rat-plate {
+  position: absolute; inset: 5px 4px; border-radius: 4px;
+  background: linear-gradient(180deg, #dcdce1, #b8b9c1); border: 1px solid #8e8e93;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.75), 0 1px 2px rgba(0,0,0,.2);
+}
+.rat-nut {
+  position: absolute; left: 50%; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f4f4f7, #8e8f96); border: 1px solid #5f6066;
+  box-shadow: 0 1px 2px rgba(0,0,0,.35);
+}
+.rat-lever {
+  position: absolute; left: 50%; top: 50%; width: 5px; height: 19px; margin: -19px 0 0 -2.5px; border-radius: 3px;
+  background: linear-gradient(90deg, #9b9ca3, #ececf0 45%, #85868d); box-shadow: 0 1px 2px rgba(0,0,0,.4);
+  transform-origin: 50% 100%; transform: rotate(180deg); transition: transform .2s cubic-bezier(.3, 1.6, .5, 1);
+}
+.rat-lever::after {
+  content: ""; position: absolute; left: 50%; top: -5px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #ff8a80, #c4281d); border: 1px solid #6d120c;
+}
+.rat[aria-checked="true"] .rat-lever { transform: rotate(0deg); }
+.rat[aria-checked="true"] .rat-lever::after { background: radial-gradient(circle at 35% 30%, #7dffa8, #1f9d4d); border-color: #0f5c2a; box-shadow: 0 0 7px rgba(46,204,113,.85); }
+.rat-txt { font-size: 9px; font-weight: 700; letter-spacing: .12em; color: var(--muted); }
+.rat-txt.on { color: var(--green); }
+
+/* Consola del equipo */
+.cfg-console .uc-body { height: clamp(150px, 26vh, 300px); }
+.cfg-t { color: #6b6b6b; }
+
+@media (max-width: 900px) {
+  .cfg-layout { grid-template-columns: 1fr; }
+  .cfg-devs { flex-direction: row; flex-wrap: wrap; }
+  .cfg-dev { width: auto; }
+}
+
+/* CFG-FIN */
+/* TC-INICIO */
+.tc-card { margin-top: 4px; padding: 12px 14px; }
+.tc-path { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.tc-path-lbl { font-size: 10px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+.tc-ruta { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; background: var(--bg-soft); padding: 3px 8px; word-break: break-all; }
+.tc-badge { font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--bg-soft); color: var(--muted); }
+.tc-badge.ok { background: #e7f6ec; color: #1e7e34; }
+.tc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 18px; margin-bottom: 10px; }
+.tc-group { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.tc-bar .btn { font-size: 12px; padding: 6px 12px; }
+.tc-bar .tc-stop { background: var(--red); color: #fff; }
+.tc-bar .tc-stop:hover { background: #b9261b; }
+.tc-in { font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid var(--line); background: #fff; color: var(--text); width: 100%; min-width: 0; outline: none; }
+.tc-in:focus { border-color: var(--blue); box-shadow: 0 0 0 2px rgba(0,113,227,.15); }
+.tc-in:disabled { background: var(--bg-soft); color: var(--muted); }
+.tc-table .tc-in { padding: 2px 8px; font-size: 12px; }
+.tc-in.mal { border-color: var(--red); }
+.tc-prog { margin-bottom: 10px; }
+.tc-prog-top { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+.tc-prog-bar { height: 5px; background: var(--bg-soft); overflow: hidden; position: relative; }
+.tc-prog-fill { height: 100%; width: 0; background: var(--blue); transition: width .25s; }
+.tc-prog.indet .tc-prog-fill { width: 35%; position: absolute; animation: tc-indet 1.2s ease-in-out infinite; }
+@keyframes tc-indet { 0% { left: -35%; } 100% { left: 100%; } }
+.tc-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tc-table th { text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); }
+.tc-table td { padding: 2px 6px; border-bottom: 1px solid #efeff2; vertical-align: middle; }
+.tc-table tr.sel td { background: #f3f8ff; }
+.c-chk { width: 28px; } .c-n { width: 44px; } .c-st { width: 15%; }
+.tc-n { font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tc-st { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 99px; background: var(--bg-soft); color: var(--muted); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.tc-st.ok { background: #e7f6ec; color: #1e7e34; }
+.tc-st.bad { background: #fdeceb; color: #b3261e; }
+.tc-st.warn { background: #fff4de; color: #9a6400; }
+.tc-st.busy { background: #fff4de; color: #9a6400; animation: parpadeo 1s ease-in-out infinite; }
+.tc-console { margin-top: 12px; }
+.tc-console .uc-body { height: clamp(120px, 20vh, 240px); }
+.tc-cl-t { color: #7a7a7a; }
+@media (max-width: 760px) { .c-st { width: auto; } }
+.c-st { width: 22%; }
+.tc-viewer { margin-top: 12px; height: clamp(220px, 34vh, 420px); min-height: 0; }
+.tc-viewer[hidden] { display: none; }
+.tc-viewer .dhcp-box-header code { font: inherit; color: #d4d4d4; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.tc-viewer .uc-actions { flex: none; }
+.tc-viewer .btn-secundario { background: #3a3a3c; color: #e5e5ea; border-color: #4a4a4a; }
+.tc-viewer .btn-secundario:hover { background: #48484a; }
+.tc-viewer .tv-meta { font-size: 10px; font-weight: 500; color: #8f8f8f; white-space: nowrap; }
+.btn.btn-secundario.is-on { background: var(--blue); color: #fff; border-color: var(--blue); }
+/* TC-FIN */
+
+/* ===== Botón y aviso de actualizaciones ===== */
+.nav-inner { padding-right: 76px; }
+.upd { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); }
+.upd-btn { position: relative; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 50%; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.upd-btn:hover { background: var(--bg-soft); border-color: #b9b9bf; }
+.upd-btn svg { width: 16px; height: 16px; }
+.upd-btn.girando svg { animation: giro 1s linear infinite; }
+.upd-btn .punto { display: none; position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: var(--red); border: 2px solid #fff; }
+.upd-btn.hay-nueva { color: var(--blue); border-color: var(--blue); }
+.upd-btn.hay-nueva .punto { display: block; animation: parpadeo 1.4s ease-in-out infinite; }
+.upd-toast { position: fixed; top: 66px; right: 24px; z-index: 200; width: 340px; display: flex; gap: 12px; padding: 14px 16px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--blue); box-shadow: 0 18px 40px rgba(0,0,0,.14); opacity: 0; transform: translateY(-8px); pointer-events: none; transition: opacity .25s, transform .25s; }
+.upd-toast.visible { opacity: 1; transform: none; pointer-events: auto; }
+.upd-toast.ok { border-left-color: var(--green); }
+.upd-toast.err { border-left-color: var(--red); }
+.upd-ico { flex: none; width: 32px; height: 32px; display: grid; place-items: center; background: rgba(0,113,227,.08); color: var(--blue); }
+.upd-toast.ok .upd-ico { background: rgba(40,167,69,.1); color: var(--green); }
+.upd-toast.err .upd-ico { background: rgba(217,48,37,.08); color: var(--red); }
+.upd-ico svg { width: 16px; height: 16px; }
+.upd-cuerpo { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.upd-cuerpo strong { font-size: 13px; }
+.upd-cuerpo span { font-size: 12px; line-height: 1.4; color: var(--muted); }
+.upd-barra { height: 6px; margin-top: 6px; background: var(--bg-soft); border: 1px solid var(--line); overflow: hidden; }
+.upd-barra i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .3s; }
+.upd-acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+.upd-acciones .btn { font-size: 12px; padding: 5px 12px; }
+.upd-toast [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+  <header class="nav">
+    <div class="nav-inner">
+      <span class="brand">
+        <img class="brand-logo" src="icons/64x64.png" alt="Connection Validation" title="Connection Validation">
+      </span>
+      <div class="upd">
+        <button id="btn-update" class="upd-btn" type="button" title="Buscar actualizaciones" aria-label="Buscar actualizaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
+          <i class="punto"></i>
+        </button>
+      </div>
+      <nav aria-label="Principal">
+        <a href="#connection-validation" class="nav-link active" data-section="connection-validation">Connection validation</a>
+        <a href="#rectificadores" class="nav-link" data-section="rectificadores">Actualización de rectificadores</a>
+        <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi">Remplazar Izumi</a>
+        <a href="#files-dhcp" class="nav-link" data-section="files-dhcp">Files DHCP</a>
+        <a href="#generar-test-case" class="nav-link" data-section="generar-test-case">Generar Test case</a>
+        <a href="#configuracion" class="nav-link" data-section="configuracion">Configuración</a>
+
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="connection-validation" class="section active">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Diagnóstico de red</span>
+            <h1>Connection validation</h1>
+            <p class="lead">Estado de conectividad de rectificadores e Izumis.</p>
+          </div>
+          <div class="status-card">
+            <div class="status-row-item">
+              <div class="status-info-group">
+                <span class="dot global-dot"></span>
+                <span class="status-title global-title">En espera…</span>
+              </div>
+              <span class="ip global-ip"></span>
+            </div>
+            <div class="status-actions">
+              <button id="test-btn" class="btn">Probar conexión</button>
+              <button id="toggle-console-btn" class="btn btn-secundario">Consola</button>
+            </div>
+            <div class="status-links">
+              <button id="open-opentest" class="link-btn lb-ot" type="button" title="Abrir http://127.0.0.1:8090 en Chrome">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3h6"/><path d="M10 3v6.2L5.2 18a2 2 0 0 0 1.7 3h10.2a2 2 0 0 0 1.7-3L14 9.2V3"/><path d="M7.8 14h8.4"/></svg>
+                <span>OpenTest</span>
+                <svg class="lb-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+              </button>
+              <button id="open-chiller" class="link-btn lb-ch" type="button" title="Abrir http://127.0.0.1:5000 en Chrome">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2v20"/><path d="M4.9 7l14.2 10"/><path d="M19.1 7L4.9 17"/><path d="M9.5 3.5L12 6l2.5-2.5"/><path d="M9.5 20.5L12 18l2.5 2.5"/></svg>
+                <span>ChillerMonitor</span>
+                <svg class="lb-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+              </button>
+            </div>
+            <div id="cv-prog" class="cv-prog" hidden>
+              <div class="cv-prog-top"><span id="cv-prog-state">—</span><span id="cv-prog-pct">0%</span></div>
+              <div class="prog-bar cv-bar">
+                <div class="prog-active" id="cv-prog-active"></div>
+                <div class="prog-done" id="cv-prog-done"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="validation-layout" style="margin-top: 14px;">
+        <div class="panels">
+          <h2 class="panel-title">Jolt</h2>
+          <div class="group-label"><span>Rectificadores</span><span>24 unidades</span></div>
+          <div id="rectifiers" class="rect-grid" aria-label="Rectificadores"></div>
+          <div class="group-label"><span>Izumis</span><span>16 enlaces</span></div>
+          <div id="izumis" class="izumi-grid" aria-label="Izumis"></div>
+          <div class="group-label"><span>Instrumentos</span><span>Ping cada 5 s</span></div>
+          <div class="instruments-list cv-instr" aria-label="Instrumentos">
+            <!-- DAQ970A -->
+            <div class="instrument-row">
+              <div class="instrument-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="0"/><line x1="8" y1="6" x2="16" y2="6"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+              </div>
+              <div class="instrument-info">
+                <div class="instrument-top">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="instrument-name">DAQ970A</span>
+                    <span class="instrument-ip">10.0.0.100</span>
+                  </div>
+                  <span class="instrument-type">Adquisición</span>
+                </div>
+                <div class="instrument-desc">Sistema de adquisición de datos y multímetro modular Keysight.</div>
+              </div>
+              <span class="status-pill"><span id="dot-daq" class="dot" title="Haciendo ping real..."></span><span class="status-text">Pendiente</span></span>
+            </div>
+
+            <!-- Juniper -->
+            <div class="instrument-row">
+              <div class="instrument-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+              </div>
+              <div class="instrument-info">
+                <div class="instrument-top">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="instrument-name">Juniper</span>
+                    <span class="instrument-ip">10.0.0.254</span>
+                  </div>
+                  <span class="instrument-type">Enrutamiento</span>
+                </div>
+                <div class="instrument-desc">Dispositivo de red y enrutamiento core para alta velocidad.</div>
+              </div>
+              <span class="status-pill"><span id="dot-juniper" class="dot" title="Haciendo ping real..."></span><span class="status-text">Pendiente</span></span>
+            </div>
+
+            <!-- Switch -->
+            <div class="instrument-row">
+              <div class="instrument-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="0"/><path d="M6 12h.01M10 12h.01M14 12h.01M18 12h.01"/></svg>
+              </div>
+              <div class="instrument-info">
+                <div class="instrument-top">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="instrument-name">Switch ZPE</span>
+                    <span class="instrument-ip">10.0.0.253</span>
+                  </div>
+                  <span class="instrument-type">Red / Consola</span>
+                </div>
+                <div class="instrument-desc">Conmutador central y servidor de consola serial ZPE.</div>
+              </div>
+              <span class="status-pill"><span id="dot-zpe" class="dot" title="Haciendo ping real..."></span><span class="status-text">Pendiente</span></span>
+            </div>
+
+            <!-- Superlogics (Servidor Principal) -->
+            <div class="instrument-row">
+              <div class="instrument-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="0"/><rect x="2" y="10" width="20" height="5" rx="0"/><rect x="2" y="17" width="20" height="5" rx="0"/></svg>
+              </div>
+              <div class="instrument-info">
+                <div class="instrument-top">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="instrument-name">Superlogics</span>
+                    <span class="instrument-ip global-ip">Cargando IP...</span>
+                  </div>
+                  <span class="instrument-type">SERVER  ABMX / SUPERLOGICS</span>
+                </div>
+                <div class="instrument-desc">Servidor principal del sistema .</div>
+              </div>
+              <span class="status-pill online"><span id="dot-superlogics" class="dot online" title="Servidor Principal Activo"></span><span class="status-text">Activo</span></span>
+            </div>
+
+            <!-- Tros -->
+            <div class="instrument-row">
+              <div class="instrument-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+              </div>
+              <div class="instrument-info">
+                <div class="instrument-top">
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span class="instrument-name">TROS</span>
+                    <span class="instrument-ip">10.254.128.3</span>
+                  </div>
+                  <span class="instrument-type">Módulo controlador de rectificadores</span>
+                </div>
+                <div class="instrument-desc">Sección reservada para agregar un nuevo controlador o instrumento.</div>
+              </div>
+              <span class="status-pill"><span id="dot-tros" class="dot" title="Sin IP asignada"></span><span class="status-text">Activo</span></span>
+            </div>
+          </div>
+        </div>
+
+        <div id="console-panel" class="console-container">
+          <div class="console-header">
+            <span>Consola en tiempo real (stdout)</span>
+            <button id="clear-console" class="btn btn-secundario" style="font-size:9px; padding:2px 6px;">Limpiar</button>
+          </div>
+          <div id="console-body" class="console-body">Esperando ejecución...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="rectificadores" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Mantenimiento</span>
+            <h1>Actualización de rectificadores</h1>
+            <p class="lead">Define los comandos y ejecútalos al accionar la palanca.</p>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-row-item">
+            <div class="status-info-group">
+              <span class="dot global-dot"></span>
+              <span class="status-title global-title">En espera…</span>
+            </div>
+            <span class="ip global-ip"></span>
+          </div>
+        </div>
+      </div>
+      <div class="upd-top">
+        <div class="card cmd-card">
+          <div class="card-head">
+            <span class="card-title">Comandos</span>
+            <span class="card-count" id="cmd-count">0 comandos</span>
+          </div>
+          <div class="cmd-add">
+            <textarea id="cmd-input" class="cmd-input" rows="2" spellcheck="false" autocomplete="off"
+              placeholder="Escribe un comando y presiona Enter&#10;(Shift+Enter = nueva línea; cada línea es un comando)"></textarea>
+            <button id="cmd-add-btn" class="btn">Agregar</button>
+          </div>
+          <ol id="cmd-list" class="cmd-list"></ol>
+          <div class="cmd-foot">
+            <label class="chk"><input type="checkbox" id="stop-on-fail" checked><span>Detener si un comando falla</span></label>
+            <button id="cmd-clear-btn" class="btn btn-secundario">Vaciar lista</button>
+          </div>
+        </div>
+
+        <div class="card lever-card" id="lever-card">
+          <div class="card-head">
+            <span class="card-title">Actualizar</span>
+            <span class="lever-status"><span class="lever-led"></span><span id="lever-state">LISTO</span></span>
+          </div>
+          <div class="lever-wrap">
+            <div class="lever-labels"><span id="lv-top">REPOSO</span><span id="lv-bot">EJECUTAR</span></div>
+            <div class="lever-track" id="lever-track">
+              <div class="lever-ticks"></div>
+              <div class="lever-slot"></div>
+              <div class="lever-handle" id="lever-handle" role="slider" tabindex="0"
+                   aria-label="Palanca de ejecución" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0">
+                <div class="lever-knob"></div>
+              </div>
+            </div>
+          </div>
+          <div class="lever-hint" id="lever-hint">Baja la palanca para ejecutar</div>
+        </div>
+      </div>
+
+      <div class="card prog-card" id="prog-card">
+        <div class="prog-top">
+          <div>
+            <span class="prog-state" id="prog-state">En reposo</span>
+            <span class="prog-sub" id="prog-sub">0 comandos en la lista</span>
+          </div>
+          <span class="prog-pct" id="prog-pct">0%</span>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-active" id="prog-active"></div>
+          <div class="prog-done" id="prog-done"></div>
+        </div>
+        <div class="prog-meta"><span id="prog-time">Tiempo: 00:00</span><span id="prog-log"></span></div>
+      </div>
+
+      <div class="upd-console">
+        <div class="uc-head">
+          <span>Consola · segundo plano</span>
+          <span class="uc-meta" id="uc-meta">0 líneas</span>
+          <div class="uc-actions">
+            <button id="uc-follow" class="btn btn-secundario btn-mini is-on">Seguir salida</button>
+            <button id="uc-log" class="btn btn-secundario btn-mini">Abrir log</button>
+            <button id="uc-clear" class="btn btn-secundario btn-mini">Limpiar</button>
+          </div>
+        </div>
+        <div id="uc-body" class="uc-body" tabindex="0"><div class="cl sys placeholder">Esperando ejecución…</div></div>
+      </div>
+    </section>
+
+    <section id="remplazar-izumi" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Mantenimiento</span>
+            <h1>Remplazar Izumi</h1>
+            <p class="lead">Abre los archivos DHCP y calcula valores en hexadecimal.</p>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-row-item">
+            <div class="status-info-group">
+              <span class="dot global-dot"></span>
+              <span class="status-title global-title">En espera…</span>
+            </div>
+            <span class="ip global-ip"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="izu-grid">
+        <div class="card izu-card">
+          <div class="card-head">
+            <span class="card-title">Archivos DHCP</span>
+            <span class="card-count">2 archivos</span>
+          </div>
+          <p class="izu-desc">Abre cada archivo de la vista previa con el editor de texto del sistema.</p>
+          <div class="izu-files">
+            <div class="izu-file"><span>/etc/dhcp/dhcpd.conf</span><small>IPv4</small></div>
+            <div class="izu-file"><span>/etc/dhcp/dhcpd6.conf</span><small>IPv6</small></div>
+          </div>
+          <div class="izu-btns">
+            <button class="btn btn-grande izu-open" type="button" data-dhcp="dhcpd">Abrir dhcpd.conf</button>
+            <button class="btn btn-grande izu-open" type="button" data-dhcp="dhcpd6">Abrir dhcpd6.conf</button>
+          </div>
+          <div id="izu-res" class="izu-res"></div>
+          <p class="izu-note">Para guardar cambios en /etc/dhcp el editor necesita permisos de administrador. Recuerda reiniciar el servicio DHCP después de editar.</p>
+        </div>
+
+        <div class="card hex-card">
+          <div class="card-head">
+            <span class="card-title">Calculadora hexadecimal</span>
+            <span class="card-count">hasta 64 dígitos</span>
+          </div>
+          <div class="hex-screen">
+            <div class="hex-expr" id="hex-expr"></div>
+            <div class="hex-disp" id="hex-disp">0</div>
+          </div>
+          <div class="hex-conv">
+            <div class="hex-row"><b>HEX</b><code id="hex-v-hex">0</code><button type="button" data-copy="hex">Copiar</button></div>
+            <div class="hex-row"><b>DEC</b><code id="hex-v-dec">0</code><button type="button" data-copy="dec">Copiar</button></div>
+            <div class="hex-row"><b>BIN</b><code id="hex-v-bin">0000</code><button type="button" data-copy="bin">Copiar</button></div>
+          </div>
+          <div class="hex-keys" id="hex-keys"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="files-dhcp" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Configuración</span>
+            <h1>Files DHCP</h1>
+            <p class="lead">Vista previa de los archivos de configuración (/etc/dhcp/).</p>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-row-item">
+            <div class="status-info-group">
+              <span class="dot global-dot"></span>
+              <span class="status-title global-title">En espera…</span>
+            </div>
+            <span class="ip global-ip"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="dhcp-layout">
+        <div class="dhcp-box">
+          <div class="dhcp-box-header"><span>/etc/dhcp/dhcpd.conf</span><span class="tag">Solo lectura</span></div>
+          <div id="dhcpd-content" class="dhcp-box-body">Cargando vista previa...</div>
+        </div>
+        <div class="dhcp-box">
+          <div class="dhcp-box-header"><span>/etc/dhcp/dhcpd6.conf</span><span class="tag">Solo lectura</span></div>
+          <div id="dhcpd6-content" class="dhcp-box-body">Cargando vista previa...</div>
+        </div>
+      </div>
+    </section>
+
+  <!-- TC-INICIO -->
+    <section id="generar-test-case" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Pruebas</span>
+            <h1>Generar Test case</h1>
+            <p class="lead">Detecta las unidades por slot, arma el UUT_case, revísalo y córrelo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card tc-card">
+        <div class="tc-path">
+          <span class="tc-path-lbl">Archivo</span>
+          <code id="tc-ruta" class="tc-ruta">—</code>
+          <span id="tc-existe" class="tc-badge">sin crear</span>
+          <button id="tc-cambiar" class="btn btn-secundario btn-mini" type="button">Cambiar…</button>
+          <button id="tc-ver" class="btn btn-secundario btn-mini" type="button" title="Mostrar el contenido del archivo generado">Ver archivo</button>
+        </div>
+
+        <div class="tc-bar">
+          <div class="tc-group">
+            <button id="tc-auto" class="btn" type="button" title="Hace ping y telnet a los 16 slots y rellena la tabla">Generar automático</button>
+            <button id="tc-guardar" class="btn btn-secundario" type="button">Guardar</button>
+            <button id="tc-recargar" class="btn btn-secundario" type="button">Recargar</button>
+          </div>
+          <div class="tc-group">
+            <button id="tc-run-all" class="btn" type="button">Correr todo</button>
+            <button id="tc-run-sel" class="btn btn-secundario" type="button">Correr selección</button>
+          </div>
+          <button id="tc-stop" class="btn tc-stop" type="button" hidden>Detener</button>
+        </div>
+
+        <div id="tc-prog" class="tc-prog" hidden>
+          <div class="tc-prog-top"><span id="tc-prog-txt">—</span><span id="tc-prog-n"></span></div>
+          <div class="tc-prog-bar"><div id="tc-prog-fill" class="tc-prog-fill"></div></div>
+        </div>
+
+        <table class="tc-table">
+          <thead>
+            <tr>
+              <th class="c-chk"><input id="tc-all" type="checkbox" title="Seleccionar todos"></th>
+              <th class="c-n">Slot</th>
+              <th>Número de parte</th>
+              <th>Serial</th>
+              <th class="c-st">Detección</th>
+            </tr>
+          </thead>
+          <tbody id="tc-rows"></tbody>
+        </table>
+      </div>
+
+      <div id="tc-viewer" class="dhcp-box tc-viewer" hidden>
+        <div class="dhcp-box-header">
+          <code id="tv-ruta">UUT_case</code>
+          <span class="tv-meta" id="tv-meta"></span>
+          <div class="uc-actions">
+            <button id="tv-recargar" class="btn btn-secundario btn-mini" type="button">Actualizar</button>
+            <button id="tv-copiar" class="btn btn-secundario btn-mini" type="button">Copiar</button>
+            <button id="tv-abrir" class="btn btn-secundario btn-mini" type="button" title="Abrir con el editor de texto del sistema">Abrir en editor</button>
+            <button id="tv-cerrar" class="btn btn-secundario btn-mini" type="button">Cerrar</button>
+          </div>
+        </div>
+        <div id="tv-body" class="dhcp-box-body"></div>
+      </div>
+
+      <div class="upd-console tc-console">
+        <div class="uc-head">
+          <span>Actividad</span>
+          <span class="uc-meta" id="tc-meta">0 líneas</span>
+          <div class="uc-actions">
+            <button id="tc-follow" class="btn btn-secundario btn-mini is-on" type="button">Seguir salida</button>
+            <button id="tc-log" class="btn btn-secundario btn-mini" type="button">Abrir logs</button>
+            <button id="tc-clear" class="btn btn-secundario btn-mini" type="button">Limpiar</button>
+          </div>
+        </div>
+        <div id="tc-body" class="uc-body" tabindex="0"></div>
+      </div>
+    </section>
+  <!-- TC-FIN -->
+
+  <!-- CFG-INICIO -->
+    <section id="configuracion" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Ajustes</span>
+            <h1>Configuración</h1>
+            <p class="lead">Carga archivos por equipo y ejecuta los scripts Python en segundo plano.</p>
+          </div>
+        </div>
+        <div class="status-card">
+          <div class="status-row-item">
+            <div class="status-info-group">
+              <span class="dot global-dot"></span>
+              <span class="status-title global-title">En espera…</span>
+            </div>
+            <span class="ip global-ip"></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cfg-layout">
+        <aside id="cfg-devs" class="cfg-devs" aria-label="Equipos"></aside>
+
+        <div class="cfg-main">
+          <div class="card">
+            <div class="card-head">
+              <span class="card-title" id="cfg-dev-title">SERVER</span>
+              <span class="card-count" id="cfg-dev-count">0 archivos</span>
+            </div>
+            <div class="cfg-add-row">
+              <button id="cfg-add-btn" class="btn" type="button">Cargar archivo</button>
+              <span class="cfg-add-hint">Cualquier formato: documentos, notas, .txt, .conf, .sh, .py…  Los .py se pueden ejecutar con el switch.</span>
+            </div>
+            <ul id="cfg-files" class="cfg-files"></ul>
+          </div>
+
+          <div class="upd-console cfg-console">
+            <div class="uc-head">
+              <span>Actividad · <span id="cfg-console-dev">SERVER</span></span>
+              <span class="uc-meta" id="cfg-meta">0 líneas</span>
+              <div class="uc-actions">
+                <button id="cfg-follow" class="btn btn-secundario btn-mini is-on" type="button">Seguir salida</button>
+                <button id="cfg-log" class="btn btn-secundario btn-mini" type="button">Abrir logs</button>
+                <button id="cfg-clear" class="btn btn-secundario btn-mini" type="button">Limpiar</button>
+              </div>
+            </div>
+            <div id="cfg-body" class="uc-body" tabindex="0"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+<!-- CFG-FIN -->
+  </main>
+
+  <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión 1.0 beta</span></footer>
+
+  <!-- Aviso de actualización -->
+  <div id="upd-toast" class="upd-toast" role="status" aria-live="polite">
+    <div class="upd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg></div>
+    <div class="upd-cuerpo">
+      <strong id="upd-titulo"></strong>
+      <span id="upd-msg"></span>
+      <div class="upd-barra" id="upd-barra"><i id="upd-prog"></i></div>
+      <div class="upd-acciones">
+        <button id="upd-cerrar" type="button" class="btn btn-secundario">Después</button>
+        <button id="upd-ok" type="button" class="btn"></button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+const $ = (id) => document.getElementById(id);
+
+let dhcpCargado = false;
+
+document.querySelectorAll('.nav-link').forEach((link) => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.querySelectorAll('.nav-link').forEach((l) => l.classList.remove('active'));
+    document.querySelectorAll('.section').forEach((s) => s.classList.remove('active'));
+    link.classList.add('active');
+    const target = document.getElementById(link.dataset.section);
+    if (target) target.classList.add('active');
+
+    if (link.dataset.section === 'files-dhcp' && !dhcpCargado) {
+      cargarVistasDhcp();
+      dhcpCargado = true;
+    }
+  });
+});
+
+function setEstadoInstrumento(id, estado, texto, tip) {
+  const dot = $(id);
+  if (!dot) return;
+  dot.className = 'dot ' + estado;
+  dot.title = tip || '';
+  const pill = dot.closest('.status-pill');
+  if (pill) {
+    pill.className = 'status-pill ' + estado;
+    const txt = pill.querySelector('.status-text');
+    if (txt) txt.textContent = texto;
+  }
+}
+
+const EQUIPOS_INSTR = [
+  { id: 'dot-daq', ip: '10.0.0.100' },
+  { id: 'dot-juniper', ip: '10.0.0.254' },
+  { id: 'dot-zpe', ip: '10.0.0.253' },
+  { id: 'dot-tros', ip: '10.254.128.3'} 
+];
+
+// Pinta el estado que el proceso principal calcula en segundo plano
+function aplicarInstrumentos(estado) {
+  for (const eq of EQUIPOS_INSTR) {
+    const r = estado && estado[eq.ip];
+    if (!r) {
+      setEstadoInstrumento(eq.id, 'busy', 'Verificando…', `Haciendo ping a ${eq.ip}...`);
+      continue;
+    }
+    const hora = new Date(r.hora).toLocaleTimeString('es');
+    const texto = r.vivo ? 'En línea' : 'Sin respuesta';
+    setEstadoInstrumento(eq.id, r.vivo ? 'online' : 'offline', texto, `${eq.ip} - ${texto} · ${hora}`);
+  }
+}
+
+async function verificarInstrumentosReales() {
+  if (!window.sistema || typeof window.sistema.obtenerInstrumentos !== 'function') {
+    for (const eq of EQUIPOS_INSTR) {
+      setEstadoInstrumento(eq.id, 'offline', 'Sin backend', `${eq.ip} - Sin conexión con el backend`);
+    }
+    return;
+  }
+  try {
+    aplicarInstrumentos(await window.sistema.obtenerInstrumentos());
+  } catch (err) {
+    for (const eq of EQUIPOS_INSTR) {
+      setEstadoInstrumento(eq.id, 'offline', 'Error', `${eq.ip} - Error al conectar`);
+    }
+  }
+}
+
+function renderDhcp(id, texto) {
+  const cont = $(id);
+  cont.textContent = '';
+  const frag = document.createDocumentFragment();
+  String(texto).split(/\r?\n/).forEach((linea) => {
+    const fila = document.createElement('div');
+    fila.className = 'ln';
+    const sp = document.createElement('span');
+    sp.className = 'ln-text' + (linea.trim().startsWith('#') ? ' cmt' : '');
+    sp.textContent = linea === '' ? ' ' : linea;
+    fila.appendChild(sp);
+    frag.appendChild(fila);
+  });
+  cont.appendChild(frag);
+}
+
+async function cargarVistasDhcp() {
+  if (!window.sistema) return;
+  try {
+    const res = await window.sistema.leerDhcpConfigs();
+    renderDhcp('dhcpd-content', res.dhcpd || '# Archivo vacío');
+    renderDhcp('dhcpd6-content', res.dhcpd6 || '# Archivo vacío');
+  } catch (err) {
+    renderDhcp('dhcpd-content', '# Error al cargar');
+    renderDhcp('dhcpd6-content', '# Error al cargar');
+  }
+}
+
+$('toggle-console-btn').addEventListener('click', () => {$('console-panel').classList.toggle('open');
+});
+
+$('clear-console').addEventListener('click', () => {$('console-body').textContent = '';
+});
+
+async function mostrarIP() {
+  try {
+    const ips = await window.sistema.obtenerIPs();
+    const textoIp = ips.length ? 'IP: ' + ips.map((i) => i.ip).join(', ') : 'IP: no disponible';
+    document.querySelectorAll('.global-ip').forEach(el => el.textContent = textoIp);
+  } catch {
+    document.querySelectorAll('.global-ip').forEach(el => el.textContent = 'IP: no disponible');
+  }
+}
+
+const FAN = '<svg class="fan" viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor">' +
+  '<path d="M12 12C9.5 7 10.5 2.5 13.5 3.2C15.5 3.8 14.5 8.5 12 12Z"/>' +
+  '<path d="M12 12C9.5 7 10.5 2.5 13.5 3.2C15.5 3.8 14.5 8.5 12 12Z" transform="rotate(90 12 12)"/>' +
+  '<path d="M12 12C9.5 7 10.5 2.5 13.5 3.2C15.5 3.8 14.5 8.5 12 12Z" transform="rotate(180 12 12)"/>' +
+  '<path d="M12 12C9.5 7 10.5 2.5 13.5 3.2C15.5 3.8 14.5 8.5 12 12Z" transform="rotate(270 12 12)"/>' +
+  '<circle cx="12" cy="12" r="1.8"/></g></svg>';
+
+const rectEls = {};
+const rectValEls = {};
+const izumiEls = {};
+const izumiStatusEls = {};
+
+function dibujarRectificadores() {
+  const cont = $('rectifiers');
+  cont.innerHTML = '';
+  for (let fila = 0; fila < 3; fila++) {
+    const row = document.createElement('div');
+    row.className = 'rect-row';
+    for (let g = 0; g < 2; g++) {
+      const grupo = document.createElement('div');
+      grupo.className = 'rect-group';
+      for (let k = 0; k < 4; k++) {
+        const n = g * 12 + fila * 4 + k + 1;
+        const r = document.createElement('div');
+        r.className = 'rect';
+        r.innerHTML =
+          '<div class="rect-top"><span class="rect-name">R' + n + '</span>' +
+          '<div class="led-frame"><span class="led" style="animation-delay:' + ((n * 0.37) % 1.2).toFixed(2) + 's"></span></div></div>' +
+          '<div class="rect-mid">' + FAN + '<span class="rect-val" id="rect-val-' + n + '">55.92 V</span></div>';
+        rectEls[n] = r;
+        rectValEls[n] = r.querySelector('.rect-val');
+        grupo.appendChild(r);
+      }
+      row.appendChild(grupo);
+    }
+    cont.appendChild(row);
+  }
+}
+
+function dibujarIzumis() {
+  const cont = $('izumis');
+  cont.innerHTML = '';
+  for (let i = 1; i <= 16; i++) {
+    const d = document.createElement('div');
+    d.className = 'izumi';
+    d.innerHTML = 
+      '<div class="izumi-info-col">' +
+        '<span class="izumi-name">Izumi ' + i + '</span>' +
+        '<span class="izumi-status-text" id="izumi-txt-' + i + '">--</span>' +
+      '</div>' +
+      '<div class="led-frame"><span class="izumi-led" id="izumi-led-' + i + '" style="animation-delay:' + ((i * 0.25) % 1.2).toFixed(2) + 's"></span></div>';
+    izumiEls[i] = d;
+    izumiStatusEls[i] = d.querySelector('.izumi-status-text');
+    cont.appendChild(d);
+  }
+}
+
+const limpiar = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const NEG = /\b(no|not|sin|without|never|fall|fail|error|unreach|inaccesib|timeout|timed out|perdid|lost|desconect|disconnect)\b/;
+
+function analizar(texto) {
+  const r = { izumis: {}, rects: {} };
+  const lineas = String(texto || '').split(/\r?\n/);
+  
+  for (const crudo of lineas) {
+    const linea = crudo.trim();
+    if (!linea) continue;
+    const t = limpiar(linea);
+
+    const matchIp = linea.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.(\d{1,3}))/);
+    if (matchIp) {
+      const ip = matchIp[1];
+      const ultimoOcteto = +matchIp[2];
+      if (ultimoOcteto >= 1 && ultimoOcteto <= 16) {
+        const tieneError = NEG.test(t);
+        r.izumis[ultimoOcteto] = { ip, ok: !tieneError };
+      }
+    }
+
+    const matchRect = t.match(/(?:rectificador|rectifier|rect|\br)\s*(\d+)\s*[:=\-]?\s*([0-9.,]+)/i);
+    if (matchRect) {
+      const num = +matchRect[1];
+      const val = parseFloat(matchRect[2].replace(',', '.'));
+      if (num >= 1 && num <= 24) {
+        r.rects[num] = isNaN(val) ? 55.92 : val;
+      }
+    }
+  }
+  return r;
+}
+
+function setEstadoRect(el, valEl, ok, voltajeVal, tooltip) {
+  if (!el) return;
+  el.classList.remove('ok', 'bad');
+  if (ok) {
+    el.classList.add('ok');
+    const vStr = (typeof voltajeVal === 'number' && !isNaN(voltajeVal)) ? voltajeVal.toFixed(2) + ' V' : '55.92 V';
+    if (valEl) valEl.textContent = vStr;
+    el.title = tooltip || `R: ${vStr}`;
+  } else {
+    el.classList.add('bad');
+    if (valEl) valEl.textContent = '55.92 V';
+    el.title = tooltip || 'R: Sin lectura / Error';
+  }
+}
+
+function setEstadoIzumi(el, txtEl, ok, tooltip) {
+  if (!el) return;
+  el.classList.remove('ok', 'bad');
+  if (ok) {
+    el.classList.add('ok');
+    if (txtEl) txtEl.textContent = 'link up';
+    el.title = tooltip || 'Izumi OK';
+  } else {
+    el.classList.add('bad');
+    if (txtEl) txtEl.textContent = 'link down';
+    el.title = tooltip || 'Izumi Error';
+  }
+}
+
+function limpiarColores() {
+  for (let n = 1; n <= 24; n++) {
+    setEstadoRect(rectEls[n], rectValEls[n], true, 55.92, '');
+    if (rectValEls[n]) rectValEls[n].textContent = '55.92 V';
+  }
+  for (let i = 1; i <= 16; i++) {
+    setEstadoIzumi(izumiEls[i], izumiStatusEls[i], true, '');
+  }
+}
+
+function pintarResultados(parsed) {
+  let fallas = 0;
+
+  for (let i = 1; i <= 16; i++) {
+    const item = parsed.izumis[i];
+    const ok = item && item.ok === true;
+    if (!ok) fallas++;
+    setEstadoIzumi(izumiEls[i], izumiStatusEls[i], ok, item ? `Izumi ${i} (${item.ip})` : `Izumi ${i}: Sin datos`);
+  }
+
+  for (let n = 1; n <= 24; n++) {
+    const val = parsed.rects[n];
+    const ok = typeof val === 'number' && !isNaN(val) && val > 0;
+    if (!ok) fallas++;
+    const voltajeMostrar = (typeof val === 'number' && !isNaN(val)) ? val : 55.92;
+    setEstadoRect(rectEls[n], rectValEls[n], ok, voltajeMostrar, ok ? `R${n}: ${voltajeMostrar.toFixed(2)} V` : `R${n}: Sin lectura / Error`);
+  }
+
+  return fallas;
+}
+
+function mostrarBarra(clase, texto, tip) {
+  document.querySelectorAll('.global-dot').forEach(el => el.className = 'dot ' + clase);
+  document.querySelectorAll('.global-title').forEach(el => {
+    el.textContent = texto;
+    el.title = tip || '';
+  });
+}
+
+function pintarProgresoValidacion(s) {
+  const cont = $('cv-prog');
+  if (!cont) return;
+  const f = s.fase;
+  const total = s.pasadas || 1;
+  const hechas = f === 'listo' ? total : Math.max(0, (s.pasada || 1) - 1);
+  const visible = f === 'buscando' || f === 'ejecutando' || f === 'listo' || f === 'error';
+  cont.hidden = !visible;
+  if (!visible) return;
+  const pct = Math.round((hechas / total) * 100);
+  $('cv-prog-done').style.width = pct + '%';
+  $('cv-prog-active').style.width = (f === 'buscando' ? 8 : f === 'ejecutando' ? Math.min(100, (hechas + 1) / total * 100) : 0) + '%';
+  cont.classList.toggle('running', f === 'buscando' || f === 'ejecutando');
+  cont.classList.toggle('ok', f === 'listo');
+  cont.classList.toggle('err', f === 'error');
+  $('cv-prog-state').textContent =
+    f === 'buscando' ? 'Buscando el script…' :
+    f === 'ejecutando' ? 'Pasada ' + (s.pasada || 1) + ' de ' + total :
+    f === 'listo' ? 'Completado · ' + total + ' pasadas' :
+    'Se detuvo en la pasada ' + (s.pasada || 1);
+  $('cv-prog-pct').textContent = pct + '%';
+}
+
+function aplicarEstado(s) {
+  if (!s) return;
+  mostrarIP();
+  const ocupado = s.fase === 'buscando' || s.fase === 'ejecutando';
+  if ($('test-btn'))$('test-btn').disabled = ocupado;
+  pintarProgresoValidacion(s);
+
+  if (s.fase === 'buscando') {
+    mostrarBarra('busy', 'Buscando connection_validation.py…', '');
+    limpiarColores();
+  } else if (s.fase === 'ejecutando') {
+    mostrarBarra('busy', 'Ejecutando validación ' + (s.pasada || 1) + '/' + (s.pasadas || 1) + '…', s.ruta || '');
+    if ((s.pasada || 1) <= 1) $('console-body').textContent = `Iniciando script en: ${s.ruta}\n----------------------------------------\n`;
+  } else if (s.fase === 'no-encontrado') {
+    limpiarColores();
+    mostrarBarra('offline', 'Script no encontrado', s.error || '');
+  } else if (s.fase === 'error') {
+    limpiarColores();
+    mostrarBarra('offline', 'Error en ejecución', s.error || '');
+  } else if (s.fase === 'listo') {
+    const parsed = analizar(s.salida);
+    const fallas = pintarResultados(parsed);
+    const hora = new Date(s.hora).toLocaleTimeString('es');
+    mostrarBarra(fallas ? 'offline' : 'online', (fallas ? `Con ${fallas} incidencias` : 'Todo en orden') + ' · ' + hora, s.ruta || '');
+  }
+}
+
+if ($('test-btn')) {$('test-btn').addEventListener('click', () => {
+    if (window.sistema) window.sistema.ejecutar();
+  });
+}
+
+for (const [btn, id] of [['open-opentest', 'opentest'], ['open-chiller', 'chiller']]) {
+  if ($(btn)) $(btn).addEventListener('click', async () => {
+    if (!window.sistema || typeof window.sistema.abrirWeb !== 'function') { alert('Reinicia la app con main.js y preload.js actualizados.'); return; }
+    try {
+      const r = await window.sistema.abrirWeb(id);
+      if (r && r.ok === false) alert('No se pudo abrir el navegador: ' + (r.error || 'error desconocido'));
+    } catch (e) { alert('No se pudo abrir el navegador: ' + e.message); }
+  });
+}
+
+dibujarRectificadores();
+dibujarIzumis();
+mostrarIP();
+
+if (window.sistema) {
+  window.sistema.onEstado(aplicarEstado);
+  if (typeof window.sistema.onInstrumentos === 'function') {
+    window.sistema.onInstrumentos(aplicarInstrumentos);   // actualizaciones en vivo (segundo plano)
+  }
+  verificarInstrumentosReales();                           // estado inicial
+  window.sistema.onConsoleLog((texto) => {
+    const body = $('console-body');
+    if (body) {
+      body.textContent += texto;
+      body.scrollTop = body.scrollHeight;
+    }
+  });
+  window.sistema.estado().then(aplicarEstado);
+} else {
+  mostrarBarra('offline', 'Abre la app mediante Electron', '');
+}
+  
+/* ===================== ACTUALIZACIÓN DE RECTIFICADORES ===================== */
+const CMDS_KEY = 'rectificadores_comandos_v1';
+const MAX_DOM_LINEAS = 3000;      // líneas visibles en pantalla (el log completo se guarda en disco)
+const MAX_COLA_LINEAS = 50000;    // tope de la cola si la ventana no alcanza a pintar
+const MAX_LARGO_LINEA = 4000;
+const LEVER_TRAVEL = 144;         // recorrido de la palanca en px (pista 200 - perilla 56)
+
+let comandos = [];
+let cmdEstado = { fase: 'reposo', total: 0, completados: 0, actual: -1, resultados: [] };
+let lineasTotales = 0;
+let lineasOmitidas = 0;
+let colaLineas = [];
+let rafPendiente = false;
+let seguirSalida = true;
+let timerReloj = null;
+let leverY = 0;
+let arrastrando = false;
+let grabDy = 0;
+
+const omitEl = document.createElement('div');
+omitEl.className = 'cl omit';
+
+const estaEjecutando = () => cmdEstado.fase === 'ejecutando';
+const haySistemaCmds = () => !!(window.sistema && typeof window.sistema.cmdsEjecutar === 'function');
+
+function cargarComandos() {
+  try {
+    const r = JSON.parse(localStorage.getItem(CMDS_KEY) || '[]');
+    if (Array.isArray(r)) comandos = r.filter((x) => typeof x === 'string');
+  } catch (e) {}
+}
+function guardarComandos() {
+  try { localStorage.setItem(CMDS_KEY, JSON.stringify(comandos)); } catch (e) {}
+}
+
+/* ---------- Lista de comandos ---------- */
+const ICONOS_ESTADO = { pendiente: '○', ok: '✓', fallo: '✕', detenido: '■' };
+
+function renderComandos() {
+  const ul = $('cmd-list');
+  ul.textContent = '';
+  const bloqueado = estaEjecutando();
+  const usarEstado = cmdEstado.fase !== 'reposo' && (cmdEstado.resultados || []).length === comandos.length;
+
+  if (!comandos.length) {
+    const li = document.createElement('li');
+    li.className = 'cmd-empty';
+    li.textContent = 'Aún no hay comandos. Escribe uno arriba y presiona Enter.';
+    ul.appendChild(li);
+  }
+
+  comandos.forEach((c, i) => {
+    const est = usarEstado ? cmdEstado.resultados[i] : 'pendiente';
+    const li = document.createElement('li');
+    li.className = 'cmd-item ' + est;
+
+    const n = document.createElement('span');
+    n.className = 'cmd-n';
+    n.textContent = String(i + 1);
+
+    const code = document.createElement('code');
+    code.className = 'cmd-text';
+    code.textContent = c;
+    code.title = c;
+
+    const st = document.createElement('span');
+    st.className = 'cmd-st';
+    if (est === 'ejecutando') {
+      const sp = document.createElement('span');
+      sp.className = 'spin';
+      st.appendChild(sp);
+    } else {
+      st.textContent = ICONOS_ESTADO[est] || '○';
+    }
+
+    const del = document.createElement('button');
+    del.className = 'cmd-del';
+    del.type = 'button';
+    del.title = 'Quitar';
+    del.textContent = '×';
+    del.disabled = bloqueado;
+    del.addEventListener('click', () => {
+      comandos.splice(i, 1);
+      guardarComandos();
+      renderComandos();
+    });
+
+    li.append(n, code, st, del);
+    ul.appendChild(li);
+  });
+
+  $('cmd-count').textContent = comandos.length + (comandos.length === 1 ? ' comando' : ' comandos');
+  $('cmd-add-btn').disabled = bloqueado;
+  $('cmd-input').disabled = bloqueado;
+  $('cmd-clear-btn').disabled = bloqueado || !comandos.length;
+  $('stop-on-fail').disabled = bloqueado;
+}
+
+function agregarDesdeInput() {
+  const inp = $('cmd-input');
+  const nuevos = inp.value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+  if (!nuevos.length) return;
+  for (const c of nuevos) comandos.push(c);
+  inp.value = '';
+  guardarComandos();
+  renderComandos();
+  const ul = $('cmd-list');
+  ul.scrollTop = ul.scrollHeight;
+  inp.focus();
+}
+
+$('cmd-add-btn').addEventListener('click', agregarDesdeInput);
+$('cmd-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    agregarDesdeInput();
+  }
+});
+$('cmd-clear-btn').addEventListener('click', () => {
+  if (estaEjecutando()) return;
+  comandos = [];
+  guardarComandos();
+  renderComandos();
+});
+
+/* ---------- Consola: salida muy larga ---------- */
+function actualizarMeta() {
+  let t = lineasTotales.toLocaleString('es') + (lineasTotales === 1 ? ' línea' : ' líneas');
+  if (lineasOmitidas > 0) t += ' · mostrando las últimas ' + MAX_DOM_LINEAS.toLocaleString('es');
+  $('uc-meta').textContent = t;
+}
+
+function recibirLineas(arr) {
+  if (!Array.isArray(arr)) return;
+  for (let i = 0; i < arr.length; i++) colaLineas.push(arr[i]);
+  if (colaLineas.length > MAX_COLA_LINEAS) {
+    const sobran = colaLineas.length - MAX_DOM_LINEAS;
+    colaLineas.splice(0, sobran);
+    lineasOmitidas += sobran;
+    lineasTotales += sobran;
+  }
+  if (!rafPendiente) {
+    rafPendiente = true;
+    requestAnimationFrame(vaciarCola);
+  }
+}
+
+function vaciarCola() {
+  rafPendiente = false;
+  if (!colaLineas.length) return;
+  const body = $('uc-body');
+  let lote = colaLineas;
+  colaLineas = [];
+  lineasTotales += lote.length;
+  if (lote.length > MAX_DOM_LINEAS) {
+    lineasOmitidas += lote.length - MAX_DOM_LINEAS;
+    lote = lote.slice(-MAX_DOM_LINEAS);
+  }
+
+  const ph = body.querySelector('.placeholder');
+  if (ph) ph.remove();
+
+  const frag = document.createDocumentFragment();
+  for (const l of lote) {
+    const d = document.createElement('div');
+    d.className = 'cl ' + (l.t || 'out');
+    const txt = String(l.s);
+    d.textContent = txt.length > MAX_LARGO_LINEA ? txt.slice(0, MAX_LARGO_LINEA) + ' …[línea truncada en pantalla]' : (txt === '' ? ' ' : txt);
+    frag.appendChild(d);
+  }
+  body.appendChild(frag);
+
+  let enDom = body.childElementCount - (omitEl.parentNode === body ? 1 : 0);
+  while (enDom > MAX_DOM_LINEAS) {
+    const n = omitEl.parentNode === body ? omitEl.nextElementSibling : body.firstElementChild;
+    if (!n) break;
+    n.remove();
+    enDom--;
+    lineasOmitidas++;
+  }
+  if (lineasOmitidas > 0) {
+    omitEl.textContent = '… ' + lineasOmitidas.toLocaleString('es') + ' líneas anteriores fuera de pantalla (están completas en el log)';
+    if (omitEl.parentNode !== body) body.insertBefore(omitEl, body.firstChild);
+  }
+
+  actualizarMeta();
+  if (seguirSalida) body.scrollTop = body.scrollHeight;
+}
+
+function pintarSeguir() {
+  $('uc-follow').classList.toggle('is-on', seguirSalida);
+}
+$('uc-body').addEventListener('scroll', () => {
+  const b = $('uc-body');
+  const alFinal = b.scrollTop + b.clientHeight >= b.scrollHeight - 30;
+  if (alFinal !== seguirSalida) { seguirSalida = alFinal; pintarSeguir(); }
+});
+$('uc-follow').addEventListener('click', () => {
+  seguirSalida = !seguirSalida;
+  pintarSeguir();
+  if (seguirSalida) $('uc-body').scrollTop = $('uc-body').scrollHeight;
+});
+$('uc-clear').addEventListener('click', () => {
+  colaLineas = [];
+  lineasTotales = 0;
+  lineasOmitidas = 0;
+  $('uc-body').textContent = '';
+  actualizarMeta();
+});
+$('uc-log').addEventListener('click', () => {
+  if (window.sistema && typeof window.sistema.cmdsAbrirLog === 'function') window.sistema.cmdsAbrirLog();
+});
+
+/* ---------- Progreso ---------- */
+function formatoTiempo(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  const dos = (n) => String(n).padStart(2, '0');
+  return (h ? dos(h) + ':' : '') + dos(m) + ':' + dos(s);
+}
+function pintarReloj() {
+  const s = cmdEstado;
+  if (!s.inicio) { $('prog-time').textContent = 'Tiempo: 00:00'; return; }
+  const fin = s.fase === 'ejecutando' ? Date.now() : (s.fin || Date.now());
+  $('prog-time').textContent = 'Tiempo: ' + formatoTiempo(fin - s.inicio);
+}
+
+function aplicarEstadoCmds(s) {
+  if (!s) return;
+  cmdEstado = Object.assign({ fase: 'reposo', total: 0, completados: 0, actual: -1, resultados: [] }, s);
+  const f = cmdEstado.fase;
+  const total = cmdEstado.total || 0;
+  const hechos = cmdEstado.completados || 0;
+
+  let pct = total ? Math.floor((hechos / total) * 100) : 0;
+  if (f === 'listo') pct = 100;
+  $('prog-pct').textContent = pct + '%';
+  $('prog-done').style.width = pct + '%';
+  $('prog-active').style.width = (f === 'ejecutando' && total ? Math.min(100, ((hechos + 1) / total) * 100) : 0) + '%';
+
+  const card = $('prog-card');
+  card.classList.toggle('running', f === 'ejecutando');
+  card.classList.toggle('ok', f === 'listo');
+  card.classList.toggle('err', f === 'error');
+  card.classList.toggle('stop', f === 'detenido');
+
+  let estado, sub;
+  if (f === 'ejecutando') {
+    estado = 'Ejecutando comando ' + (cmdEstado.actual + 1) + ' de ' + total;
+    sub = hechos + ' de ' + total + ' completados';
+  } else if (f === 'listo') {
+    estado = 'Completado';
+    sub = total + ' de ' + total + ' comandos';
+  } else if (f === 'error') {
+    estado = 'Finalizado con errores';
+    sub = hechos + ' de ' + total + ' comandos ejecutados';
+  } else if (f === 'detenido') {
+    estado = 'Detenido';
+    sub = hechos + ' de ' + total + ' comandos completados';
+  } else {
+    estado = 'En reposo';
+    sub = comandos.length + (comandos.length === 1 ? ' comando en la lista' : ' comandos en la lista');
+  }
+  $('prog-state').textContent = estado;
+  $('prog-sub').textContent = sub;
+  $('prog-log').textContent = cmdEstado.logPath ? 'Log: ' + cmdEstado.logPath : '';
+
+  if (f === 'ejecutando' && !timerReloj) timerReloj = setInterval(pintarReloj, 500);
+  if (f !== 'ejecutando' && timerReloj) { clearInterval(timerReloj); timerReloj = null; }
+  pintarReloj();
+
+  $('lever-state').textContent = f === 'ejecutando' ? 'EN MARCHA' : 'LISTO';
+  if (!arrastrando) {
+    if (f === 'ejecutando') {
+      posicion(1);
+      setHint('Sube la palanca para detener');
+    } else {
+      posicion(0);
+      setHint(f === 'listo' ? 'Proceso completado · palanca en reposo'
+        : f === 'detenido' ? 'Proceso detenido · palanca en reposo'
+        : f === 'error' ? 'Terminó con errores · revisa la consola'
+        : 'Baja la palanca para ejecutar');
+    }
+  }
+  renderComandos();
+}
+
+/* ---------- Palanca ---------- */
+const leverHandle = $('lever-handle');
+const leverTrack = $('lever-track');
+
+function setHint(t) { $('lever-hint').textContent = t; }
+
+function posicion(v) {
+  leverY = v ? LEVER_TRAVEL : 0;
+  leverHandle.style.setProperty('--y', leverY + 'px');
+  $('lever-card').classList.toggle('on', !!v);
+  leverHandle.setAttribute('aria-valuenow', v ? '1' : '0');
+}
+
+function sacudir() {
+  leverHandle.classList.remove('shake');
+  void leverHandle.offsetWidth;
+  leverHandle.classList.add('shake');
+}
+
+async function iniciarEjecucion() {
+  if (estaEjecutando()) { posicion(1); return; }
+  if (!haySistemaCmds()) {
+    setHint('Abre la app mediante Electron para ejecutar comandos');
+    posicion(0); sacudir(); return;
+  }
+  if (!comandos.length) {
+    setHint('Agrega al menos un comando a la lista');
+    posicion(0); sacudir(); return;
+  }
+  posicion(1);
+  setHint('Iniciando…');
+  try {
+    const r = await window.sistema.cmdsEjecutar(comandos.slice(), $('stop-on-fail').checked);
+    if (r && r.ok === false) {
+      setHint(r.error || 'No se pudo iniciar');
+      posicion(0); sacudir();
+    }
+  } catch (e) {
+    setHint('Error al iniciar: ' + e.message);
+    posicion(0);
+  }
+}
+
+function detenerEjecucion() {
+  posicion(0);
+  if (estaEjecutando() && haySistemaCmds()) {
+    setHint('Deteniendo…');
+    window.sistema.cmdsDetener();
+  }
+}
+
+function decidirPalanca(frac) {
+  if (estaEjecutando()) {
+    if (frac < 0.5) detenerEjecucion(); else posicion(1);
+  } else {
+    if (frac >= 0.75) iniciarEjecucion(); else posicion(0);
+  }
+}
+
+leverHandle.addEventListener('pointerdown', (e) => {
+  if (e.button !== undefined && e.button !== 0) return;
+  arrastrando = true;
+  leverTrack.classList.add('dragging');
+  grabDy = e.clientY - leverHandle.getBoundingClientRect().top;
+  leverHandle.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+leverHandle.addEventListener('pointermove', (e) => {
+  if (!arrastrando) return;
+  const r = leverTrack.getBoundingClientRect();
+  leverY = Math.max(0, Math.min(LEVER_TRAVEL, e.clientY - r.top - grabDy));
+  leverHandle.style.setProperty('--y', leverY + 'px');
+});
+function soltarPalanca() {
+  if (!arrastrando) return;
+  arrastrando = false;
+  leverTrack.classList.remove('dragging');
+  decidirPalanca(leverY / LEVER_TRAVEL);
+}
+leverHandle.addEventListener('pointerup', soltarPalanca);
+leverHandle.addEventListener('pointercancel', soltarPalanca);
+leverHandle.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); iniciarEjecucion(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); detenerEjecucion(); }
+  else if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    if (estaEjecutando()) detenerEjecucion(); else iniciarEjecucion();
+  }
+});
+
+/* ---------- Arranque ---------- */
+cargarComandos();
+renderComandos();
+posicion(0);
+aplicarEstadoCmds({ fase: 'reposo' });
+if (window.sistema && typeof window.sistema.onCmdsEstado === 'function') {
+  window.sistema.onCmdsEstado(aplicarEstadoCmds);
+  window.sistema.onCmdsSalida(recibirLineas);
+  window.sistema.cmdsEstado().then(aplicarEstadoCmds).catch(() => {});
+}
+
+/* ===================== REMPLAZAR IZUMI ===================== */
+async function abrirArchivosDhcp(btn) {
+  const cual = btn.dataset.dhcp;
+  const cont = $('izu-res');
+  cont.textContent = '';
+  const linea = (ok, texto) => {
+    const d = document.createElement('div');
+    d.className = ok ? 'ok' : 'bad';
+    d.textContent = texto;
+    cont.appendChild(d);
+  };
+
+  if (!window.sistema || typeof window.sistema.abrirDhcp !== 'function') {
+    linea(false, 'No disponible: abre la app mediante Electron y reiníciala si acabas de actualizar main.js y preload.js.');
+    return;
+  }
+  btn.disabled = true;
+  try {
+    const r = await window.sistema.abrirDhcp(cual);
+    const x = r && r[cual];
+    if (x) linea(x.ok, x.ok ? 'Abierto: ' + x.ruta : x.ruta + ' — ' + (x.error || 'no se pudo abrir'));
+    else linea(false, 'No se recibió respuesta del sistema.');
+  } catch (e) {
+    linea(false, 'Error: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+document.querySelectorAll('.izu-open').forEach((b) => b.addEventListener('click', () => abrirArchivosDhcp(b)));
+
+/* ---------- Calculadora hexadecimal (BigInt: sin pérdida de precisión) ---------- */
+const MAX_HEX_DIGITOS = 64;
+const OPS_HEX = { add: '+', sub: '−', mul: '×', div: '÷', and: 'AND', or: 'OR', xor: 'XOR', shl: '<<', shr: '>>' };
+const HEX = { acc: null, op: null, entrada: '', reinicio: false, error: null, expr: '' };
+
+const aBig = (h) => BigInt('0x' + (h === '' ? '0' : h));
+const hexStr = (n) => (n < 0n ? '-' : '') + (n < 0n ? -n : n).toString(16).toUpperCase();
+function binStr(n) {
+  let b = (n < 0n ? -n : n).toString(2);
+  while (b.length % 4) b = '0' + b;
+  return (n < 0n ? '-' : '') + b.replace(/(.{4})(?=.)/g, '$1 ');
+}
+
+function calcularHex(a, op, b) {
+  switch (op) {
+    case 'add': return a + b;
+    case 'sub': return a - b;
+    case 'mul': return a * b;
+    case 'div':
+      if (b === 0n) throw new Error('División entre 0');
+      return a / b;
+    case 'and': return a & b;
+    case 'or':  return a | b;
+    case 'xor': return a ^ b;
+    case 'shl':
+    case 'shr':
+      if (b > 1024n) throw new Error('Desplazamiento demasiado grande');
+      return op === 'shl' ? a << b : a >> b;
+    default: throw new Error('Operación no válida');
+  }
+}
+
+function hexValorActual() {
+  if (HEX.entrada !== '') return aBig(HEX.entrada);
+  return HEX.acc !== null ? HEX.acc : 0n;
+}
+
+function hexPintar() {
+  const disp = $('hex-disp');
+  if (HEX.error) {
+    disp.textContent = HEX.error;
+    disp.classList.add('error');
+    disp.style.fontSize = '';
+    $('hex-v-hex').textContent = $('hex-v-dec').textContent = $('hex-v-bin').textContent = '—';
+    $('hex-expr').textContent = HEX.expr;
+    return;
+  }
+  disp.classList.remove('error');
+  const v = hexValorActual();
+  const texto = HEX.entrada !== '' ? HEX.entrada : hexStr(v);
+  disp.textContent = texto;
+  disp.style.fontSize = texto.length > 32 ? '14px' : texto.length > 20 ? '18px' : texto.length > 12 ? '22px' : '';
+  $('hex-v-hex').textContent = hexStr(v);
+  $('hex-v-dec').textContent = v.toString(10);
+  $('hex-v-bin').textContent = binStr(v);
+  $('hex-expr').textContent = HEX.expr;
+  document.querySelectorAll('.hex-key.op').forEach((k) => {
+    k.classList.toggle('on', !!HEX.op && k.dataset.op === HEX.op && HEX.entrada === '');
+  });
+}
+
+function hexReset() {
+  HEX.acc = null; HEX.op = null; HEX.entrada = ''; HEX.reinicio = false; HEX.error = null; HEX.expr = '';
+  hexPintar();
+}
+
+function hexDigito(d) {
+  if (HEX.error) hexReset();
+  if (HEX.reinicio) { HEX.acc = null; HEX.op = null; HEX.entrada = ''; HEX.expr = ''; HEX.reinicio = false; }
+  if (HEX.entrada.length >= MAX_HEX_DIGITOS) return;
+  HEX.entrada = (HEX.entrada === '' || HEX.entrada === '0') ? d : HEX.entrada + d;
+  hexPintar();
+}
+
+function hexBorrar() {
+  if (HEX.error) { hexReset(); return; }
+  if (HEX.entrada !== '') HEX.entrada = HEX.entrada.slice(0, -1);
+  hexPintar();
+}
+
+function hexOperador(o) {
+  if (HEX.error) return;
+  HEX.reinicio = false;
+  try {
+    if (HEX.entrada !== '') {
+      const b = aBig(HEX.entrada);
+      HEX.acc = (HEX.acc !== null && HEX.op) ? calcularHex(HEX.acc, HEX.op, b) : b;
+      HEX.entrada = '';
+    } else if (HEX.acc === null) {
+      HEX.acc = 0n;
+    }
+    HEX.op = o;
+    HEX.expr = hexStr(HEX.acc) + ' ' + OPS_HEX[o];
+  } catch (e) {
+    HEX.error = e.message;
+  }
+  hexPintar();
+}
+
+function hexIgual() {
+  if (HEX.error || !HEX.op || HEX.entrada === '') return;
+  try {
+    const b = aBig(HEX.entrada);
+    const previo = hexStr(HEX.acc) + ' ' + OPS_HEX[HEX.op] + ' ' + hexStr(b) + ' =';
+    HEX.acc = calcularHex(HEX.acc, HEX.op, b);
+    HEX.expr = previo;
+    HEX.op = null; HEX.entrada = ''; HEX.reinicio = true;
+  } catch (e) {
+    HEX.error = e.message;
+  }
+  hexPintar();
+}
+
+function construirTecladoHex() {
+  const T = [
+    { t: 'AC', c: 'clr', a: 'ac' }, { t: '⌫', c: 'op', a: 'back' }, { t: '<<', c: 'op', o: 'shl' }, { t: '>>', c: 'op', o: 'shr' },
+    { t: 'AND', c: 'op', o: 'and' }, { t: 'OR', c: 'op', o: 'or' }, { t: 'XOR', c: 'op', o: 'xor' }, { t: '÷', c: 'op', o: 'div' },
+    { t: 'D', c: 'letra', d: 'D' }, { t: 'E', c: 'letra', d: 'E' }, { t: 'F', c: 'letra', d: 'F' }, { t: '×', c: 'op', o: 'mul' },
+    { t: 'A', c: 'letra', d: 'A' }, { t: 'B', c: 'letra', d: 'B' }, { t: 'C', c: 'letra', d: 'C' }, { t: '−', c: 'op', o: 'sub' },
+    { t: '7', d: '7' }, { t: '8', d: '8' }, { t: '9', d: '9' }, { t: '+', c: 'op', o: 'add' },
+    { t: '4', d: '4' }, { t: '5', d: '5' }, { t: '6', d: '6' }, { t: '=', c: 'eq', a: 'eq' },
+    { t: '1', d: '1' }, { t: '2', d: '2' }, { t: '3', d: '3' },
+    { t: '0', c: 'cero', d: '0' }
+  ];
+  const cont = $('hex-keys');
+  for (const k of T) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hex-key' + (k.c ? ' ' + k.c : '');
+    b.textContent = k.t;
+    if (k.d) b.dataset.d = k.d;
+    if (k.o) b.dataset.op = k.o;
+    if (k.a) b.dataset.act = k.a;
+    cont.appendChild(b);
+  }
+  cont.addEventListener('click', (e) => {
+    const b = e.target.closest('.hex-key');
+    if (!b) return;
+    if (b.dataset.d) hexDigito(b.dataset.d);
+    else if (b.dataset.op) hexOperador(b.dataset.op);
+    else if (b.dataset.act === 'ac') hexReset();
+    else if (b.dataset.act === 'back') hexBorrar();
+    else if (b.dataset.act === 'eq') hexIgual();
+  });
+}
+
+async function copiarTexto(t) {
+  try {
+    await navigator.clipboard.writeText(t);
+  } catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = t;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e2) {}
+    ta.remove();
+  }
+}
+
+document.querySelectorAll('.hex-row button[data-copy]').forEach((b) => {
+  b.addEventListener('click', async () => {
+    const id = 'hex-v-' + b.dataset.copy;
+    let t = $(id).textContent;
+    if (b.dataset.copy === 'bin') t = t.replace(/ /g, '');
+    if (t === '—') return;
+    await copiarTexto(t);
+    const antes = b.textContent;
+    b.textContent = 'Copiado';
+    setTimeout(() => { b.textContent = antes; }, 900);
+  });
+});
+
+// Teclado: solo cuando esta sección está visible
+document.addEventListener('keydown', (e) => {
+  const sec = $('remplazar-izumi');
+  if (!sec || !sec.classList.contains('active')) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+  if (t && t.closest && t.closest('button') && !t.closest('.hex-card')) return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+  const k = e.key;
+  let atendida = true;
+  if (/^[0-9a-fA-F]$/.test(k)) hexDigito(k.toUpperCase());
+  else if (k === '+') hexOperador('add');
+  else if (k === '-') hexOperador('sub');
+  else if (k === '*') hexOperador('mul');
+  else if (k === '/') hexOperador('div');
+  else if (k === '&') hexOperador('and');
+  else if (k === '|') hexOperador('or');
+  else if (k === '^') hexOperador('xor');
+  else if (k === '<') hexOperador('shl');
+  else if (k === '>') hexOperador('shr');
+  else if (k === 'Enter' || k === '=') hexIgual();
+  else if (k === 'Backspace') hexBorrar();
+  else if (k === 'Escape') hexReset();
+  else atendida = false;
+  if (atendida) e.preventDefault();
+});
+
+construirTecladoHex();
+hexPintar();
+
+
+
+// CFG-INICIO
+(function () {
+  'use strict';
+  const q = (id) => document.getElementById(id);
+  const hayApi = () => !!(window.sistema && typeof window.sistema.cfgObtener === 'function');
+
+  const MAX_DOM = 3000;
+  const POR_DEFECTO = [
+    { id: 'server', nombre: 'SERVER' }, { id: 'juniper', nombre: 'JUNIPER' }, { id: 'tros', nombre: 'TROS' },
+    { id: 'zpe', nombre: 'ZPE' }, { id: 'daq', nombre: 'DAQ' }, { id: 'omron', nombre: 'SENSOR OMRON' }
+  ];
+
+  let dispositivos = POR_DEFECTO;
+  let archivos = {};
+  let sel = 'server';
+  let seguir = true;
+  const ocupados = new Set();
+
+  // consola
+  let cola = [];
+  let raf = false;
+  let ultimoId = 0;
+  let totales = 0;
+  let omitidas = 0;
+  let cargando = false;
+  let enEspera = [];
+  let token = 0;
+  const omitEl = document.createElement('div');
+  omitEl.className = 'cl omit';
+
+  const dos = (n) => String(n).padStart(2, '0');
+  const hora = (ms) => { const d = new Date(ms); return dos(d.getHours()) + ':' + dos(d.getMinutes()) + ':' + dos(d.getSeconds()); };
+  function fmtTam(n) {
+    if (!n) return '0 B';
+    if (n < 1024) return n + ' B';
+    if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+    return (n / 1048576).toFixed(1) + ' MB';
+  }
+  const nombreDe = (id) => (dispositivos.find((d) => d.id === id) || { nombre: id }).nombre;
+
+  /* ---------- Equipos ---------- */
+  function renderDevs() {
+    const cont = q('cfg-devs');
+    cont.textContent = '';
+    for (const d of dispositivos) {
+      const lista = archivos[d.id] || [];
+      const enCurso = lista.filter((a) => a.corriendo).length;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'cfg-dev' + (d.id === sel ? ' sel' : '');
+      const dot = document.createElement('span');
+      dot.className = 'dot' + (enCurso ? ' busy' : '');
+      const nom = document.createElement('span');
+      nom.textContent = d.nombre;
+      const n = document.createElement('span');
+      n.className = 'n';
+      n.textContent = enCurso ? enCurso + ' en curso' : String(lista.length);
+      b.append(dot, nom, n);
+      b.addEventListener('click', () => seleccionar(d.id));
+      cont.appendChild(b);
+    }
+  }
+
+  /* ---------- Archivos del equipo ---------- */
+  function textoEstado(a) {
+    if (!a.existe) return 'El archivo ya no existe en su ubicación';
+    if (a.corriendo) return 'En ejecución desde ' + hora(a.corriendo.inicio);
+    if (a.ultimo) {
+      const e = a.ultimo.estado === 'ok' ? 'terminó bien' : a.ultimo.estado === 'detenido' ? 'detenido' : 'falló (código ' + a.ultimo.codigo + ')';
+      return 'Última ejecución ' + hora(a.ultimo.fin) + ' · ' + e;
+    }
+    return a.ejecutable ? 'Listo para ejecutar' : 'Documento (no se ejecuta)';
+  }
+
+  function crearSwitch(a) {
+    const wrap = document.createElement('div');
+    wrap.className = 'rat-wrap';
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'rat';
+    b.setAttribute('role', 'switch');
+    b.setAttribute('aria-checked', a.corriendo ? 'true' : 'false');
+    b.setAttribute('aria-label', 'Ejecutar ' + a.nombre);
+    b.title = a.corriendo ? 'Apagar: detener ' + a.nombre : 'Encender: ejecutar ' + a.nombre + ' en segundo plano';
+    b.disabled = ocupados.has(a.id) || (!a.existe && !a.corriendo);
+    for (const c of ['rat-plate', 'rat-nut', 'rat-lever']) {
+      const s = document.createElement('span');
+      s.className = c;
+      b.appendChild(s);
+    }
+    b.addEventListener('click', () => alternar(a));
+    const t = document.createElement('span');
+    t.className = 'rat-txt' + (a.corriendo ? ' on' : '');
+    t.textContent = a.corriendo ? 'ON' : 'OFF';
+    wrap.append(b, t);
+    return wrap;
+  }
+
+  function renderFiles() {
+    const lista = archivos[sel] || [];
+    q('cfg-dev-title').textContent = nombreDe(sel);
+    q('cfg-console-dev').textContent = nombreDe(sel);
+    q('cfg-dev-count').textContent = lista.length + (lista.length === 1 ? ' archivo' : ' archivos');
+    const ul = q('cfg-files');
+    ul.textContent = '';
+
+    if (!hayApi()) {
+      const li = document.createElement('li');
+      li.className = 'cfg-empty';
+      li.textContent = 'Esta sección necesita main.js y preload.js actualizados. Cierra la app y vuelve a correr npm start.';
+      ul.appendChild(li);
+      return;
+    }
+    if (!lista.length) {
+      const li = document.createElement('li');
+      li.className = 'cfg-empty';
+      li.textContent = 'Aún no hay archivos en ' + nombreDe(sel) + '. Presiona "Cargar archivo".';
+      ul.appendChild(li);
+      return;
+    }
+
+    for (const a of lista) {
+      const li = document.createElement('li');
+      let cls = 'cfg-file';
+      if (!a.existe) cls += ' missing';
+      else if (a.corriendo) cls += ' run';
+      else if (a.ultimo && a.ultimo.estado === 'ok') cls += ' ok';
+      else if (a.ultimo && a.ultimo.estado === 'fallo') cls += ' fail';
+      li.className = cls;
+
+      const ext = document.createElement('span');
+      ext.className = 'cfg-ext' + (a.ext === '.py' ? ' py' : '');
+      ext.textContent = a.ext ? a.ext.replace('.', '') : 'archivo';
+
+      const info = document.createElement('div');
+      info.className = 'cfg-info';
+      const nom = document.createElement('span');
+      nom.className = 'cfg-name';
+      nom.textContent = a.nombre;
+      nom.title = a.ruta;
+      const meta = document.createElement('span');
+      meta.className = 'cfg-meta';
+      meta.textContent = fmtTam(a.tam) + ' · ' + textoEstado(a);
+      meta.title = a.ruta;
+      info.append(nom, meta);
+
+      const acts = document.createElement('div');
+      acts.className = 'cfg-acts';
+      const abrir = document.createElement('button');
+      abrir.type = 'button';
+      abrir.className = 'btn btn-secundario btn-mini';
+      abrir.textContent = 'Abrir';
+      abrir.title = 'Abrir con el programa predeterminado del sistema';
+      abrir.addEventListener('click', () => abrirArchivo(a));
+      acts.appendChild(abrir);
+      if (a.ultimo || a.corriendo) {
+        const log = document.createElement('button');
+        log.type = 'button';
+        log.className = 'btn btn-secundario btn-mini';
+        log.textContent = 'Log';
+        log.title = 'Mostrar el log de la última ejecución';
+        log.addEventListener('click', () => window.sistema.cfgAbrirLog(a.id));
+        acts.appendChild(log);
+      }
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'cmd-del';
+      del.textContent = '×';
+      del.title = 'Quitar de la lista (no borra el archivo)';
+      del.addEventListener('click', () => quitar(a));
+      acts.appendChild(del);
+
+      li.append(ext, info, acts);
+      if (a.ejecutable) {
+        li.appendChild(crearSwitch(a));
+      } else {
+        const n = document.createElement('span');
+        n.className = 'cfg-noexec';
+        n.textContent = 'Solo archivo';
+        li.appendChild(n);
+      }
+      ul.appendChild(li);
+    }
+  }
+
+  /* ---------- Acciones ---------- */
+  async function alternar(a) {
+    if (ocupados.has(a.id)) return;
+    ocupados.add(a.id);
+    renderFiles();
+    try {
+      const r = a.corriendo ? await window.sistema.cfgDetener(a.id) : await window.sistema.cfgEjecutar(sel, a.id);
+      if (r && r.ok === false && r.error) local('err', r.error);
+    } catch (e) {
+      local('err', 'Error: ' + e.message);
+    } finally {
+      ocupados.delete(a.id);
+      renderFiles();
+    }
+  }
+
+  async function abrirArchivo(a) {
+    try {
+      const r = await window.sistema.cfgAbrir(a.id);
+      if (r && r.ok === false) local('err', 'No se pudo abrir ' + a.nombre + ': ' + (r.error || 'error desconocido'));
+    } catch (e) {
+      local('err', 'Error: ' + e.message);
+    }
+  }
+
+  async function quitar(a) {
+    if (a.corriendo && !window.confirm('«' + a.nombre + '» se está ejecutando. Se detendrá y se quitará de la lista. ¿Continuar?')) return;
+    try { await window.sistema.cfgQuitar(sel, a.id); } catch (e) { local('err', 'Error: ' + e.message); }
+  }
+
+  async function agregar() {
+    if (!hayApi()) { local('err', 'Reinicia la app con main.js y preload.js actualizados.'); return; }
+    const b = q('cfg-add-btn');
+    b.disabled = true;
+    try { await window.sistema.cfgAgregar(sel); } catch (e) { local('err', 'Error: ' + e.message); }
+    b.disabled = false;
+  }
+
+  /* ---------- Consola ---------- */
+  function actualizarMeta() {
+    let t = totales.toLocaleString('es') + (totales === 1 ? ' línea' : ' líneas');
+    if (omitidas > 0) t += ' · mostrando las últimas ' + MAX_DOM.toLocaleString('es');
+    q('cfg-meta').textContent = t;
+  }
+
+  function local(tipo, texto) {
+    cola.push({ t: tipo, s: texto, h: Date.now() });
+    programar();
+  }
+
+  function programar() {
+    if (!raf) { raf = true; requestAnimationFrame(vaciar); }
+  }
+
+  function recibir(arr) {
+    if (!Array.isArray(arr)) return;
+    for (const r of arr) {
+      if (typeof r.i === 'number') {
+        if (r.i <= ultimoId) continue;
+        ultimoId = r.i;
+      }
+      cola.push(r);
+    }
+    programar();
+  }
+
+  function vaciar() {
+    raf = false;
+    if (!cola.length) return;
+    const body = q('cfg-body');
+    let lote = cola;
+    cola = [];
+    totales += lote.length;
+    if (lote.length > MAX_DOM) { omitidas += lote.length - MAX_DOM; lote = lote.slice(-MAX_DOM); }
+
+    const ph = body.querySelector('.placeholder');
+    if (ph) ph.remove();
+
+    const varios = (archivos[sel] || []).filter((x) => x.ejecutable).length > 1;
+    const frag = document.createDocumentFragment();
+    for (const r of lote) {
+      const d = document.createElement('div');
+      d.className = 'cl ' + (r.t || 'out');
+      const t = document.createElement('span');
+      t.className = 'cfg-t';
+      t.textContent = hora(r.h) + '  ';
+      d.appendChild(t);
+      const pref = (varios && r.n && r.t !== 'sys') ? '[' + r.n + '] ' : '';
+      const txt = pref + String(r.s);
+      d.appendChild(document.createTextNode(txt === '' ? ' ' : txt));
+      frag.appendChild(d);
+    }
+    body.appendChild(frag);
+
+    let extra = body.childElementCount - (omitEl.parentNode === body ? 1 : 0) - MAX_DOM;
+    while (extra > 0) {
+      const n = omitEl.parentNode === body ? omitEl.nextElementSibling : body.firstElementChild;
+      if (!n) break;
+      n.remove();
+      omitidas++;
+      extra--;
+    }
+    if (omitidas > 0) {
+      omitEl.textContent = '… ' + omitidas.toLocaleString('es') + ' líneas anteriores fuera de pantalla (están completas en el log)';
+      if (omitEl.parentNode !== body) body.insertBefore(omitEl, body.firstChild);
+    }
+    actualizarMeta();
+    if (seguir) body.scrollTop = body.scrollHeight;
+  }
+
+  async function cargarHistorial() {
+    const body = q('cfg-body');
+    const mio = ++token;
+    body.textContent = '';
+    cola = []; enEspera = [];
+    totales = 0; omitidas = 0; ultimoId = 0;
+    const ph = document.createElement('div');
+    ph.className = 'cl sys placeholder';
+    ph.textContent = 'Aún no hay actividad en ' + nombreDe(sel) + '.';
+    body.appendChild(ph);
+    actualizarMeta();
+    if (!hayApi()) return;
+    cargando = true;
+    try {
+      const h = await window.sistema.cfgHistorial(sel);
+      if (mio !== token) return;
+      recibir(h);
+    } catch (e) {}
+    if (mio === token) {
+      cargando = false;
+      const pend = enEspera;
+      enEspera = [];
+      recibir(pend);
+    }
+  }
+
+  function seleccionar(id) {
+    sel = id;
+    renderDevs();
+    renderFiles();
+    cargarHistorial();
+  }
+
+  function aplicar(s) {
+    if (s && s.dispositivos) archivos = s.dispositivos;
+    renderDevs();
+    renderFiles();
+  }
+
+  /* ---------- Arranque ---------- */
+  q('cfg-add-btn').addEventListener('click', agregar);
+  q('cfg-follow').addEventListener('click', () => {
+    seguir = !seguir;
+    q('cfg-follow').classList.toggle('is-on', seguir);
+    if (seguir) q('cfg-body').scrollTop = q('cfg-body').scrollHeight;
+  });
+  q('cfg-log').addEventListener('click', () => { if (hayApi()) window.sistema.cfgAbrirLog(null); });
+  q('cfg-clear').addEventListener('click', () => {
+    cola = []; totales = 0; omitidas = 0;
+    q('cfg-body').textContent = '';
+    actualizarMeta();
+  });
+  q('cfg-body').addEventListener('scroll', () => {
+    const b = q('cfg-body');
+    const alFinal = b.scrollTop + b.clientHeight >= b.scrollHeight - 30;
+    if (alFinal !== seguir) { seguir = alFinal; q('cfg-follow').classList.toggle('is-on', seguir); }
+  });
+
+  // Al abrir la sección se refresca el estado
+  document.querySelectorAll('.nav-link[data-section="configuracion"]').forEach((l) => {
+    l.addEventListener('click', () => {
+      if (hayApi()) window.sistema.cfgObtener().then(aplicar).catch(() => {});
+    });
+  });
+
+  renderDevs();
+  renderFiles();
+  cargarHistorial();
+
+  if (hayApi()) {
+    window.sistema.cfgObtener().then((r) => {
+      dispositivos = r.lista || POR_DEFECTO;
+      sel = dispositivos[0].id;
+      aplicar(r);
+      return cargarHistorial();
+    }).catch(() => {});
+    window.sistema.onCfgEstado(aplicar);
+    window.sistema.onCfgSalida((d) => {
+      if (!d || d.dev !== sel) return;
+      if (cargando) enEspera.push(...d.lineas); else recibir(d.lineas);
+    });
+  }
+})();
+
+// CFG-FIN
+
+// TC-INICIO
+(function () {
+  'use strict';
+  const q = (id) => document.getElementById(id);
+  const hayApi = () => !!(window.sistema && typeof window.sistema.tcObtener === 'function');
+  const N = 16;
+  const MAX_DOM = 3000;
+  const PATRON = /^[A-Za-z0-9._\-]*$/;
+  const ETQ_JOB = { escaneo: 'Detectando unidades', ejecucion: 'Ejecutando UUT_case' };
+
+  let slots = Array.from({ length: N }, () => ({ parte: '', serial: '' }));
+  let ruta = '', existe = false, job = null, dirty = false;
+  const sel = new Set();
+  const filas = [];           // { tr, chk, parte, serial, det }
+
+  // consola
+  let cola = [], raf = false, ultimoId = 0, totales = 0, omitidas = 0, seguir = true;
+  let cargando = false, enEspera = [], token = 0;
+  const omitEl = document.createElement('div');
+  omitEl.className = 'cl omit';
+
+  const dos = (n) => String(n).padStart(2, '0');
+  const hora = (ms) => { const d = new Date(ms); return dos(d.getHours()) + ':' + dos(d.getMinutes()) + ':' + dos(d.getSeconds()); };
+
+  /* ---------- Tabla ---------- */
+  function construirTabla() {
+    const tb = q('tc-rows');
+    tb.textContent = '';
+    for (let i = 0; i < N; i++) {
+      const tr = document.createElement('tr');
+      const celda = (el, cls) => { const td = document.createElement('td'); if (cls) td.className = cls; td.appendChild(el); tr.appendChild(td); return td; };
+      const chk = document.createElement('input');
+      chk.type = 'checkbox';
+      chk.addEventListener('change', () => {
+        if (chk.checked) sel.add(i + 1); else sel.delete(i + 1);
+        tr.classList.toggle('sel', chk.checked);
+        q('tc-all').checked = sel.size === N;
+        q('tc-all').indeterminate = sel.size > 0 && sel.size < N;
+      });
+      celda(chk, 'c-chk');
+      const n = document.createElement('span');
+      n.className = 'tc-n';
+      n.textContent = dos(i + 1);
+      celda(n, 'c-n');
+      const mk = (campo, ph) => {
+        const inp = document.createElement('input');
+        inp.type = 'text'; inp.className = 'tc-in'; inp.placeholder = ph; inp.maxLength = 60;
+        inp.spellcheck = false; inp.autocomplete = 'off';
+        inp.addEventListener('input', () => {
+          slots[i][campo] = inp.value;
+          inp.classList.toggle('mal', !PATRON.test(inp.value.trim()));
+          dirty = true;
+        });
+        return inp;
+      };
+      const parte = mk('parte', 'CORRIJA_PARTE');
+      const serial = mk('serial', 'CORRIJA_SERIAL');
+      celda(parte); celda(serial);
+      const pill = () => { const s = document.createElement('span'); s.className = 'tc-st'; s.textContent = '—'; return s; };
+      const det = pill();
+      celda(det, 'c-st');
+      tb.appendChild(tr);
+      filas.push({ tr, chk, parte, serial, det });
+    }
+  }
+
+  function pintarPill(el, clase, texto, titulo) {
+    el.className = 'tc-st' + (clase ? ' ' + clase : '');
+    el.textContent = texto;
+    el.title = titulo || texto;
+  }
+
+  function pintarValores() {
+    for (let i = 0; i < N; i++) {
+      filas[i].parte.value = slots[i].parte;
+      filas[i].serial.value = slots[i].serial;
+      filas[i].parte.classList.remove('mal');
+      filas[i].serial.classList.remove('mal');
+    }
+  }
+
+  function limpiarEstados(cols, nums) {
+    for (const n of nums || Array.from({ length: N }, (_, i) => i + 1)) {
+      const f = filas[n - 1];
+      if (cols.includes('det')) pintarPill(f.det, '', '—');
+    }
+  }
+
+  /* ---------- Estado general ---------- */
+  function ocupado() { return !!job; }
+
+  function aplicarJob() {
+    const b = ocupado();
+    const disab = ['tc-auto', 'tc-guardar', 'tc-recargar', 'tc-run-all', 'tc-run-sel', 'tc-cambiar'];
+    for (const id of disab) q(id).disabled = b;
+    q('tc-all').disabled = b;
+    for (const f of filas) { f.parte.disabled = b; f.serial.disabled = b; f.chk.disabled = b; }
+    q('tc-stop').hidden = !b;
+    const p = q('tc-prog');
+    p.hidden = !b;
+    if (b) {
+      const fijo = job.tipo !== 'ejecucion' && job.total > 0;
+      p.classList.toggle('indet', !fijo);
+      q('tc-prog-txt').textContent = ETQ_JOB[job.tipo] || 'Trabajando';
+      q('tc-prog-n').textContent = fijo ? job.hechos + ' / ' + job.total : '';
+      q('tc-prog-fill').style.width = fijo ? Math.round((job.hechos / job.total) * 100) + '%' : '';
+    }
+  }
+
+  function aplicarRuta() {
+    q('tc-ruta').textContent = ruta || '—';
+    q('tc-ruta').title = ruta || '';
+    const e = q('tc-existe');
+    e.textContent = existe ? 'existe' : 'sin crear';
+    e.classList.toggle('ok', existe);
+  }
+
+  function aplicarEstado(s) {
+    if (!s) return;
+    const habiaJob = !!job;
+    const rutaAntes = ruta;
+    if (typeof s.ruta === 'string') ruta = s.ruta;
+    if (typeof s.existe === 'boolean') existe = s.existe;
+    job = s.job || null;
+    if ((habiaJob && !job) || (rutaAntes && rutaAntes !== ruta)) refrescarVisor();
+    aplicarRuta();
+    aplicarJob();
+  }
+
+  /* ---------- Validaciones previas ---------- */
+  function revisarCampos() {
+    for (let i = 0; i < N; i++) {
+      for (const c of ['parte', 'serial']) {
+        const v = slots[i][c].trim();
+        if (v && !PATRON.test(v)) {
+          local('err', 'Slot ' + dos(i + 1) + ': ' + (c === 'parte' ? 'el número de parte' : 'el serial') + ' solo puede llevar letras, números, punto, guion y guion bajo.');
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+  const incompletos = (nums) => nums.filter((n) => !slots[n - 1].parte.trim() || !slots[n - 1].serial.trim());
+  const todos = () => Array.from({ length: N }, (_, i) => i + 1);
+  const seleccionados = () => [...sel].sort((a, b) => a - b);
+
+  /* ---------- Acciones ---------- */
+  async function llamar(fn) {
+    if (!hayApi()) { local('err', 'Reinicia la app con main.js y preload.js actualizados.'); return null; }
+    try {
+      const r = await fn();
+      if (r && r.ok === false && r.error) local('err', r.error);
+      return r;
+    } catch (e) {
+      local('err', 'Error: ' + e.message);
+      return null;
+    }
+  }
+
+  async function auto() {
+    const hay = existe || slots.some((s) => s.parte || s.serial);
+    if (hay && !window.confirm('Se detectarán las unidades de los 16 slots y se sobrescribirá ' + (ruta || 'el archivo UUT_case') + '. ¿Continuar?')) return;
+    limpiarEstados(['det']);
+    await llamar(() => window.sistema.tcEscanear());
+  }
+
+  async function guardar() {
+    if (!revisarCampos()) return;
+    const r = await llamar(() => window.sistema.tcGuardar(slots));
+    if (r && r.ok) { dirty = false; existe = true; aplicarRuta(); refrescarVisor(); }
+  }
+
+  async function recargar() {
+    if (dirty && !window.confirm('Hay cambios sin guardar en la tabla. ¿Descartarlos y leer el archivo?')) return;
+    const r = await llamar(() => window.sistema.tcObtener());
+    if (r && Array.isArray(r.slots)) {
+      slots = r.slots.map((s) => ({ parte: s.parte || '', serial: s.serial || '' }));
+      dirty = false;
+      pintarValores();
+      aplicarEstado(r);
+      local('sys', r.existe ? 'Tabla leída de ' + r.ruta : 'El archivo aún no existe; tabla vacía.');
+    }
+  }
+
+  async function correr(modo) {
+    const nums = modo === 'todos' ? todos() : seleccionados();
+    if (!nums.length) { local('err', 'Marca al menos un slot.'); return; }
+    if (!revisarCampos()) return;
+    const falta = incompletos(nums);
+    if (falta.length && !window.confirm('Faltan parte o serial en: ' + falta.map(dos).join(', ') + '.\nSe correrán con los valores CORRIJA_*. ¿Continuar?')) return;
+    if (modo === 'todos' && !window.confirm('Se correrá todo el UUT_case (16 slots). ¿Continuar?')) return;
+    dirty = false;
+    await llamar(() => window.sistema.tcCorrer(slots, modo === 'todos' ? 'todos' : nums));
+  }
+
+
+  /* ---------- Eventos del proceso ---------- */
+  function alSlot(d) {
+    if (!d || !(d.n >= 1 && d.n <= N)) return;
+    const f = filas[d.n - 1];
+    if (d.estado === 'verificando') pintarPill(f.det, 'busy', 'verificando…');
+    else if (d.estado === 'ok') {
+      pintarPill(f.det, 'ok', 'OK', d.msg);
+      slots[d.n - 1] = { parte: d.parte || '', serial: d.serial || '' };
+      f.parte.value = slots[d.n - 1].parte;
+      f.serial.value = slots[d.n - 1].serial;
+    } else pintarPill(f.det, 'bad', d.msg || 'Fallo', d.msg);
+  }
+
+  function alSlots(d) {
+    if (!d || !Array.isArray(d.slots)) return;
+    slots = d.slots.map((s) => ({ parte: (s && s.parte) || '', serial: (s && s.serial) || '' }));
+    dirty = false;
+    existe = true;
+    pintarValores();
+    aplicarRuta();
+  }
+
+
+  /* ---------- Consola ---------- */
+  function actualizarMeta() {
+    let t = totales.toLocaleString('es') + (totales === 1 ? ' línea' : ' líneas');
+    if (omitidas > 0) t += ' · mostrando las últimas ' + MAX_DOM.toLocaleString('es');
+    q('tc-meta').textContent = t;
+  }
+  function local(tipo, texto) { cola.push({ t: tipo, s: texto, h: Date.now() }); programar(); }
+  function programar() { if (!raf) { raf = true; requestAnimationFrame(vaciar); } }
+  function recibir(arr) {
+    if (!Array.isArray(arr)) return;
+    for (const r of arr) {
+      if (typeof r.i === 'number') { if (r.i <= ultimoId) continue; ultimoId = r.i; }
+      cola.push(r);
+    }
+    programar();
+  }
+  function vaciar() {
+    raf = false;
+    if (!cola.length) return;
+    const body = q('tc-body');
+    let lote = cola; cola = [];
+    totales += lote.length;
+    if (lote.length > MAX_DOM) { omitidas += lote.length - MAX_DOM; lote = lote.slice(-MAX_DOM); }
+    const ph = body.querySelector('.placeholder');
+    if (ph) ph.remove();
+    const frag = document.createDocumentFragment();
+    for (const r of lote) {
+      const d = document.createElement('div');
+      d.className = 'cl ' + (r.t || 'out');
+      const t = document.createElement('span');
+      t.className = 'tc-cl-t';
+      t.textContent = hora(r.h) + '  ';
+      d.appendChild(t);
+      const txt = String(r.s);
+      d.appendChild(document.createTextNode(txt === '' ? ' ' : txt));
+      frag.appendChild(d);
+    }
+    body.appendChild(frag);
+    let extra = body.childElementCount - (omitEl.parentNode === body ? 1 : 0) - MAX_DOM;
+    while (extra > 0) {
+      const n = omitEl.parentNode === body ? omitEl.nextElementSibling : body.firstElementChild;
+      if (!n) break;
+      n.remove(); omitidas++; extra--;
+    }
+    if (omitidas > 0) {
+      omitEl.textContent = '… ' + omitidas.toLocaleString('es') + ' líneas anteriores fuera de pantalla (están completas en el log)';
+      if (omitEl.parentNode !== body) body.insertBefore(omitEl, body.firstChild);
+    }
+    actualizarMeta();
+    if (seguir) body.scrollTop = body.scrollHeight;
+  }
+
+  async function cargarHistorial() {
+    const body = q('tc-body');
+    const mio = ++token;
+    body.textContent = '';
+    cola = []; enEspera = []; totales = 0; omitidas = 0; ultimoId = 0;
+    const ph = document.createElement('div');
+    ph.className = 'cl sys placeholder';
+    ph.textContent = 'Aún no hay actividad.';
+    body.appendChild(ph);
+    actualizarMeta();
+    if (!hayApi()) return;
+    cargando = true;
+    try { const h = await window.sistema.tcHistorial(); if (mio !== token) return; recibir(h); } catch (e) {}
+    if (mio === token) { cargando = false; const p = enEspera; enEspera = []; recibir(p); }
+  }
+
+
+  /* ---------- Visor del archivo generado ---------- */
+  let visorTexto = '';
+  function pintarVisor(r) {
+    const body = q('tv-body');
+    body.textContent = '';
+    q('tv-ruta').textContent = (r && r.ruta) || ruta || 'UUT_case';
+    q('tv-ruta').title = (r && r.ruta) || ruta || '';
+    if (!r || r.ok === false) {
+      visorTexto = '';
+      q('tv-meta').textContent = '';
+      const d = document.createElement('div'); d.className = 'ln';
+      const sp = document.createElement('span'); sp.className = 'ln-text cmt';
+      sp.textContent = '# ' + ((r && r.error) || 'No se pudo leer el archivo.');
+      d.appendChild(sp); body.appendChild(d);
+      return;
+    }
+    if (!r.existe) {
+      visorTexto = '';
+      q('tv-meta').textContent = 'sin crear';
+      const d = document.createElement('div'); d.className = 'ln';
+      const sp = document.createElement('span'); sp.className = 'ln-text cmt';
+      sp.textContent = '# El archivo aún no existe. Usa "Generar automático" o "Guardar".';
+      d.appendChild(sp); body.appendChild(d);
+      return;
+    }
+    visorTexto = r.texto || '';
+    const lineas = visorTexto.replace(/\n$/, '').split(/\r?\n/);
+    q('tv-meta').textContent = lineas.length + (lineas.length === 1 ? ' línea' : ' líneas') + (r.mtime ? ' · modificado ' + hora(r.mtime) : '');
+    const frag = document.createDocumentFragment();
+    for (const l of lineas) {
+      const d = document.createElement('div'); d.className = 'ln';
+      const sp = document.createElement('span');
+      sp.className = 'ln-text' + (l.trim().startsWith('#') ? ' cmt' : '');
+      sp.textContent = l === '' ? ' ' : l;
+      d.appendChild(sp); frag.appendChild(d);
+    }
+    body.appendChild(frag);
+  }
+  async function refrescarVisor() {
+    if (q('tc-viewer').hidden || !hayApi() || typeof window.sistema.tcLeerArchivo !== 'function') return;
+    try { pintarVisor(await window.sistema.tcLeerArchivo()); } catch (e) { pintarVisor({ ok: false, error: e.message }); }
+  }
+  function mostrarVisor(on) {
+    q('tc-viewer').hidden = !on;
+    q('tc-ver').classList.toggle('is-on', on);
+    q('tc-ver').textContent = on ? 'Ocultar archivo' : 'Ver archivo';
+    if (on) {
+      if (!hayApi() || typeof window.sistema.tcLeerArchivo !== 'function') {
+        pintarVisor({ ok: false, error: 'Reinicia la app con main.js, preload.js y testcase_main.js actualizados.' });
+        return;
+      }
+      refrescarVisor();
+      q('tc-viewer').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+  }
+  q('tc-ver').addEventListener('click', () => mostrarVisor(q('tc-viewer').hidden));
+  q('tv-cerrar').addEventListener('click', () => mostrarVisor(false));
+  q('tv-recargar').addEventListener('click', refrescarVisor);
+  q('tv-copiar').addEventListener('click', async () => {
+    if (!visorTexto) return;
+    await copiarTexto(visorTexto);
+    const b = q('tv-copiar'); b.textContent = 'Copiado';
+    setTimeout(() => { b.textContent = 'Copiar'; }, 900);
+  });
+  q('tv-abrir').addEventListener('click', async () => {
+    if (!hayApi() || typeof window.sistema.tcAbrirArchivo !== 'function') return;
+    const r = await llamar(() => window.sistema.tcAbrirArchivo());
+    if (r && r.ok) local('sys', 'Abierto en el editor: ' + r.ruta);
+  });
+
+  /* ---------- Arranque ---------- */
+  construirTabla();
+  pintarValores();
+  aplicarRuta();
+  aplicarJob();
+  actualizarMeta();
+
+  q('tc-auto').addEventListener('click', auto);
+  q('tc-guardar').addEventListener('click', guardar);
+  q('tc-recargar').addEventListener('click', recargar);
+  q('tc-run-all').addEventListener('click', () => correr('todos'));
+  q('tc-run-sel').addEventListener('click', () => correr('sel'));
+  q('tc-stop').addEventListener('click', () => llamar(() => window.sistema.tcDetener()));
+  q('tc-cambiar').addEventListener('click', async () => {
+    const r = await llamar(() => window.sistema.tcElegirRuta());
+    if (r && r.ok && r.cambio) recargarSinPreguntar();
+  });
+  q('tc-all').addEventListener('change', () => {
+    const on = q('tc-all').checked;
+    for (const f of filas) { f.chk.checked = on; f.chk.dispatchEvent(new Event('change')); }
+  });
+  q('tc-follow').addEventListener('click', () => {
+    seguir = !seguir;
+    q('tc-follow').classList.toggle('is-on', seguir);
+    if (seguir) q('tc-body').scrollTop = q('tc-body').scrollHeight;
+  });
+  q('tc-log').addEventListener('click', () => { if (hayApi()) window.sistema.tcAbrirLog(); });
+  q('tc-clear').addEventListener('click', () => { cola = []; totales = 0; omitidas = 0; q('tc-body').textContent = ''; actualizarMeta(); });
+  q('tc-body').addEventListener('scroll', () => {
+    const b = q('tc-body');
+    const alFinal = b.scrollTop + b.clientHeight >= b.scrollHeight - 30;
+    if (alFinal !== seguir) { seguir = alFinal; q('tc-follow').classList.toggle('is-on', seguir); }
+  });
+
+  async function recargarSinPreguntar() {
+    try {
+      const r = await window.sistema.tcObtener();
+      if (r && Array.isArray(r.slots)) {
+        slots = r.slots.map((s) => ({ parte: s.parte || '', serial: s.serial || '' }));
+        dirty = false;
+        pintarValores();
+        limpiarEstados(['det']);
+        aplicarEstado(r);
+      }
+    } catch (e) {}
+  }
+
+  // Al abrir la sección se refresca el estado (sin pisar cambios sin guardar)
+  document.querySelectorAll('.nav-link[data-section="generar-test-case"]').forEach((l) => {
+    l.addEventListener('click', async () => {
+      if (!hayApi()) return;
+      try {
+        const r = await window.sistema.tcObtener();
+        aplicarEstado(r);
+        if (!dirty && !ocupado() && r && Array.isArray(r.slots)) {
+          slots = r.slots.map((s) => ({ parte: s.parte || '', serial: s.serial || '' }));
+          pintarValores();
+        }
+      } catch (e) {}
+    });
+  });
+
+  if (hayApi()) {
+    window.sistema.tcObtener().then((r) => {
+      if (r && Array.isArray(r.slots)) {
+        slots = r.slots.map((s) => ({ parte: s.parte || '', serial: s.serial || '' }));
+        pintarValores();
+      }
+      aplicarEstado(r);
+      return cargarHistorial();
+    }).catch(() => {});
+    window.sistema.onTcEstado(aplicarEstado);
+    window.sistema.onTcSalida((l) => { if (cargando) enEspera.push(...l); else recibir(l); });
+    window.sistema.onTcSlot(alSlot);
+    window.sistema.onTcSlots(alSlots);
+  }
+})();
+// TC-FIN
+
+  /* ===== Versión y actualizaciones ===== */
+  (function () {
+    const upd = window.actualizador;
+    const btn = document.getElementById('btn-update');
+    const toast = document.getElementById('upd-toast');
+    if (!upd) { btn.hidden = true; return; }
+    let manual = false, accion = null, timer = null;
+
+    function mostrar({ titulo, msg = '', tipo = '', ok = null, alOk = null, progreso = null, cerrar = true, ocultarEn = 0 }) {
+      clearTimeout(timer);
+      toast.className = 'upd-toast visible ' + tipo;
+      document.getElementById('upd-titulo').textContent = titulo;
+      document.getElementById('upd-msg').textContent = msg;
+      const bOk = document.getElementById('upd-ok');
+      bOk.textContent = ok || ''; bOk.hidden = !ok; accion = alOk;
+      document.getElementById('upd-cerrar').hidden = !cerrar;
+      document.getElementById('upd-barra').hidden = progreso === null;
+      if (progreso !== null) document.getElementById('upd-prog').style.width = progreso + '%';
+      if (ocultarEn) timer = setTimeout(ocultar, ocultarEn);
+    }
+    function ocultar() { toast.classList.remove('visible'); }
+    document.getElementById('upd-ok').addEventListener('click', () => { if (accion) accion(); });
+    document.getElementById('upd-cerrar').addEventListener('click', ocultar);
+
+    upd.version().then((v) => {
+      document.getElementById('version-app').textContent = 'Versión ' + v;
+      btn.title = 'Buscar actualizaciones · v' + v;
+    }).catch(() => {});
+
+    btn.addEventListener('click', () => { manual = true; upd.buscar(); });
+
+    upd.alCambiar(({ estado, version, porcentaje, mensaje }) => {
+      btn.classList.toggle('girando', estado === 'buscando' || estado === 'descargando');
+      switch (estado) {
+        case 'buscando':
+          if (manual) mostrar({ titulo: 'Buscando actualizaciones…', cerrar: false });
+          break;
+        case 'disponible':
+          btn.classList.add('hay-nueva');
+          mostrar({ titulo: 'Nueva versión ' + version, msg: 'Hay una actualización lista para descargar.', ok: 'Descargar',
+            alOk: () => { upd.descargar(); mostrar({ titulo: 'Descargando actualización', msg: '0%', progreso: 0, cerrar: false }); } });
+          break;
+        case 'descargando':
+          mostrar({ titulo: 'Descargando actualización', msg: porcentaje + '%', progreso: porcentaje, cerrar: false });
+          break;
+        case 'lista':
+          mostrar({ titulo: 'Versión ' + version + ' descargada', msg: 'Reinicia para instalarla (te pedirá tu contraseña de Ubuntu). Si no, se instala al cerrar la app.',
+            tipo: 'ok', ok: 'Reiniciar e instalar', alOk: () => upd.instalar() });
+          break;
+        case 'actual':
+          btn.classList.remove('hay-nueva');
+          if (manual) mostrar({ titulo: 'Todo al día', msg: 'Ya tienes la última versión (v' + version + ').', tipo: 'ok', ocultarEn: 4000 });
+          manual = false;
+          break;
+        case 'dev':
+          if (manual) mostrar({ titulo: 'Modo desarrollo', msg: 'Las actualizaciones solo funcionan en la app instalada (.deb).', ocultarEn: 5000 });
+          manual = false;
+          break;
+        case 'error':
+          if (manual) mostrar({ titulo: 'No se pudo buscar actualizaciones', msg: mensaje || 'Revisa tu conexión a internet.', tipo: 'err', ocultarEn: 7000 });
+          manual = false;
+          break;
+      }
+    });
+  })();
+</script>
+</body>
+</html>

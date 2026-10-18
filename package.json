@@ -1,0 +1,56 @@
+{
+  "name": "ghostfish-engine",
+  "productName": "Connection Validation",
+  "version": "1.0.0",
+  "description": "Ghostfish Engine - Motor de validación",
+  "main": "main.js",
+  "desktopName": "ghostfish-engine.desktop",
+  "author": "Vicente Muñoz <vicentemunoz3323@gmail.com>",
+  "homepage": "https://github.com/vicentemunoz3323-max/connection-validation",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vicentemunoz3323-max/connection-validation.git"
+  },
+  "scripts": {
+    "start": "electron .",
+    "build:deb": "electron-builder --linux deb",
+    "release": "electron-builder --linux deb --publish always"
+  },
+  "dependencies": {
+    "electron-updater": "^6.3.9"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "com.vicente.connectionvalidation",
+    "productName": "Connection Validation",
+    "directories": {
+      "output": "dist"
+    },
+    "linux": {
+      "target": [
+        "deb"
+      ],
+      "icon": "icons",
+      "category": "Utility",
+      "executableName": "ghostfish-engine",
+      "maintainer": "Vicente Muñoz <vicentemunoz3323@gmail.com>",
+      "syncDesktopName": true,
+      "desktop": {
+        "entry": {
+          "StartupWMClass": "ghostfish-engine"
+        }
+      }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "vicentemunoz3323-max",
+        "repo": "connection-validation",
+        "releaseType": "release"
+      }
+    ]
+  }
+}
