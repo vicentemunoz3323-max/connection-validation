@@ -421,6 +421,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
   font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--muted);
 }
 .panel-title::before, .panel-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+.panel-title-sec { margin-top: calc(var(--gap) * .6); }   /* misma línea que JOLT, separando los Izumis */
 .group-label {
   display: flex; align-items: baseline; justify-content: space-between;
   width: var(--panel-w); max-width: 100%;
@@ -808,6 +809,33 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .upd-acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .upd-acciones .btn { font-size: 12px; padding: 5px 12px; }
 .upd-toast [hidden] { display: none !important; }
+
+/* ===== Pantallas chicas ===== */
+.lbl-corto { display: none; }
+.ip { white-space: nowrap; flex-shrink: 0; }
+.status-title { min-width: 0; }
+
+/* Menú: en ventanas angostas usa nombres cortos para que quepan todas las pestañas */
+@media (max-width: 1180px) {
+  .nav nav { gap: 6px; }
+  .nav-link { padding: 6px 10px; }
+  .lbl-full { display: none; }
+  .lbl-corto { display: inline; }
+}
+@media (max-width: 900px) {
+  .ip { font-size: 13px; }
+  main { padding-left: 16px; padding-right: 16px; }
+  .status-card { max-width: none; }
+  .inst-header > .status-card { flex: 1 1 100%; }
+}
+
+/* Pantallas bajitas (laptop o ventana chica): títulos y pie más compactos */
+@media (max-height: 720px) {
+  h1 { font-size: clamp(20px, 4.4vh, 30px); }
+  .lead { margin-bottom: 6px; font-size: 13px; }
+  .firma { padding: 2px 16px 4px; font-size: 11px; }
+  .firma .version { display: inline; margin-left: 8px; }
+}
 </style>
 </head>
 <body>
@@ -823,12 +851,12 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         </button>
       </div>
       <nav aria-label="Principal">
-        <a href="#connection-validation" class="nav-link active" data-section="connection-validation">Connection validation</a>
-        <a href="#rectificadores" class="nav-link" data-section="rectificadores">Actualización de rectificadores</a>
-        <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi">Remplazar Izumi</a>
-        <a href="#files-dhcp" class="nav-link" data-section="files-dhcp">Files DHCP</a>
-        <a href="#generar-test-case" class="nav-link" data-section="generar-test-case">Generar Test case</a>
-        <a href="#configuracion" class="nav-link" data-section="configuracion">Configuración</a>
+        <a href="#connection-validation" class="nav-link active" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
+        <a href="#rectificadores" class="nav-link" data-section="rectificadores" title="Actualización de rectificadores"><span class="lbl-full">Actualización de rectificadores</span><span class="lbl-corto">Rectificadores</span></a>
+        <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi" title="Remplazar Izumi"><span class="lbl-full">Remplazar Izumi</span><span class="lbl-corto">Izumi</span></a>
+        <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
+        <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
+        <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
 
       </nav>
     </div>
@@ -883,9 +911,9 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <h2 class="panel-title">Jolt</h2>
           <div class="group-label"><span>Rectificadores</span><span>24 unidades</span></div>
           <div id="rectifiers" class="rect-grid" aria-label="Rectificadores"></div>
-          <div class="group-label"><span>Izumis</span><span>16 enlaces</span></div>
+          <h2 class="panel-title panel-title-sec">Izumis</h2>
           <div id="izumis" class="izumi-grid" aria-label="Izumis"></div>
-          <div class="group-label"><span>Instrumentos</span><span>Ping cada 5 s</span></div>
+          <h2 class="panel-title panel-title-sec">Instrumentos</h2>
           <div class="instruments-list cv-instr" aria-label="Instrumentos">
             <!-- DAQ970A -->
             <div class="instrument-row">
@@ -959,7 +987,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
               <span class="status-pill online"><span id="dot-superlogics" class="dot online" title="Servidor Principal Activo"></span><span class="status-text">Activo</span></span>
             </div>
 
-            <!-- Tros -->
+            <!-- TROSS -->
             <div class="instrument-row">
               <div class="instrument-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
@@ -967,12 +995,12 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
               <div class="instrument-info">
                 <div class="instrument-top">
                   <div style="display:flex; align-items:center; gap:8px;">
-                    <span class="instrument-name">TROS</span>
+                    <span class="instrument-name">TROSS</span>
                     <span class="instrument-ip">10.254.128.3</span>
                   </div>
-                  <span class="instrument-type">Módulo controlador de rectificadores</span>
+                  <span class="instrument-type">Controlador de rectificadores</span>
                 </div>
-                <div class="instrument-desc">Sección reservada para agregar un nuevo controlador o instrumento.</div>
+                <div class="instrument-desc">Dispositivo para setear voltaje de rectificadores.</div>
               </div>
               <span class="status-pill"><span id="dot-tros" class="dot" title="Sin IP asignada"></span><span class="status-text">Activo</span></span>
             </div>
@@ -2334,7 +2362,7 @@ hexPintar();
 
   const MAX_DOM = 3000;
   const POR_DEFECTO = [
-    { id: 'server', nombre: 'SERVER' }, { id: 'juniper', nombre: 'JUNIPER' }, { id: 'tros', nombre: 'TROS' },
+    { id: 'server', nombre: 'SERVER' }, { id: 'juniper', nombre: 'JUNIPER' }, { id: 'tros', nombre: 'TROSS' },
     { id: 'zpe', nombre: 'ZPE' }, { id: 'daq', nombre: 'DAQ' }, { id: 'omron', nombre: 'SENSOR OMRON' }
   ];
 

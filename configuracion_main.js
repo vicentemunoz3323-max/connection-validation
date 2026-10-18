@@ -16,7 +16,7 @@ const { StringDecoder } = require('string_decoder');
 const DISPOSITIVOS = [
   { id: 'server', nombre: 'SERVER' },
   { id: 'juniper', nombre: 'JUNIPER' },
-  { id: 'tros', nombre: 'TROS' },
+  { id: 'tros', nombre: 'TROSS' },
   { id: 'zpe', nombre: 'ZPE' },
   { id: 'daq', nombre: 'DAQ' },
   { id: 'omron', nombre: 'SENSOR OMRON' }
