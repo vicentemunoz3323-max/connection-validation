@@ -229,6 +229,7 @@ function iniciar(devId, fileId) {
     const seguro = arch.nombre.replace(/[^\w.\-]+/g, '_');
     logPath = path.join(dir, devId + '_' + seguro + '_' + sello + '.log');
     logStream = fs.createWriteStream(logPath, { flags: 'a' });
+    logStream.on('error', () => {});   // un fallo de disco no debe tumbar la app
     logStream.write('# ' + arch.nombre + ' · equipo ' + devId.toUpperCase() + ' · ' + fechaTxt(inicio) + '\n# ' + arch.ruta + '\n\n');
   } catch (e) {
     logStream = null;

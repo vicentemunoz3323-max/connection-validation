@@ -21,9 +21,22 @@ require('./testcase_main.js');
 
 
 
-try {
-  require('electron-reload')(__dirname);
-} catch (e) {}
+// Recarga automática solo al desarrollar (npm start), nunca en la app instalada
+if (!app.isPackaged) {
+  try { require('electron-reload')(__dirname); } catch (e) {}
+}
+
+// Una sola instancia: si ya está abierta, se trae al frente en vez de abrir otra
+// (dos copias duplicaban los pings y se pisaban la configuración)
+const esInstanciaPrincipal = app.requestSingleInstanceLock();
+if (!esInstanciaPrincipal) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const w = BrowserWindow.getAllWindows()[0];
+    if (w) { if (w.isMinimized()) w.restore(); w.show(); w.focus(); }
+  });
+}
 
 const NOMBRES_SCRIPT = new Set(['connection_validation.py', 'connection_vaidation.py']);
 const TIMEOUT_SCRIPT_MS = 3 * 60 * 1000;
@@ -156,11 +169,36 @@ async function buscarEn(raiz, yaRevisadas) {
   return null;
 }
 
+// Recuerda dónde se encontró el script para no recorrer el disco en cada validación
+const rutaCacheScript = () => path.join(app.getPath('userData'), 'script-validacion.json');
+function leerCacheScript() {
+  try {
+    const r = JSON.parse(fs.readFileSync(rutaCacheScript(), 'utf8')).ruta;
+    if (r && fs.existsSync(r) && NOMBRES_SCRIPT.has(path.basename(r).toLowerCase())) return r;
+  } catch (e) {}
+  return null;
+}
+function guardarCacheScript(r) {
+  try { fs.writeFileSync(rutaCacheScript(), JSON.stringify({ ruta: r })); } catch (e) {}
+}
+
 async function buscarScriptCompleto() {
+  const enCache = leerCacheScript();
+  if (enCache) return enCache;
+  const encontrado = await buscarScriptEnDisco();
+  if (encontrado) guardarCacheScript(encontrado);
+  return encontrado;
+}
+
+async function buscarScriptEnDisco() {
   const homedir = os.homedir();
+  // Instalada desde el menú, la carpeta actual suele ser "/" o la carpeta personal:
+  // en ese caso no se usa (si no, se recorría todo el disco antes que el Escritorio)
+  const cwd = process.cwd();
+  const cwdUtil = cwd !== path.parse(cwd).root && cwd !== homedir;
   const raicesPrioritarias = [
     __dirname,
-    process.cwd(),
+    ...(cwdUtil ? [cwd] : []),
     path.join(homedir, 'Desktop'),
     path.join(homedir, 'Escritorio'),
     path.join(homedir, 'Documents'),
@@ -216,8 +254,8 @@ function ejecutarScript(ruta) {
       const timer = setTimeout(() => {
         if (!terminado) {
           terminado = true;
-          proc.kill();
-          resolve({ ok: false, salida, error: 'Tiempo de espera agotado (Timeout).' });
+          try { proc.kill('SIGKILL'); } catch (e) {}
+          resolve({ ok: false, salida, error: 'Tiempo de espera agotado (' + Math.round(TIMEOUT_SCRIPT_MS / 60000) + ' min).' });
         }
       }, TIMEOUT_SCRIPT_MS);
 
@@ -253,7 +291,7 @@ function ejecutarScript(ruta) {
         if (terminado) return;
         terminado = true;
         clearTimeout(timer);
-        resolve({ ok: code === 0 || salida.trim().length > 0, salida, error: err });
+        resolve({ ok: code === 0 || salida.trim().length > 0, salida, error: err, codigo: code });
       });
     };
 
@@ -262,6 +300,12 @@ function ejecutarScript(ruta) {
 }
 
 let estadoActual = { fase: 'reposo', salida: '', error: null, ruta: null };
+
+function emitirConsola(texto) {
+  for (const w of BrowserWindow.getAllWindows()) {
+    if (!w.isDestroyed()) w.webContents.send('console-log', texto);
+  }
+}
 
 function emitirEstado(parcial) {
   estadoActual = { ...estadoActual, ...parcial };
@@ -277,6 +321,7 @@ async function iniciarProcesoValidacion() {
   emitirEstado({ fase: 'buscando', error: null, salida: '', pasada: 0, pasadas: PASADAS_VALIDACION });
   try {
     const ruta = await buscarScriptCompleto();
+    if (ruta) emitirConsola('Script: ' + ruta + '\n');
     if (!ruta) {
       emitirEstado({ fase: 'no-encontrado', error: 'No se encontró el archivo connection_validation.py' });
       return;
@@ -289,6 +334,9 @@ async function iniciarProcesoValidacion() {
         if (!w.isDestroyed()) w.webContents.send('console-log', (i > 1 ? '\n' : '') + '===== Pasada ' + i + ' de ' + PASADAS_VALIDACION + ' =====\n');
       }
       resultado = await ejecutarScript(ruta);
+      if (resultado.codigo !== undefined && resultado.codigo !== 0) {
+        emitirConsola('[AVISO] La pasada ' + i + ' terminó con código ' + resultado.codigo + '\n');
+      }
       if (!resultado.ok) {
         emitirEstado({ fase: 'error', ruta, salida: resultado.salida, error: 'Pasada ' + i + ' de ' + PASADAS_VALIDACION + ': ' + (resultado.error || 'falló la ejecución'), hora: Date.now() });
         return;
@@ -555,6 +603,7 @@ async function ejecutarComandos(lista, detenerSiFalla) {
     const sello = new Date().toISOString().replace(/[:.]/g, '-');
     logPath = path.join(dir, `actualizacion_${sello}.log`);
     logStream = fs.createWriteStream(logPath, { flags: 'a' });
+    logStream.on('error', (e) => console.log('[cmds] no se pudo escribir el log:', e.message));   // disco lleno, etc.: no debe tumbar la app
   } catch (e) {
     logStream = null;
   }
@@ -678,10 +727,19 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     }
   });
+  // Los enlaces externos se abren en el navegador, nunca dentro de la app
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+    return { action: 'deny' };
+  });
+  win.webContents.on('will-navigate', (e, url) => {
+    if (!url.startsWith('file://')) { e.preventDefault(); if (/^https?:\/\//i.test(url)) shell.openExternal(url); }
+  });
   win.loadFile(path.join(__dirname, 'index.html'));
 }
 
 app.whenReady().then(() => {
+  if (!esInstanciaPrincipal) return;   // otra copia ya está abierta
   console.log('[main] interfaces de red:',
     Object.entries(os.networkInterfaces())
       .map(([n, d]) => n + '=' + (d || []).filter((i) => i.family === 'IPv4' || i.family === 4).map((i) => i.address).join('/'))
@@ -703,6 +761,8 @@ app.on('window-all-closed', () => {
    Solo funciona en la app instalada (.deb); con "npm start" muestra "modo desarrollo".
    ============================================================ */
 let autoUpdater = null;
+let versionAvisada = null;
+let descargando = false;
 try { ({ autoUpdater } = require('electron-updater')); } catch (e) { console.log('[update] electron-updater no instalado: corre "npm install"'); }
 
 function enviarUpdate(estado, datos = {}) {
@@ -718,6 +778,8 @@ if (autoUpdater) {
   autoUpdater.on('update-not-available', () => enviarUpdate('actual', { version: app.getVersion() }));
   autoUpdater.on('update-available', (info) => {
     enviarUpdate('disponible', { version: info.version });
+    if (versionAvisada === info.version) return;   // la notificación de Ubuntu sale una vez por versión, no cada hora
+    versionAvisada = info.version;
     if (Notification.isSupported()) {
       new Notification({ title: 'Connection Validation', body: `Nueva versión ${info.version} disponible. Ábrela para actualizar.` }).show();
     }
@@ -742,13 +804,15 @@ async function buscarActualizaciones() {
 ipcMain.handle('app:version', () => app.getVersion());
 ipcMain.handle('update:buscar', () => buscarActualizaciones());
 ipcMain.handle('update:descargar', async () => {
-  if (!autoUpdater) return;
+  if (!autoUpdater || descargando) return;   // evita dos descargas a la vez
+  descargando = true;
   try { await autoUpdater.downloadUpdate(); } catch (e) { enviarUpdate('error', { mensaje: e.message }); }
+  finally { descargando = false; }
 });
 ipcMain.handle('update:instalar', () => { if (autoUpdater) autoUpdater.quitAndInstall(); });
 
 app.whenReady().then(() => {
-  if (!app.isPackaged) return;
+  if (!app.isPackaged || !esInstanciaPrincipal) return;
   setTimeout(buscarActualizaciones, 5000);                      // al abrir
   setInterval(buscarActualizaciones, 60 * 60 * 1000);           // y cada hora
 });

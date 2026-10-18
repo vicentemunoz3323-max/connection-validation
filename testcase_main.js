@@ -346,8 +346,9 @@ async function escanear() {
       const nn = dos(n);
       enviar('tc-slot', { n, estado: 'verificando', msg: 'Verificando…' });
       let res;
+      const detenido = () => enviar('tc-slot', { n, estado: 'detenido', msg: 'Detenido' });
       if (await pingUnidad(n)) {
-        if (t.abort) return;
+        if (t.abort) return detenido();
         const d = await obtenerDatosHardware(n);
         if (d.parte || d.serial) {
           slots[n - 1] = d;
@@ -358,7 +359,7 @@ async function escanear() {
           linea('err', 'Slot ' + nn + ': FAIL -> Responde pero no se extrajeron datos.');
         }
       } else {
-        if (t.abort) return;
+        if (t.abort) return detenido();
         res = { n, estado: 'fail', msg: 'Sin respuesta' };
         linea('err', 'Slot ' + nn + ': FAIL -> Sin respuesta (vacío o apagado).');
       }

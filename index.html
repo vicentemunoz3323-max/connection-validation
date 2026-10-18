@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CONNECTION_VALIDATION</title>
   <link rel="icon" type="image/png" href="icons/32x32.png">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
   <style>
 :root {
   --bg: #ffffff;
@@ -779,7 +780,10 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 /* TC-FIN */
 
 /* ===== Botón y aviso de actualizaciones ===== */
-.nav-inner { padding-right: 76px; }
+/* El menú queda entre el logo y el botón: si no cabe, se desliza de lado sin taparse */
+.nav-inner { padding: 0 76px 0 80px; justify-content: safe center; }
+.nav nav { min-width: 0; }
+@media (max-width: 760px) { .nav-inner { padding-left: 16px; } }
 .upd { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); }
 .upd-btn { position: relative; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 50%; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
 .upd-btn:hover { background: var(--bg-soft); border-color: #b9b9bf; }
@@ -1332,8 +1336,17 @@ document.querySelectorAll('.nav-link').forEach((link) => {
       cargarVistasDhcp();
       dhcpCargado = true;
     }
+    try { localStorage.setItem('seccion_activa', link.dataset.section); } catch (err) {}
   });
 });
+
+// Al abrir la app vuelve a la última sección usada
+setTimeout(() => {
+  let ultima = null;
+  try { ultima = localStorage.getItem('seccion_activa'); } catch (e) {}
+  const link = ultima && document.querySelector('.nav-link[data-section="' + ultima + '"]');
+  if (link && !link.classList.contains('active')) link.click();
+}, 0);
 
 function setEstadoInstrumento(id, estado, texto, tip) {
   const dot = $(id);
@@ -1436,6 +1449,7 @@ const FAN = '<svg class="fan" viewBox="0 0 24 24" aria-hidden="true"><g fill="cu
   '<path d="M12 12C9.5 7 10.5 2.5 13.5 3.2C15.5 3.8 14.5 8.5 12 12Z" transform="rotate(270 12 12)"/>' +
   '<circle cx="12" cy="12" r="1.8"/></g></svg>';
 
+const SIN_LECTURA = '-- V';   // se muestra cuando no hay lectura (antes salía un 55.92 V falso)
 const rectEls = {};
 const rectValEls = {};
 const izumiEls = {};
@@ -1457,7 +1471,7 @@ function dibujarRectificadores() {
         r.innerHTML =
           '<div class="rect-top"><span class="rect-name">R' + n + '</span>' +
           '<div class="led-frame"><span class="led" style="animation-delay:' + ((n * 0.37) % 1.2).toFixed(2) + 's"></span></div></div>' +
-          '<div class="rect-mid">' + FAN + '<span class="rect-val" id="rect-val-' + n + '">55.92 V</span></div>';
+          '<div class="rect-mid">' + FAN + '<span class="rect-val" id="rect-val-' + n + '">' + SIN_LECTURA + '</span></div>';
         rectEls[n] = r;
         rectValEls[n] = r.querySelector('.rect-val');
         grupo.appendChild(r);
@@ -1530,7 +1544,7 @@ function setEstadoRect(el, valEl, ok, voltajeVal, tooltip) {
     el.title = tooltip || `R: ${vStr}`;
   } else {
     el.classList.add('bad');
-    if (valEl) valEl.textContent = '55.92 V';
+    if (valEl) valEl.textContent = SIN_LECTURA;
     el.title = tooltip || 'R: Sin lectura / Error';
   }
 }
@@ -1549,13 +1563,22 @@ function setEstadoIzumi(el, txtEl, ok, tooltip) {
   }
 }
 
+// Deja todo en gris (sin resultado). Antes lo pintaba en VERDE: si el script no se
+// encontraba o fallaba, la pantalla decía que todo estaba bien.
 function limpiarColores() {
   for (let n = 1; n <= 24; n++) {
-    setEstadoRect(rectEls[n], rectValEls[n], true, 55.92, '');
-    if (rectValEls[n]) rectValEls[n].textContent = '55.92 V';
+    const el = rectEls[n];
+    if (!el) continue;
+    el.classList.remove('ok', 'bad');
+    el.title = 'R' + n + ': sin resultado';
+    if (rectValEls[n]) rectValEls[n].textContent = SIN_LECTURA;
   }
   for (let i = 1; i <= 16; i++) {
-    setEstadoIzumi(izumiEls[i], izumiStatusEls[i], true, '');
+    const el = izumiEls[i];
+    if (!el) continue;
+    el.classList.remove('ok', 'bad');
+    el.title = 'Izumi ' + i + ': sin resultado';
+    if (izumiStatusEls[i]) izumiStatusEls[i].textContent = '--';
   }
 }
 
@@ -1663,12 +1686,15 @@ if (window.sistema) {
     window.sistema.onInstrumentos(aplicarInstrumentos);   // actualizaciones en vivo (segundo plano)
   }
   verificarInstrumentosReales();                           // estado inicial
+  const MAX_CONSOLA = 200000;   // caracteres visibles: con 5 pasadas de salida larga la ventana se trababa
   window.sistema.onConsoleLog((texto) => {
     const body = $('console-body');
-    if (body) {
-      body.textContent += texto;
-      body.scrollTop = body.scrollHeight;
-    }
+    if (!body) return;
+    const alFinal = body.scrollTop + body.clientHeight >= body.scrollHeight - 30;
+    let t = body.textContent + texto;
+    if (t.length > MAX_CONSOLA) t = '…\n' + t.slice(t.length - MAX_CONSOLA);
+    body.textContent = t;
+    if (alFinal) body.scrollTop = body.scrollHeight;   // no brinca al final si estás leyendo arriba
   });
   window.sistema.estado().then(aplicarEstado);
 } else {
@@ -2872,8 +2898,8 @@ hexPintar();
     const falta = incompletos(nums);
     if (falta.length && !window.confirm('Faltan parte o serial en: ' + falta.map(dos).join(', ') + '.\nSe correrán con los valores CORRIJA_*. ¿Continuar?')) return;
     if (modo === 'todos' && !window.confirm('Se correrá todo el UUT_case (16 slots). ¿Continuar?')) return;
-    dirty = false;
-    await llamar(() => window.sistema.tcCorrer(slots, modo === 'todos' ? 'todos' : nums));
+    const r = await llamar(() => window.sistema.tcCorrer(slots, modo === 'todos' ? 'todos' : nums));
+    if (r && r.ok) dirty = false;   // la tabla quedó guardada en el archivo antes de correr
   }
 
 
@@ -2887,7 +2913,8 @@ hexPintar();
       slots[d.n - 1] = { parte: d.parte || '', serial: d.serial || '' };
       f.parte.value = slots[d.n - 1].parte;
       f.serial.value = slots[d.n - 1].serial;
-    } else pintarPill(f.det, 'bad', d.msg || 'Fallo', d.msg);
+    } else if (d.estado === 'detenido') pintarPill(f.det, '', 'detenido');
+    else pintarPill(f.det, 'bad', d.msg || 'Fallo', d.msg);
   }
 
   function alSlots(d) {
