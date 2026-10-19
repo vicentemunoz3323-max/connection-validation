@@ -59,6 +59,9 @@ contextBridge.exposeInMainWorld('sistema', {
   onTcSlots: (cb) => ipcRenderer.on('tc-slots', (_e, d) => cb(d)),
   // TC-FIN
 
+  // Remplazar Izumi: MAC actuales leídas de /etc/dhcp/dhcpd.conf
+  rzLeerMacs: () => ipcRenderer.invoke('rz-leer'),
+
   // Consola telnet de cada Izumi (abre su propia ventana)
   abrirConsolaIzumi: (n) => ipcRenderer.invoke('izu:abrir', n),
   consolasIzumi: () => ipcRenderer.invoke('izu:sesiones'),

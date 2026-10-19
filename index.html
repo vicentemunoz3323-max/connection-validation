@@ -583,7 +583,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 @media (max-width: 900px) { .upd-top { grid-template-columns: 1fr; } }
   
 /* ===== Remplazar Izumi ===== */
-.izu-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 16px; margin-top: 16px; align-items: start; }
+.izu-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 16px; align-items: start; }
 .izu-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; }
 .izu-files { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
 .izu-file { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #fafafa; border: 1px solid var(--line); border-left: 3px solid var(--blue); font: 12px SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; }
@@ -900,6 +900,71 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .uc-rapidas button { font: 600 11px SFMono-Regular, Consolas, monospace; padding: 4px 10px; background: #3a3a3a; color: #e5c07b; border: 1px solid #e5c07b; cursor: pointer; }
 .uc-rapidas button:hover { background: #4a4330; }
 .uc-pide.prog { color: #4ec9b0; }
+
+/* ===== Remplazar Izumi: selección ===== */
+.rz-quick { display: flex; gap: 6px; margin: 4px 0 12px; }
+.rz-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 1100px) { .rz-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.rz-item {
+  position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  padding: 12px 4px 10px; border: 1px solid var(--line); border-left: 3px solid #c7c7cc; background: var(--bg-soft);
+  cursor: pointer; user-select: none; transition: background .15s, border-color .15s;
+}
+.rz-item:hover { border-color: #b9b9bf; border-left-color: #8e8e93; }
+.rz-item input { position: absolute; opacity: 0; pointer-events: none; }
+.rz-box { width: 18px; height: 18px; border: 1.5px solid #8e8e93; background: #fff; display: grid; place-items: center; transition: background .15s, border-color .15s; }
+.rz-box::after { content: ""; width: 9px; height: 5px; border: 2px solid #fff; border-top: 0; border-right: 0; transform: rotate(-45deg) translate(1px, -1px); opacity: 0; }
+.rz-num { font-size: 18px; font-weight: 700; letter-spacing: -.02em; line-height: 1; color: var(--text); font-variant-numeric: tabular-nums; }
+.rz-lbl { font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.rz-item.on { background: rgba(0,113,227,.07); border-color: rgba(0,113,227,.45); border-left-color: var(--blue); }
+.rz-item.on .rz-box { background: var(--blue); border-color: var(--blue); }
+.rz-item.on .rz-box::after { opacity: 1; }
+.rz-item.on .rz-num { color: var(--blue); }
+.rz-item:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
+.rz-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.rz-sel { font-size: 12px; color: var(--muted); min-width: 0; }
+.rz-sel b { color: var(--text); }
+
+/* ===== Remplazar Izumi: MAC vieja y nueva ===== */
+.rz-macs { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 14px; }
+.rz-macs[hidden] { display: none; }
+.rz-macs-head { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.rz-fuente { flex: 1; min-width: 0; font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rz-fuente.err { color: var(--red); }
+.rz-tabla { display: flex; flex-direction: column; gap: 6px; }
+.rz-fila {
+  display: grid; grid-template-columns: 92px minmax(0, 1.1fr) 20px minmax(0, 1fr) 24px; align-items: center; gap: 12px;
+  padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--blue); background: #fff;
+  animation: rzEntra .18s ease-out;
+}
+@keyframes rzEntra { from { opacity: 0; transform: translateY(-4px); } }
+.rz-fila .rz-n { font-size: 13px; font-weight: 700; }
+.rz-fila .rz-n small { display: block; font-size: 10px; font-weight: 500; color: var(--muted); font-family: SFMono-Regular, Consolas, monospace; }
+.rz-vieja { min-width: 0; }
+.rz-vieja code { display: block; font: 600 13px SFMono-Regular, Consolas, monospace; color: var(--text); letter-spacing: .02em; }
+.rz-vieja small { display: block; font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rz-vieja.nada code { color: var(--muted); font-weight: 500; }
+.rz-flecha { color: var(--muted); text-align: center; font-size: 14px; }
+.rz-nueva input {
+  width: 100%; padding: 7px 10px; border: 1px solid var(--line); background: var(--bg-soft);
+  font: 600 13px SFMono-Regular, Consolas, monospace; letter-spacing: .02em; text-transform: lowercase;
+}
+.rz-nueva input:focus { outline: 2px solid var(--blue); outline-offset: -1px; background: #fff; }
+.rz-nueva small { display: block; min-height: 13px; margin-top: 3px; font-size: 10px; color: var(--muted); }
+.rz-fila.ok { border-left-color: var(--green); }
+.rz-fila.ok .rz-nueva input { border-color: rgba(40,167,69,.5); background: #fff; }
+.rz-fila.mal { border-left-color: var(--red); }
+.rz-fila.mal .rz-nueva input { border-color: rgba(217,48,37,.55); background: #fff; }
+.rz-fila.mal .rz-nueva small { color: var(--red); }
+.rz-fila.aviso .rz-nueva small { color: #b7791f; }
+.rz-st { font-size: 15px; text-align: center; }
+.rz-fila.ok .rz-st { color: var(--green); }
+.rz-fila.mal .rz-st { color: var(--red); }
+@media (max-width: 760px) {
+  .rz-fila { grid-template-columns: 70px minmax(0, 1fr) 20px; }
+  .rz-flecha { display: none; }
+  .rz-nueva { grid-column: 2 / 3; }
+}
 </style>
 </head>
 <body>
@@ -1196,7 +1261,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <div class="inst-header-text">
             <span class="inst-eyebrow">Mantenimiento</span>
             <h1>Remplazar Izumi</h1>
-            <p class="lead">Abre los archivos DHCP y calcula valores en hexadecimal.</p>
+            <p class="lead">Elige qué Izumi vas a remplazar: una, varias o las 16.</p>
           </div>
         </div>
         <div class="status-card">
@@ -1211,39 +1276,31 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
       </div>
 
       <div class="izu-grid">
-        <div class="card izu-card">
+        <div class="card rz-card">
           <div class="card-head">
-            <span class="card-title">Archivos DHCP</span>
-            <span class="card-count">2 archivos</span>
+            <span class="card-title">Izumi a remplazar</span>
+            <span class="card-count" id="rz-count">Ninguna seleccionada</span>
           </div>
-          <p class="izu-desc">Abre cada archivo de la vista previa con el editor de texto del sistema.</p>
-          <div class="izu-files">
-            <div class="izu-file"><span>/etc/dhcp/dhcpd.conf</span><small>IPv4</small></div>
-            <div class="izu-file"><span>/etc/dhcp/dhcpd6.conf</span><small>IPv6</small></div>
+          <p class="izu-desc">Marca las Izumi que vas a cambiar. Puedes elegir una sola, varias o todas.</p>
+          <div class="rz-quick">
+            <button type="button" class="btn btn-secundario btn-mini" id="rz-todas">Seleccionar las 16</button>
+            <button type="button" class="btn btn-secundario btn-mini" id="rz-ninguna">Quitar selección</button>
           </div>
-          <div class="izu-btns">
-            <button class="btn btn-grande izu-open" type="button" data-dhcp="dhcpd">Abrir dhcpd.conf</button>
-            <button class="btn btn-grande izu-open" type="button" data-dhcp="dhcpd6">Abrir dhcpd6.conf</button>
-          </div>
-          <div id="izu-res" class="izu-res"></div>
-          <p class="izu-note">Para guardar cambios en /etc/dhcp el editor necesita permisos de administrador. Recuerda reiniciar el servicio DHCP después de editar.</p>
-        </div>
+          <div class="rz-grid" id="rz-grid" role="group" aria-label="Izumi a remplazar"></div>
 
-        <div class="card hex-card">
-          <div class="card-head">
-            <span class="card-title">Calculadora hexadecimal</span>
-            <span class="card-count">hasta 64 dígitos</span>
+          <div class="rz-macs" id="rz-macs" hidden>
+            <div class="rz-macs-head">
+              <span class="card-title">MAC nuevas</span>
+              <span class="rz-fuente" id="rz-fuente">Leyendo /etc/dhcp/dhcpd.conf…</span>
+              <button type="button" class="btn btn-secundario btn-mini" id="rz-recargar" title="Vuelve a leer las MAC actuales del archivo">Volver a leer</button>
+            </div>
+            <div class="rz-tabla" id="rz-tabla"></div>
           </div>
-          <div class="hex-screen">
-            <div class="hex-expr" id="hex-expr"></div>
-            <div class="hex-disp" id="hex-disp">0</div>
+
+          <div class="rz-foot">
+            <span class="rz-sel" id="rz-sel">Selecciona al menos una Izumi.</span>
+            <button type="button" class="btn" id="rz-continuar" disabled title="Siguiente paso: pendiente de definir">Continuar →</button>
           </div>
-          <div class="hex-conv">
-            <div class="hex-row"><b>HEX</b><code id="hex-v-hex">0</code><button type="button" data-copy="hex">Copiar</button></div>
-            <div class="hex-row"><b>DEC</b><code id="hex-v-dec">0</code><button type="button" data-copy="dec">Copiar</button></div>
-            <div class="hex-row"><b>BIN</b><code id="hex-v-bin">0000</code><button type="button" data-copy="bin">Copiar</button></div>
-          </div>
-          <div class="hex-keys" id="hex-keys"></div>
         </div>
       </div>
     </section>
@@ -2604,7 +2661,7 @@ document.querySelectorAll('.hex-row button[data-copy]').forEach((b) => {
 // Teclado: solo cuando esta sección está visible
 document.addEventListener('keydown', (e) => {
   const sec = $('remplazar-izumi');
-  if (!sec || !sec.classList.contains('active')) return;
+  if (!sec || !sec.classList.contains('active') || !$('hex-disp')) return;
   const t = e.target;
   if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
   if (t && t.closest && t.closest('button') && !t.closest('.hex-card')) return;
@@ -2629,8 +2686,213 @@ document.addEventListener('keydown', (e) => {
   if (atendida) e.preventDefault();
 });
 
-construirTecladoHex();
-hexPintar();
+// La calculadora se quitó de la pantalla por ahora: solo se arma si su HTML existe
+if ($('hex-keys')) { construirTecladoHex(); hexPintar(); }
+
+/* ---------- Remplazar Izumi: selección de 1 a 16 ---------- */
+const rzSel = new Set();
+(function construirSeleccionIzumi() {
+  const cont = $('rz-grid');
+  if (!cont) return;
+  for (let i = 1; i <= 16; i++) {
+    const lab = document.createElement('label');
+    lab.className = 'rz-item';
+    lab.dataset.n = i;
+    lab.title = 'Izumi ' + i + ' · telnet 10.0.0.253 ' + (7000 + i);
+    const chk = document.createElement('input');
+    chk.type = 'checkbox';
+    chk.value = i;
+    chk.setAttribute('aria-label', 'Izumi ' + i);
+    chk.addEventListener('change', () => { if (chk.checked) rzSel.add(i); else rzSel.delete(i); pintarSeleccionIzumi(); });
+    const box = document.createElement('span'); box.className = 'rz-box';
+    const num = document.createElement('span'); num.className = 'rz-num'; num.textContent = i;
+    const txt = document.createElement('span'); txt.className = 'rz-lbl'; txt.textContent = 'Izumi';
+    lab.append(chk, box, num, txt);
+    cont.appendChild(lab);
+  }
+  const marcar = (on) => {
+    cont.querySelectorAll('input').forEach((c) => { c.checked = on; if (on) rzSel.add(+c.value); else rzSel.delete(+c.value); });
+    pintarSeleccionIzumi();
+  };
+  $('rz-todas').addEventListener('click', () => marcar(true));
+  $('rz-ninguna').addEventListener('click', () => marcar(false));
+  $('rz-recargar').addEventListener('click', () => { rzDhcp = null; pintarMacs(); rzLeerDhcp(); });
+  pintarSeleccionIzumi();
+})();
+
+/* ---------- MAC actual (de dhcpd.conf) y MAC nueva por Izumi ---------- */
+const rzNuevas = new Map();      // n -> texto escrito (se conserva aunque desmarques y vuelvas a marcar)
+let rzDhcp = null;               // lo que se leyó de /etc/dhcp/dhcpd.conf
+let rzLeyendo = null;
+
+// Acepta 00:1a:2b:3c:4d:5e, 00-1A-2B-3C-4D-5E, 001a.2b3c.4d5e, 001a2b3c4d5e y la forma corta 0:1a:2b:3c:4d:5
+const rzNormalizar = (m) => {
+  const t = String(m || '').trim();
+  const partes = t.split(/[:\-]/);
+  if (partes.length === 6 && partes.every((p) => /^[0-9a-f]{1,2}$/i.test(p))) return partes.map((p) => p.padStart(2, '0').toLowerCase()).join(':');
+  const x = t.replace(/[.\s]/g, '');
+  return /^[0-9a-f]{12}$/i.test(x) ? x.toLowerCase().match(/../g).join(':') : null;
+};
+
+async function rzLeerDhcp() {
+  if (!window.sistema || typeof window.sistema.rzLeerMacs !== 'function') {
+    rzDhcp = { ok: false, archivos: { dhcpd: { ruta: '/etc/dhcp/dhcpd.conf', existe: false, error: 'Reinicia la app (falta actualizar main.js y preload.js).' } }, izumis: {}, macs: [] };
+    pintarMacs();
+    return;
+  }
+  if (rzLeyendo) return rzLeyendo;
+  $('rz-fuente').textContent = 'Leyendo /etc/dhcp/dhcpd.conf…';
+  rzLeyendo = window.sistema.rzLeerMacs()
+    .then((d) => { rzDhcp = d; })
+    .catch((e) => { rzDhcp = { ok: false, archivos: { dhcpd: { ruta: '/etc/dhcp/dhcpd.conf', existe: true, error: e.message } }, izumis: {}, macs: [] }; })
+    .finally(() => { rzLeyendo = null; pintarMacs(); });
+  return rzLeyendo;
+}
+
+// Revisa la MAC nueva de una Izumi: formato, que no sea la misma, que no la tenga otro equipo, que no se repita
+function rzValidar(n, todas) {
+  const txt = (rzNuevas.get(n) || '').trim();
+  if (!txt) return { estado: 'vacia', msg: 'Pega o escribe la MAC nueva (ej. 00:1a:2b:3c:4d:5e)' };
+  const mac = rzNormalizar(txt);
+  if (!mac) {
+    const dig = txt.replace(/[^0-9a-f]/gi, '').length;
+    if (/[g-z]/i.test(txt)) return { estado: 'mal', msg: 'Solo se permiten números y letras de la A a la F' };
+    return { estado: 'mal', msg: dig !== 12 ? 'Faltan o sobran dígitos: lleva ' + dig + ' de 12' : 'Formato no válido (usa 00:1a:2b:3c:4d:5e)' };
+  }
+  const info = rzDhcp && rzDhcp.izumis ? rzDhcp.izumis[n] : null;
+  if (info && info.mac === mac) return { estado: 'mal', msg: 'Es la misma MAC que ya tiene', mac };
+  const otra = todas.find((x) => x.n !== n && x.mac === mac);
+  if (otra) return { estado: 'mal', msg: 'Repetida: también la pusiste en la Izumi ' + otra.n, mac };
+  const ajena = (rzDhcp && rzDhcp.macs || []).find((x) => x.mac === mac && (!info || x.host !== info.host));
+  if (ajena) return { estado: 'mal', msg: 'Esa MAC ya la tiene «' + ajena.host + '» en dhcpd.conf', mac };
+  return { estado: 'ok', msg: mac === txt.toLowerCase() ? 'MAC válida' : 'Se guardará como ' + mac, mac };
+}
+
+function pintarMacs() {
+  const lista = [...rzSel].sort((a, b) => a - b);
+  const caja = $('rz-macs');
+  caja.hidden = !lista.length;
+  if (!lista.length) { rzActualizarListo(); return; }
+
+  // Fuente: qué se leyó del archivo
+  const f = $('rz-fuente');
+  f.classList.remove('err');
+  if (!rzDhcp) f.textContent = 'Leyendo /etc/dhcp/dhcpd.conf…';
+  else {
+    const a = rzDhcp.archivos.dhcpd;
+    const encontradas = Object.values(rzDhcp.izumis || {}).filter(Boolean).length;
+    if (a.error) { f.textContent = 'No se pudo leer ' + a.ruta + ': ' + a.error; f.classList.add('err'); }
+    else if (!a.existe) { f.textContent = 'No existe ' + a.ruta + ' en esta PC'; f.classList.add('err'); }
+    else f.textContent = 'MAC actuales leídas de ' + a.ruta + ' · ' + a.hosts + ' hosts · ' + encontradas + ' de 16 Izumi encontradas';
+  }
+
+  // Filas: se reutilizan para no perder el foco mientras escribes
+  const tabla = $('rz-tabla');
+  const existentes = new Map([...tabla.children].map((el) => [+el.dataset.n, el]));
+  for (const [n, el] of existentes) if (!rzSel.has(n)) el.remove();
+  let previa = null;
+  for (const n of lista) {
+    let fila = existentes.get(n);
+    if (!fila) {
+      fila = document.createElement('div');
+      fila.className = 'rz-fila';
+      fila.dataset.n = n;
+      fila.innerHTML =
+        '<div class="rz-n">Izumi ' + n + '<small>10.0.0.' + n + '</small></div>' +
+        '<div class="rz-vieja"><code></code><small></small></div>' +
+        '<div class="rz-flecha">→</div>' +
+        '<div class="rz-nueva"><input type="text" maxlength="20" spellcheck="false" autocomplete="off" placeholder="MAC nueva"><small></small></div>' +
+        '<div class="rz-st"></div>';
+      const inp = fila.querySelector('input');
+      inp.value = rzNuevas.get(n) || '';
+      inp.setAttribute('aria-label', 'MAC nueva de la Izumi ' + n);
+      inp.addEventListener('input', () => { rzNuevas.set(n, inp.value); rzRevisarTodas(); });
+      inp.addEventListener('blur', () => { const m = rzNormalizar(inp.value); if (m) { inp.value = m; rzNuevas.set(n, m); rzRevisarTodas(); } });
+      inp.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const sig = fila.nextElementSibling && fila.nextElementSibling.querySelector('input');
+        if (sig) sig.focus(); else inp.blur();
+      });
+    }
+    // Siempre en orden 1..16
+    if (previa ? previa.nextElementSibling !== fila : tabla.firstElementChild !== fila) {
+      if (previa) previa.after(fila); else tabla.prepend(fila);
+    }
+    previa = fila;
+
+    const info = rzDhcp && rzDhcp.izumis ? rzDhcp.izumis[n] : undefined;
+    const v = fila.querySelector('.rz-vieja');
+    v.classList.toggle('nada', !info || !info.mac);
+    if (info === undefined) { v.querySelector('code').textContent = 'leyendo…'; v.querySelector('small').textContent = ''; }
+    else if (!info) { v.querySelector('code').textContent = 'no encontrada'; v.querySelector('small').textContent = 'Sin host para esta Izumi en dhcpd.conf'; }
+    else {
+      v.querySelector('code').textContent = info.mac || 'sin MAC';
+      const extra = [];
+      extra.push('host ' + info.host + (info.ip ? ' · ' + info.ip : ''));
+      if (info.por === 'ip') extra.push('(encontrada por IP)');
+      if (info.duplicados > 1) extra.push('⚠ ' + info.duplicados + ' hosts coinciden');
+      if (info.en6) extra.push('también en dhcpd6.conf');
+      v.querySelector('small').textContent = extra.join(' · ');
+      v.title = 'Línea ' + info.linea + ' de dhcpd.conf';
+    }
+  }
+  rzRevisarTodas();
+}
+
+function rzRevisarTodas() {
+  const lista = [...rzSel].sort((a, b) => a - b);
+  const todas = lista.map((n) => ({ n, mac: rzNormalizar(rzNuevas.get(n)) }));
+  let validas = 0;
+  for (const n of lista) {
+    const fila = document.querySelector('#rz-tabla .rz-fila[data-n="' + n + '"]');
+    if (!fila) continue;
+    const r = rzValidar(n, todas);
+    fila.classList.toggle('ok', r.estado === 'ok');
+    fila.classList.toggle('mal', r.estado === 'mal');
+    fila.querySelector('.rz-nueva small').textContent = r.msg;
+    fila.querySelector('.rz-st').textContent = r.estado === 'ok' ? '✓' : r.estado === 'mal' ? '✕' : '';
+    if (r.estado === 'ok') validas++;
+  }
+  rzActualizarListo(validas, lista.length);
+}
+
+function rzActualizarListo(validas, total) {
+  const ex = document.querySelector('#rz-sel .rz-sel-mac');
+  if (ex && total) ex.textContent = ' · ' + (validas === total ? 'todas las MAC listas ✓' : validas + ' de ' + total + ' MAC listas');
+  const b = $('rz-continuar');
+  b.disabled = true;   // el siguiente paso se define después
+  if (total) b.title = validas === total ? 'Las ' + total + ' MAC están listas · siguiente paso pendiente de definir' : 'Faltan ' + (total - validas) + ' MAC por completar';
+}
+
+function pintarSeleccionIzumi() {
+  const lista = [...rzSel].sort((a, b) => a - b);
+  document.querySelectorAll('#rz-grid .rz-item').forEach((el) => el.classList.toggle('on', rzSel.has(+el.dataset.n)));
+  $('rz-count').textContent = lista.length === 0 ? 'Ninguna seleccionada'
+    : lista.length === 16 ? 'Las 16 seleccionadas'
+    : lista.length + (lista.length === 1 ? ' seleccionada' : ' seleccionadas');
+  const sel = $('rz-sel');
+  if (!lista.length) sel.textContent = 'Selecciona al menos una Izumi.';
+  else {
+    sel.textContent = '';
+    sel.append(lista.length === 16 ? 'Vas a remplazar ' : (lista.length === 1 ? 'Vas a remplazar la Izumi ' : 'Vas a remplazar las Izumi '));
+    const b = document.createElement('b');
+    b.textContent = lista.length === 16 ? 'las 16 Izumi' : lista.join(', ');
+    sel.appendChild(b);
+  }
+  $('rz-todas').disabled = lista.length === 16;
+  $('rz-ninguna').disabled = !lista.length;
+  if (lista.length && !rzDhcp) rzLeerDhcp();   // se lee el archivo la primera vez que eliges una
+  pintarMacs();
+  // Resumen con cuántas MAC faltan
+  if (lista.length) {
+    const listas = lista.filter((n) => rzValidar(n, lista.map((x) => ({ n: x, mac: rzNormalizar(rzNuevas.get(x)) }))).estado === 'ok').length;
+    const extra = document.createElement('span');
+    extra.className = 'rz-sel-mac';
+    extra.textContent = ' · ' + (listas === lista.length ? 'todas las MAC listas ✓' : listas + ' de ' + lista.length + ' MAC listas');
+    sel.appendChild(extra);
+  }
+}
 
 
 

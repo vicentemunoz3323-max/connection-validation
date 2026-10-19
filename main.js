@@ -22,6 +22,9 @@ require('./testcase_main.js');
 // Consolas telnet de las Izumi (una ventana por Izumi)
 const consolasIzumi = require('./izumi_main.js');
 
+// Remplazar Izumi: lee las MAC actuales de dhcpd.conf
+require('./remplazo_main.js');
+
 
 
 // Recarga automática solo al desarrollar (npm start), nunca en la app instalada
