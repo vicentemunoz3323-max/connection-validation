@@ -894,6 +894,12 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .uc-resp.pide .uc-pide { color: #e5c07b; font-weight: 700; }
 .uc-resp.pide #uc-in { border-color: #e5c07b; }
 @keyframes pideLuz { 50% { background: #2f2a1d; } }
+
+.uc-rapidas { display: inline-flex; gap: 6px; }
+.uc-rapidas[hidden] { display: none; }
+.uc-rapidas button { font: 600 11px SFMono-Regular, Consolas, monospace; padding: 4px 10px; background: #3a3a3a; color: #e5c07b; border: 1px solid #e5c07b; cursor: pointer; }
+.uc-rapidas button:hover { background: #4a4330; }
+.uc-pide.prog { color: #4ec9b0; }
 </style>
 </head>
 <body>
@@ -1116,7 +1122,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
             <div class="cmd-opts">
               <label class="chk"><input type="checkbox" id="stop-on-fail" checked><span>Detener si un comando falla</span></label>
               <label class="chk lim" title="Si un comando tarda más, se detiene y se marca como fallido · 0 = sin límite">
-                <span>Tiempo límite</span><input type="number" id="lim-min" min="0" max="1440" step="1" value="10"><span>min por comando</span>
+                <span>Tiempo límite</span><input type="number" id="lim-min" min="0" max="1440" step="1" value="30"><span>min por comando</span>
               </label>
             </div>
             <button id="cmd-clear-btn" class="btn btn-secundario">Vaciar lista</button>
@@ -1162,7 +1168,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         <div class="uc-head">
           <span>Consola · segundo plano</span>
           <span class="uc-meta" id="uc-meta">0 líneas</span>
-          <span class="uc-sudo" id="uc-sudo" hidden>🔑 sudo recordado <button type="button" id="uc-olvidar" title="Borra la contraseña guardada">Olvidar</button></span>
+          <span class="uc-sudo" id="uc-sudo" hidden><span id="uc-sudo-txt">🔑 contraseñas recordadas</span> <button type="button" id="uc-olvidar" title="Borra las contraseñas recordadas (sudo, racks…)">Olvidar</button></span>
           <div class="uc-actions">
             <button id="uc-follow" class="btn btn-secundario btn-mini is-on">Seguir salida</button>
             <button id="uc-log" class="btn btn-secundario btn-mini">Abrir log</button>
@@ -1175,10 +1181,11 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <div class="uc-row">
             <span class="uc-prompt" id="uc-prompt">›</span>
             <input id="uc-in" type="text" spellcheck="false" autocomplete="off" disabled placeholder="Respuesta para el comando que está corriendo">
+            <span class="uc-rapidas" id="uc-rapidas" hidden></span>
             <button type="submit" id="uc-enviar" class="btn btn-mini" disabled>Enviar</button>
             <button type="button" id="uc-ctrlc" class="btn btn-secundario btn-mini" disabled title="Interrumpe el comando actual">Ctrl+C</button>
           </div>
-          <label class="uc-rec" id="uc-rec" hidden><input type="checkbox" id="uc-recordar" checked> Recordar la contraseña de sudo mientras la app esté abierta (no se guarda en disco)</label>
+          <label class="uc-rec" id="uc-rec" hidden><input type="checkbox" id="uc-recordar" checked> <span id="uc-rec-txt">Recordar esta contraseña mientras la app esté abierta (no se guarda en disco)</span></label>
         </form>
       </div>
     </section>
@@ -2163,14 +2170,36 @@ function aplicarPregunta(s) {
   const esPass = !!(p && p.tipo === 'password');
   inp.type = esPass ? 'password' : 'text';
   $('uc-prompt').textContent = esPass ? '🔑' : '›';
-  $('uc-rec').hidden = !(p && p.sudo);
+  $('uc-rec').hidden = !esPass;
+  $('uc-rec-txt').textContent = p && p.sudo
+    ? 'Recordar la contraseña de sudo mientras la app esté abierta (no se guarda en disco)'
+    : 'Recordar esta contraseña (' + (p ? p.texto.replace(/[:：]\s*$/, '').slice(0, 60) : '') + ') mientras la app esté abierta';
+  // Respuestas rápidas para preguntas de sí/no (por ejemplo, la primera vez que te conectas a un rack)
+  const rap = $('uc-rapidas');
+  rap.textContent = '';
+  let opciones = [];
+  if (p && p.tipo === 'texto') {
+    if (/yes\/no/i.test(p.texto)) opciones = ['yes', 'no'];
+    else if (/\[[sS]\/[nN]\]|\(s[ií]\/no\)/.test(p.texto)) opciones = ['s', 'n'];
+    else if (/\[[yY]\/[nN]\]/.test(p.texto)) opciones = ['y', 'n'];
+  }
+  for (const o of opciones) {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = o;
+    b.addEventListener('click', () => { $('uc-in').value = o; $('uc-resp').requestSubmit(); });
+    rap.appendChild(b);
+  }
+  rap.hidden = !opciones.length;
+  $('uc-pide').classList.toggle('prog', !p && !!(corriendo && s.progreso));
   if (p) {
     $('uc-pide').textContent = (esPass ? 'El comando pide contraseña: ' : 'El comando espera respuesta: ') + p.texto;
     inp.placeholder = esPass ? 'Escribe la contraseña y presiona Enter' : 'Escribe la respuesta y presiona Enter';
   } else {
-    $('uc-pide').textContent = corriendo
-      ? 'Si un comando pregunta algo (contraseña, s/n…), contéstale aquí.' + (s.terminal === false ? ' (sin terminal: sudo puede no funcionar)' : '')
-      : 'Se activa mientras corren los comandos.';
+    $('uc-pide').textContent = corriendo && s.progreso
+      ? '⏳ ' + s.progreso
+      : corriendo
+        ? 'Si un comando pregunta algo (contraseña, s/n…), contéstale aquí.' + (s.terminal === false ? ' (sin terminal: sudo puede no funcionar)' : '')
+        : 'Se activa mientras corren los comandos.';
     inp.placeholder = 'Respuesta para el comando que está corriendo';
   }
   if (nueva) {
@@ -2181,14 +2210,18 @@ function aplicarPregunta(s) {
 }
 async function revisarSudo() {
   if (!window.sistema || typeof window.sistema.cmdsSudoHay !== 'function') return;
-  try { $('uc-sudo').hidden = !(await window.sistema.cmdsSudoHay()); } catch (e) {}
+  try {
+    const n = Number(await window.sistema.cmdsSudoHay()) || 0;
+    $('uc-sudo').hidden = !n;
+    $('uc-sudo-txt').textContent = '🔑 ' + n + (n === 1 ? ' contraseña recordada' : ' contraseñas recordadas');
+  } catch (e) {}
 }
 $('uc-resp').addEventListener('submit', async (e) => {
   e.preventDefault();
   if (!window.sistema || typeof window.sistema.cmdsResponder !== 'function') return;
   const inp = $('uc-in');
   const secreto = inp.type === 'password';
-  const r = await window.sistema.cmdsResponder(inp.value, { secreto, recordarSudo: secreto && !$('uc-rec').hidden && $('uc-recordar').checked });
+  const r = await window.sistema.cmdsResponder(inp.value, { secreto, recordar: secreto && !$('uc-rec').hidden && $('uc-recordar').checked });
   if (r && r.ok) { inp.value = ''; revisarSudo(); }
   else if (r && r.error) setHint(r.error);
 });

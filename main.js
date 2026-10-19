@@ -503,7 +503,7 @@ function flushSalida() {
 }
 
 function emitirLinea(tipo, texto) {
-  if (estadoCmds.pide && tipo !== 'sys') emitirCmds({ pide: null });   // llegó salida nueva: ya no está esperando
+  if ((estadoCmds.pide || estadoCmds.progreso) && tipo !== 'sys') emitirCmds({ pide: null, progreso: null });   // llegó salida nueva: ya no está esperando
   colaSalida.push({ t: tipo, s: texto });
   if (logStream) {
     logStream.write((tipo === 'err' ? '[ERR] ' : tipo === 'sys' ? '>>> ' : '') + texto + '\n');
@@ -514,17 +514,28 @@ function emitirLinea(tipo, texto) {
 // Convierte los trozos (chunks) del proceso en líneas completas.
 // alPausar(texto): se llama cuando una línea se queda sin terminar (así se ven las preguntas
 // tipo "[sudo] password for …:" o "¿Continuar? [S/n]").
-function crearLector(tipo, alPausar) {
+// alProgreso(texto): barras de progreso que se reescriben con \r (scp, rsync, apt): no llenan la consola,
+// se muestran en una sola línea de estado y solo queda en la consola el resultado final.
+const ultimoSegmento = (l) => { const i = l.lastIndexOf('\r'); return i >= 0 ? l.slice(i + 1) : l; };
+
+function crearLector(tipo, alPausar, alProgreso) {
   const decoder = new StringDecoder('utf8');
   let resto = '';
   let idle = null;
+  let esProgreso = false;
+  let ultimoProg = 0;
 
   const limpiar = (t) => t.replace(REGEX_ANSI, '');
   const vaciarResto = (porPausa) => {
     const t = resto.replace(/\r$/, '');
-    resto = '';
-    if (!t.length) return;
+    if (!t.length) { resto = ''; return; }
     const linea = limpiar(t);
+    if (porPausa && esProgreso && !analizarPregunta(linea)) {
+      if (alProgreso) alProgreso(linea);   // sigue en curso: se queda pendiente hasta el salto de línea
+      return;
+    }
+    resto = '';
+    esProgreso = false;
     emitirLinea(tipo, linea);
     if (porPausa && alPausar) alPausar(linea);
   };
@@ -535,15 +546,24 @@ function crearLector(tipo, alPausar) {
       let texto = resto + decoder.write(buf);
       let retenido = '';
       if (texto.endsWith('\r')) { retenido = '\r'; texto = texto.slice(0, -1); } // por si llega \r\n partido
-      const partes = texto.split(/\r\n|\n|\r/);
-      resto = partes.pop() + retenido;
-      for (const linea of partes) emitirLinea(tipo, limpiar(linea));
+      const partes = texto.split(/\r?\n/);
+      resto = partes.pop();
+      for (const linea of partes) emitirLinea(tipo, limpiar(ultimoSegmento(linea)));
+      if (partes.length) esProgreso = false;
+      const k = resto.lastIndexOf('\r');
+      if (k >= 0) { resto = resto.slice(k + 1); esProgreso = true; }   // se reescribió la línea: solo cuenta lo último
+      resto += retenido;
+      if (esProgreso && alProgreso && resto.trim() && Date.now() - ultimoProg > 700) {
+        ultimoProg = Date.now();
+        alProgreso(limpiar(resto.replace(/\r$/, '')));
+      }
       if (resto.length) idle = setTimeout(() => vaciarResto(true), IDLE_PARCIAL_MS);
     },
     flush() {
       if (idle) { clearTimeout(idle); idle = null; }
       const fin = decoder.end();
       if (fin) resto += fin;
+      esProgreso = false;
       vaciarResto(false);
     }
   };
@@ -571,7 +591,56 @@ const SCRIPT_PTY = process.platform === 'linux' && fs.existsSync('/usr/bin/scrip
 const RX_PIDE_PASS = /(password|contraseña|passphrase|clave|pin)\b[^\n]*[:：]\s*$/i;
 const RX_PIDE_SUDO = /\[sudo\]|sudo\b.*(password|contraseña)|password for \S+:\s*$|contraseña para \S+:\s*$/i;
 const RX_PIDE_SINO = /(\[[ysSnN]\/[ysSnN]\]|\((yes|no|si|sí)\/(no|yes)[^)]*\)|\[(Y|S)\/n\]|\[y\/N\]|continue\?|continuar\?|\?\s*$|:\s*$)/i;
-let sudoGuardada = null;   // solo en memoria, se borra al cerrar la app
+// Contraseñas recordadas (solo en memoria, se borran al cerrar la app).
+// Clave: "sudo" para sudo, y el texto de la pregunta para lo demás (p. ej. "serverus@10.0.0.5's password:"),
+// así cada rack/usuario tiene la suya.
+const guardadas = new Map();
+const claveDe = (p) => (p.sudo ? 'sudo' : p.texto.trim().replace(/\s+/g, ' '));
+const etiquetaDe = (clave) => (clave === 'sudo' ? 'sudo' : clave.replace(/[:：]\s*$/, ''));
+const RX_PASS_MALA = /permission denied|sorry, try again|incorrect password|authentication fail|contraseña incorrecta|wrong password|access denied|login incorrect|bad passphrase/i;
+
+/* ---------- "no new privileges" ----------
+   Si la app se abrió desde un programa que activa esta protección (por ejemplo VS Code
+   instalado como Flatpak/Snap, o algunos lanzadores), sudo no puede subir a root en ningún
+   proceso hijo. En ese caso cada comando se lanza con "systemd-run --user", que corre fuera
+   de la app (en tu sesión de Ubuntu) y ahí sudo sí funciona. */
+function tieneNoNewPrivs() {
+  try { return /NoNewPrivs:\s*1/.test(fs.readFileSync('/proc/self/status', 'utf8')); } catch (e) { return false; }
+}
+const NO_NEW_PRIVS = process.platform === 'linux' && tieneNoNewPrivs();
+const SYSTEMD_RUN = process.env.CV_SYSTEMD_RUN || (fs.existsSync('/usr/bin/systemd-run') ? '/usr/bin/systemd-run' : null);
+let systemdRunOk = null;   // se prueba una sola vez
+
+function probarSystemdRun() {
+  if (systemdRunOk !== null) return Promise.resolve(systemdRunOk);
+  if (!NO_NEW_PRIVS || !SYSTEMD_RUN) { systemdRunOk = false; return Promise.resolve(false); }
+  return new Promise((resolve) => {
+    let p;
+    try { p = spawn(SYSTEMD_RUN, ['--user', '--quiet', '--wait', '--collect', '--', '/bin/true'], { stdio: 'ignore' }); }
+    catch (e) { systemdRunOk = false; return resolve(false); }
+    const t = setTimeout(() => { try { p.kill(); } catch (e) {} systemdRunOk = false; resolve(false); }, 5000);
+    p.on('error', () => { clearTimeout(t); systemdRunOk = false; resolve(false); });
+    p.on('close', (c) => { clearTimeout(t); systemdRunOk = c === 0; resolve(systemdRunOk); });
+  });
+}
+
+const comillas = (t) => "'" + String(t).replace(/'/g, "'\\''") + "'";
+const VARS_SESION = ['PATH', 'HOME', 'USER', 'LOGNAME', 'LANG', 'LANGUAGE', 'LC_ALL', 'DISPLAY', 'WAYLAND_DISPLAY',
+  'XAUTHORITY', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_RUNTIME_DIR', 'SSH_AUTH_SOCK'];
+
+// Arma el comando para correrlo fuera de la app con systemd-run (con terminal propia)
+function argsSystemdRun(cmd, unidad) {
+  const env = { TERM: 'dumb', NO_COLOR: '1', PAGER: 'cat', GIT_PAGER: 'cat', SYSTEMD_PAGER: 'cat', PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8', COLUMNS: '200' };
+  for (const k of VARS_SESION) if (process.env[k]) env[k] = process.env[k];
+  return ['--user', '--pty', '--quiet', '--wait', '--collect', '--same-dir', '--unit=' + unidad,
+    ...Object.entries(env).map(([k, v]) => '--setenv=' + k + '=' + v),
+    '--', '/bin/bash', '-lc', cmd];
+}
+
+function detenerUnidad(unidad) {
+  if (!unidad || !SYSTEMD_RUN) return;
+  try { spawn('systemctl', ['--user', 'kill', '--signal=SIGKILL', unidad], { stdio: 'ignore' }).on('error', () => {}); } catch (e) {}
+}
 
 function analizarPregunta(linea) {
   const t = linea.trimEnd();
@@ -612,44 +681,76 @@ function correrComando(cmd, opciones = {}) {
         cwd: os.homedir(),
         env
       };
-      proc = SCRIPT_PTY
-        ? spawn(SCRIPT_PTY, ['-qefc', cmd, '/dev/null'], opts)
-        : spawn(cmd, { ...opts, shell: true });
+      if (opciones.fueraDeLaApp) {
+        // Fuera de la app: systemd-run --pty necesita una terminal, se la da "script"
+        const unidad = 'connection-validation-' + process.pid + '-' + Date.now();
+        if (ejecCmds) ejecCmds.unidad = unidad;
+        const linea = [SYSTEMD_RUN, ...argsSystemdRun(cmd, unidad)].map(comillas).join(' ');
+        proc = spawn(SCRIPT_PTY, ['-qefc', linea, '/dev/null'], opts);
+      } else {
+        proc = SCRIPT_PTY
+          ? spawn(SCRIPT_PTY, ['-qefc', cmd, '/dev/null'], opts)
+          : spawn(cmd, { ...opts, shell: true });
+      }
     } catch (e) {
       emitirLinea('err', 'No se pudo iniciar: ' + e.message);
       return fin(-1);
     }
 
-    if (ejecCmds) { ejecCmds.proc = proc; ejecCmds.autoSudo = 0; }
+    if (ejecCmds) { ejecCmds.proc = proc; ejecCmds.ultimaClave = null; ejecCmds.tEnvio = 0; }
     proc.stdin.on('error', () => {});
 
+    let avisoNnp = false;
+    const vigilar = (d) => {
+      const txt = d.toString();
+      // Si justo después de mandar una contraseña recordada sale "Permission denied" / "Sorry, try again", estaba mal
+      if (ejecCmds && ejecCmds.ultimaClave && Date.now() - ejecCmds.tEnvio < 15000 && RX_PASS_MALA.test(txt)) {
+        const c = ejecCmds.ultimaClave;
+        ejecCmds.ultimaClave = null;
+        if (guardadas.delete(c)) {
+          setTimeout(() => emitirLinea('sys', '✕ La contraseña recordada para «' + etiquetaDe(c) + '» no funcionó; se borró. Escríbela de nuevo.'), 30);
+          emitirCmds({ guardadas: guardadas.size });
+        }
+      }
+      if (!avisoNnp && /no new privileges/i.test(txt)) {
+        avisoNnp = true;
+        setTimeout(() => emitirLinea('sys', '⚠ sudo está bloqueado porque la app se abrió desde un programa que lo prohíbe (por ejemplo la terminal de VS Code). Ábrela desde el menú de aplicaciones (app instalada) y vuelve a intentar.'), 50);
+      }
+    };
     const alPausar = (linea) => {
       const p = analizarPregunta(linea);
       if (!p) return;
-      // Contraseña de sudo recordada: se contesta sola (una vez por comando; si falla, se pregunta)
-      if (p.sudo && sudoGuardada && ejecCmds && ejecCmds.autoSudo < 1) {
-        ejecCmds.autoSudo++;
-        if (escribirAlComando(sudoGuardada + '\n')) {
-          emitirLinea('sys', '🔑 Contraseña de sudo enviada automáticamente');
+      // Contraseña recordada: se contesta sola
+      if (p.tipo === 'password' && ejecCmds) {
+        const clave = claveDe(p);
+        const pass = guardadas.get(clave);
+        // Si vuelve a preguntar enseguida de mandarla, estaba mal
+        if (pass !== undefined && ejecCmds.ultimaClave === clave && Date.now() - ejecCmds.tEnvio < 2500) {
+          guardadas.delete(clave);
+          emitirLinea('sys', '✕ La contraseña recordada para «' + etiquetaDe(clave) + '» no funcionó; se borró. Escríbela de nuevo.');
+          emitirCmds({ guardadas: guardadas.size });
+        } else if (pass !== undefined && escribirAlComando(pass + '\n')) {
+          ejecCmds.ultimaClave = clave;
+          ejecCmds.tEnvio = Date.now();
+          emitirLinea('sys', '🔑 Contraseña de «' + etiquetaDe(clave) + '» enviada automáticamente');
           return;
         }
-      } else if (p.sudo && sudoGuardada && ejecCmds && ejecCmds.autoSudo >= 1) {
-        sudoGuardada = null;
-        emitirLinea('sys', '✕ La contraseña de sudo guardada no funcionó; escríbela de nuevo');
       }
-      emitirCmds({ pide: { tipo: p.tipo, sudo: p.sudo, texto: p.texto.slice(-200), hora: Date.now() } });
+      emitirCmds({ pide: { tipo: p.tipo, sudo: p.sudo, texto: p.texto.slice(-200), hora: Date.now() }, progreso: null });
     };
 
-    const lectorOut = crearLector('out', alPausar);
-    const lectorErr = crearLector('err', alPausar);
-    proc.stdout.on('data', (d) => lectorOut.push(d));
-    proc.stderr.on('data', (d) => lectorErr.push(d));
+    const alProgreso = (t) => emitirCmds({ progreso: t.trim().slice(-200) });
+    const lectorOut = crearLector('out', alPausar, alProgreso);
+    const lectorErr = crearLector('err', alPausar, alProgreso);
+    proc.stdout.on('data', (d) => { lectorOut.push(d); vigilar(d); });
+    proc.stderr.on('data', (d) => { lectorErr.push(d); vigilar(d); });
 
     if (opciones.limiteMs > 0) {
       timerLimite = setTimeout(() => {
         tiempoAgotado = true;
         const lim = opciones.limiteMs >= 60000 ? Math.round(opciones.limiteMs / 60000) + ' min' : Math.round(opciones.limiteMs / 1000) + ' s';
         emitirLinea('err', '⏱ Tiempo límite agotado (' + lim + '): se detiene este comando');
+        if (ejecCmds) detenerUnidad(ejecCmds.unidad);
         matarArbol(proc);
       }, opciones.limiteMs);
     }
@@ -689,15 +790,23 @@ async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
     terminal: !!SCRIPT_PTY, limiteMs: limiteMs || 0
   });
 
+  const fueraDeLaApp = await probarSystemdRun();
+  if (NO_NEW_PRIVS) {
+    emitirLinea('sys', fueraDeLaApp
+      ? 'ℹ La app se abrió con "no new privileges" (por ejemplo desde VS Code): los comandos se corren fuera de la app con systemd-run para que sudo funcione.'
+      : '⚠ La app se abrió con "no new privileges" (por ejemplo desde VS Code): sudo no va a funcionar. Ábrela desde el menú de aplicaciones.');
+  }
+
   let hayFallos = false;
   for (let i = 0; i < total; i++) {
     if (ejecCmds.abortado) break;
     resultados[i] = 'ejecutando';
-    emitirCmds({ actual: i, resultados: [...resultados], pide: null });
+    emitirCmds({ actual: i, resultados: [...resultados], pide: null, progreso: null });
     emitirLinea('sys', `[${i + 1}/${total}] $ ${lista[i]}`);
 
     const t0 = Date.now();
-    const { codigo, tiempoAgotado } = await correrComando(lista[i], { limiteMs });
+    const { codigo, tiempoAgotado } = await correrComando(lista[i], { limiteMs, fueraDeLaApp });
+    ejecCmds.unidad = null;
     const seg = ((Date.now() - t0) / 1000).toFixed(1);
     if (estadoCmds.pide) emitirCmds({ pide: null });
 
@@ -765,6 +874,7 @@ ipcMain.handle('cmds-run', (_e, datos) => {
 ipcMain.handle('cmds-stop', () => {
   if (!ejecCmds) return { ok: false };
   ejecCmds.abortado = true;
+  detenerUnidad(ejecCmds.unidad);
   matarArbol(ejecCmds.proc);
   return { ok: true };
 });
@@ -783,9 +893,12 @@ ipcMain.handle('cmds-input', (_e, texto, datos = {}) => {
   if (!escribirAlComando(t + '\n')) return { ok: false, error: 'El comando ya no acepta respuestas.' };
   if (datos.secreto) {
     emitirLinea('sys', '🔑 Contraseña enviada');
-    if (datos.recordarSudo && estadoCmds.pide && estadoCmds.pide.sudo) {
-      sudoGuardada = t;
-      ejecCmds.autoSudo = 1;   // si sudo vuelve a preguntar en este comando, es que estaba mal: se avisa y se olvida
+    if ((datos.recordar || datos.recordarSudo) && estadoCmds.pide && estadoCmds.pide.tipo === 'password') {
+      const clave = claveDe(estadoCmds.pide);
+      guardadas.set(clave, t);
+      ejecCmds.ultimaClave = clave;   // si sale "Permission denied" enseguida, se borra
+      ejecCmds.tEnvio = Date.now();
+      emitirCmds({ guardadas: guardadas.size });
     }
   } else if (!SCRIPT_PTY) {
     emitirLinea('sys', '> ' + t);   // sin terminal no hay eco: se muestra lo que mandaste
@@ -793,8 +906,8 @@ ipcMain.handle('cmds-input', (_e, texto, datos = {}) => {
   if (estadoCmds.pide) emitirCmds({ pide: null });
   return { ok: true };
 });
-ipcMain.handle('cmds-sudo-olvidar', () => { sudoGuardada = null; return true; });
-ipcMain.handle('cmds-sudo-hay', () => !!sudoGuardada);
+ipcMain.handle('cmds-sudo-olvidar', () => { guardadas.clear(); emitirCmds({ guardadas: 0 }); return true; });
+ipcMain.handle('cmds-sudo-hay', () => guardadas.size);
 
 ipcMain.handle('cmds-open-log', () => {
   const dir = path.join(app.getPath('userData'), 'logs');
@@ -809,7 +922,7 @@ ipcMain.handle('cmds-open-log', () => {
 console.log('[main] manejadores de comandos registrados (cmds-run, cmds-stop)');
 
 app.on('before-quit', () => {
-  if (ejecCmds) { ejecCmds.abortado = true; matarArbol(ejecCmds.proc); }
+  if (ejecCmds) { ejecCmds.abortado = true; detenerUnidad(ejecCmds.unidad); matarArbol(ejecCmds.proc); }
 });
 
 /* ============================================================
