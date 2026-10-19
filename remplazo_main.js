@@ -6,6 +6,8 @@
    - La MAC que va en el DHCP es la de la etiqueta + 3 (suma hexadecimal con acarreo).
    - Remplaza SOLO la MAC de las líneas "host izumi-N" directamente en el archivo (sed),
      revisa el archivo (dhcpd -t) y reinicia el servicio DHCP.
+   - En /etc/dhcp/dhcpd6.conf la Izumi N es "host diorite-N" y su MAC va dentro del
+     client-id (00:03:00:01:<MAC>). Ahí va la MAC de la etiqueta SIN sumarle nada.
    - No crea respaldos ni copias. Si la revisión o el reinicio fallan, vuelve a poner
      las MAC anteriores en esas mismas líneas.
    Se carga desde main.js con:  require('./remplazo_main.js');
@@ -71,7 +73,13 @@ function leerHosts(texto) {
     const mac = /hardware\s+ethernet\s+([0-9a-f]{1,2}(?::[0-9a-f]{1,2}){5})\s*;/i.exec(cuerpo);
     const ip4 = cuerpo.match(/fixed-address\s+([^;]+);/i);
     const ip6 = cuerpo.match(/fixed-address6\s+([^;]+);/i);
+    // IPv6: host-identifier option dhcp6.client-id 00:03:00:01:92:1A:2B:3C:4D:5E;  -> MAC = los últimos 6
+    const cid = /host-identifier\s+option\s+dhcp6\.client-id\s+([0-9a-f]{1,2}(?::[0-9a-f]{1,2}){5,})\s*;/i.exec(cuerpo);
+    const cidPartes = cid ? cid[1].split(':') : [];
     hosts.push({
+      idTexto: cid ? cid[1] : null,
+      idPrefijo: cid ? cidPartes.slice(0, -6).join(':') : null,
+      mac6: cid ? normalizarMac(cidPartes.slice(-6).join(':')) : null,
       nombre: m[2],
       mac: mac ? normalizarMac(mac[1]) : null,
       macTexto: mac ? mac[1] : null,
@@ -85,6 +93,12 @@ function leerHosts(texto) {
 }
 
 const esIzumi = (nombre, n) => new RegExp('(izumi|izu)[^0-9a-z]*0*' + n + '(?![0-9])', 'i').test(nombre);
+// En dhcpd6.conf la Izumi N se llama diorite-N
+const esIzumi6 = (nombre, n) => new RegExp('(diorite|izumi|izu)[^0-9a-z]*0*' + n + '(?![0-9])', 'i').test(nombre);
+function buscarIzumi6(hosts6, n) {
+  const h = hosts6.filter((x) => x.mac6 && esIzumi6(x.nombre, n));
+  return h.length ? { host: h[0], duplicados: h.length } : null;
+}
 
 function buscarIzumi(hosts, n) {
   const porNombre = hosts.filter((h) => esIzumi(h.nombre, n));
@@ -110,13 +124,11 @@ async function leerTodo() {
   const hosts6 = a6.ok ? leerHosts(a6.texto) : [];
   const izumis = {};
   for (let n = 1; n <= NUM_IZUMIS; n++) {
+    const r6 = buscarIzumi6(hosts6, n);
+    const v6 = r6 ? { mac: r6.host.mac6, host: r6.host.nombre, ip: r6.host.ip, linea: r6.host.linea, duplicados: r6.duplicados } : null;
     const r = buscarIzumi(hosts4, n);
-    if (!r) { izumis[n] = null; continue; }
-    const mac = r.host.mac;
-    izumis[n] = {
-      mac, host: r.host.nombre, ip: r.host.ip, linea: r.host.linea, por: r.por, duplicados: r.duplicados,
-      en6: mac ? hosts6.filter((h) => h.mac === mac).length : 0
-    };
+    if (!r) { izumis[n] = v6 ? { mac: null, host: null, v6 } : null; continue; }
+    izumis[n] = { mac: r.host.mac, host: r.host.nombre, ip: r.host.ip, linea: r.host.linea, por: r.por, duplicados: r.duplicados, v6 };
   }
   return { a4, hosts4, a6, hosts6, izumis };
 }
@@ -131,7 +143,8 @@ ipcMain.handle('rz-leer', async () => {
       dhcpd6: { ruta: a6.ruta, existe: a6.existe, error: a6.error || null, hosts: hosts6.length }
     },
     izumis,
-    macs: hosts4.filter((h) => h.mac).map((h) => ({ mac: h.mac, host: h.nombre }))
+    macs: hosts4.filter((h) => h.mac).map((h) => ({ mac: h.mac, host: h.nombre })),
+    macs6: hosts6.filter((h) => h.mac6).map((h) => ({ mac: h.mac6, host: h.nombre }))
   };
 });
 
@@ -173,7 +186,7 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
   if (!cambiosPedidos.length) return { ok: false, error: 'No hay cambios.' };
 
   // 1) Se vuelve a leer el archivo y se arma el texto nuevo cambiando solo las MAC
-  const { a4, hosts4, izumis } = await leerTodo();
+  const { a4, hosts4, a6, hosts6, izumis } = await leerTodo();
   if (!a4.ok) return { ok: false, error: a4.existe ? 'No se pudo leer ' + a4.ruta + ': ' + a4.error : 'No existe ' + a4.ruta };
   const cambios = [];
   for (const c of cambiosPedidos) {
@@ -188,7 +201,20 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
     const otro = hosts4.find((h) => h.mac === nueva && h.nombre !== info.host);
     if (otro) return { ok: false, error: 'La MAC ' + nueva + ' ya la tiene «' + otro.nombre + '».' };
     const h = hosts4.find((x) => x.nombre === info.host);
-    cambios.push({ n, host: info.host, vieja: info.mac, nueva, texto: h.macTexto });
+    // IPv6 (diorite-N): la MAC de la etiqueta tal cual
+    let v6 = null;
+    if (info.v6) {
+      const etiqueta = normalizarMac(c.etiqueta);
+      if (!etiqueta) return { ok: false, error: 'Falta la MAC de la etiqueta de la Izumi ' + n + ' (para dhcpd6.conf)' };
+      if (c.vieja6 && normalizarMac(c.vieja6) !== info.v6.mac) {
+        return { ok: false, error: 'La MAC de ' + info.v6.host + ' cambió en dhcpd6.conf desde que lo leíste (ahora es ' + info.v6.mac + '). Dale "Volver a leer".' };
+      }
+      const otro6 = hosts6.find((x) => x.mac6 === etiqueta && x.nombre !== info.v6.host);
+      if (otro6) return { ok: false, error: 'La MAC ' + etiqueta + ' ya la tiene «' + otro6.nombre + '» en dhcpd6.conf.' };
+      const h6 = hosts6.find((x) => x.nombre === info.v6.host);
+      v6 = { host: h6.nombre, vieja: h6.mac6, nueva: etiqueta, idViejo: h6.idTexto, idNuevo: (h6.idPrefijo ? h6.idPrefijo + ':' : '') + etiqueta };
+    }
+    cambios.push({ n, host: info.host, vieja: info.mac, nueva, texto: h.macTexto, v6 });
   }
   const repetidas = cambios.map((c) => c.nueva).filter((m, i, a) => a.indexOf(m) !== i);
   if (repetidas.length) return { ok: false, error: 'MAC repetida: ' + repetidas[0] };
@@ -199,27 +225,47 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
     "[[:space:]]*\\{[^}]*hardware[[:space:]]+ethernet[[:space:]]+)" + escRe(de) + "([[:space:]]*;)/\\1" + a + "\\2/I";
   const verifica = (host, mac) => "^[[:space:]]*host[[:space:]]+" + escRe(host) +
     "[[:space:]]*\\{[^}]*hardware[[:space:]]+ethernet[[:space:]]+" + escRe(mac) + "[[:space:]]*;";
+  // IPv6: el bloque "host diorite-N { … }" ocupa varias líneas: se cambia solo dentro de ese bloque
+  const bloque6 = (host) => '/^[[:space:]]*host[[:space:]]+' + escRe(host) + '[[:space:]]*\\{/,/\\}/';
+  const sedCambio6 = (host, de, a) => bloque6(host) + ' s/(dhcp6\\.client-id[[:space:]]+)' + escRe(de) + '([[:space:]]*;)/\\1' + a + '\\2/I';
   const F = RUTAS.dhcpd;
+  const F6 = RUTAS.dhcpd6;
+  const c6 = cambios.filter((c) => c.v6);
   const reiniciar = datos.reiniciar !== false;
-  const aplicar = cambios.map((c) => 'sed -i -E ' + comillas(sedCambio(c.host, c.texto, c.nueva)) + ' "$F"').join(' && ');
-  const regresar = cambios.map((c) => 'sed -i -E ' + comillas(sedCambio(c.host, c.nueva, c.texto)) + ' "$F"').join('; ');
-  const revisar = cambios.map((c) => 'grep -Eiq ' + comillas(verifica(c.host, c.nueva)) + ' "$F"').join(' && ');
+  const aplicar = cambios.map((c) => 'sed -i -E ' + comillas(sedCambio(c.host, c.texto, c.nueva)) + ' "$F"')
+    .concat(c6.map((c) => 'sed -i -E ' + comillas(sedCambio6(c.v6.host, c.v6.idViejo, c.v6.idNuevo)) + ' "$F6"')).join(' && ');
+  const regresar = cambios.map((c) => 'sed -i -E ' + comillas(sedCambio(c.host, c.nueva, c.texto)) + ' "$F"')
+    .concat(c6.map((c) => 'sed -i -E ' + comillas(sedCambio6(c.v6.host, c.v6.idNuevo, c.v6.idViejo)) + ' "$F6"')).join('; ');
+  const revisar = cambios.map((c) => 'grep -Eiq ' + comillas(verifica(c.host, c.nueva)) + ' "$F"')
+    .concat(c6.map((c) => 'sed -n -E ' + comillas(bloque6(c.v6.host) + 'p') + ' "$F6" | grep -Eiq ' + comillas('client-id[[:space:]]+' + escRe(c.v6.idNuevo) + '[[:space:]]*;'))).join(' && ');
   const script = [
-    'F=' + comillas(F),
+    'F=' + comillas(F) + '; F6=' + comillas(F6),
     'regresar() { ' + regresar + '; }',
     '{ ' + aplicar + '; } || { regresar; echo "PASO:escribir:fallo"; exit 11; }',
     '{ ' + revisar + '; } || { regresar; echo "PASO:escribir:no-encontrado"; exit 14; }',
     'echo "PASO:escribir:ok"',
+    c6.length ? 'echo "PASO:escribir6:ok"' : 'echo "PASO:escribir6:sin-host"',
     'D=$(command -v dhcpd || ls /usr/sbin/dhcpd 2>/dev/null)',
     'if [ -n "$D" ]; then',
     '  if OUT=$("$D" -t -cf "$F" 2>&1); then echo "PASO:revisar:ok"; else echo "$OUT" | tail -n 15; regresar; echo "PASO:revisar:fallo"; exit 12; fi',
     'else echo "PASO:revisar:omitido"; fi',
+    c6.length ? [
+      'if [ -n "$D" ]; then',
+      '  if OUT=$("$D" -6 -t -cf "$F6" 2>&1); then echo "PASO:revisar6:ok"; else echo "$OUT" | tail -n 15; regresar; echo "PASO:revisar6:fallo"; exit 15; fi',
+      'else echo "PASO:revisar6:omitido"; fi'
+    ].join('\n') : '',
     reiniciar ? [
       'SVC=""; for s in isc-dhcp-server dhcpd; do if systemctl cat "$s.service" >/dev/null 2>&1; then SVC=$s; break; fi; done',
       'if [ -z "$SVC" ]; then echo "PASO:reiniciar:sin-servicio";',
       'elif systemctl restart "$SVC" 2>&1; then echo "PASO:reiniciar:ok:$SVC";',
       'else journalctl -u "$SVC" -n 12 --no-pager 2>/dev/null; regresar; systemctl restart "$SVC" >/dev/null 2>&1; echo "PASO:reiniciar:fallo:$SVC"; exit 13; fi'
     ].join('\n') : 'echo "PASO:reiniciar:no-pedido"',
+    reiniciar && c6.length ? [
+      'SVC6=""; for s in isc-dhcp-server6 dhcpd6; do if systemctl cat "$s.service" >/dev/null 2>&1; then SVC6=$s; break; fi; done',
+      'if [ -z "$SVC6" ]; then echo "PASO:reiniciar6:sin-servicio";',
+      'elif systemctl restart "$SVC6" 2>&1; then echo "PASO:reiniciar6:ok:$SVC6";',
+      'else journalctl -u "$SVC6" -n 12 --no-pager 2>/dev/null; regresar; systemctl restart "$SVC6" >/dev/null 2>&1; [ -n "$SVC" ] && systemctl restart "$SVC" >/dev/null 2>&1; echo "PASO:reiniciar6:fallo:$SVC6"; exit 16; fi'
+    ].join('\n') : '',
     'exit 0'
   ].join('\n');
 
@@ -243,7 +289,7 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
   const pasos = {};
   const detalle = [];
   for (const l of (r.salida + '\n' + r.err).split('\n')) {
-    const m = l.match(/^PASO:([a-z]+):([a-z\-]+)(?::(.*))?$/);
+    const m = l.match(/^PASO:([a-z0-9]+):([a-z\-]+)(?::(.*))?$/);
     if (m) pasos[m[1]] = { estado: m[2], dato: m[3] || '' };
     else if (l.trim() && !/^\[sudo\]/.test(l)) detalle.push(l);
   }
@@ -253,11 +299,11 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
   const ok = r.codigo === 0 && pasos.escribir && pasos.escribir.estado === 'ok';
   return {
     ok, codigo: r.codigo, pasos,
-    cambios: cambios.map(({ n, host, vieja, nueva }) => ({ n, host, vieja, nueva })),
+    cambios: cambios.map(({ n, host, vieja, nueva, v6 }) => ({ n, host, vieja, nueva, v6: v6 ? { host: v6.host, vieja: v6.vieja, nueva: v6.nueva } : null })),
     detalle: detalle.slice(-15),
     error: ok ? null : 'No se aplicaron los cambios (código ' + r.codigo + ').'
   };
 });
 
-module.exports = { configurar, leerHosts, buscarIzumi, normalizarMac, sumarMac };
+module.exports = { configurar, leerHosts, buscarIzumi, buscarIzumi6, normalizarMac, sumarMac };
 console.log('[remplazo] módulo Remplazar Izumi cargado');
