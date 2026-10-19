@@ -1,7 +1,7 @@
 {
   "name": "ghostfish-engine",
   "productName": "Connection Validation",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "description": "Ghostfish Engine - Motor de validación",
   "main": "main.js",
   "desktopName": "ghostfish-engine.desktop",
@@ -14,7 +14,8 @@
   "scripts": {
     "start": "electron .",
     "build:deb": "electron-builder --linux deb",
-    "release": "electron-builder --linux deb --publish always"
+    "release": "electron-builder --linux deb --publish always",
+    "publicar": "npm version patch --no-git-tag-version && git add -A && git commit -m \"nueva version\" && git push && electron-builder --linux deb --publish always"
   },
   "dependencies": {
     "electron-updater": "^6.3.9"

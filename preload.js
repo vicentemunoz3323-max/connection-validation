@@ -48,6 +48,8 @@ contextBridge.exposeInMainWorld('sistema', {
   tcGuardar: (slots) => ipcRenderer.invoke('tc-save', slots),
   tcElegirRuta: () => ipcRenderer.invoke('tc-set-path'),
   tcEscanear: () => ipcRenderer.invoke('tc-scan'),
+  tcCorrerScript: () => ipcRenderer.invoke('tc-script-run'),
+  tcElegirScript: () => ipcRenderer.invoke('tc-script-set'),
   tcCorrer: (slots, seleccion) => ipcRenderer.invoke('tc-run', slots, seleccion),
   tcDetener: () => ipcRenderer.invoke('tc-stop'),
   tcLeerArchivo: () => ipcRenderer.invoke('tc-read-file'),

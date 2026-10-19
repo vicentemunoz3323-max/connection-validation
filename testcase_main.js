@@ -47,25 +47,65 @@ const dos = (n) => String(n).padStart(2, '0');
 const horaTxt = (ms) => { const d = new Date(ms); return dos(d.getHours()) + ':' + dos(d.getMinutes()) + ':' + dos(d.getSeconds()); };
 const fechaTxt = (ms) => { const d = new Date(ms); return d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate()) + ' ' + horaTxt(ms); };
 
-/* ---------- Ruta del archivo UUT_case ---------- */
+/* ---------- Ruta del archivo UUT_case y del script generador ---------- */
 const rutaCfg = () => path.join(app.getPath('userData'), 'testcase.json');
 let rutaUUT = null;
+let rutaScript;   // undefined = sin leer; null = sin elegir
+
+function leerCfg() {
+  try { const j = JSON.parse(fs.readFileSync(rutaCfg(), 'utf8')); return j && typeof j === 'object' ? j : {}; } catch (e) { return {}; }
+}
+function escribirCfg(cambios) {
+  try {
+    fs.mkdirSync(path.dirname(rutaCfg()), { recursive: true });
+    fs.writeFileSync(rutaCfg(), JSON.stringify({ ...leerCfg(), ...cambios }));
+  } catch (e) {}
+}
 
 function obtenerRuta() {
   if (rutaUUT) return rutaUUT;
-  try {
-    const j = JSON.parse(fs.readFileSync(rutaCfg(), 'utf8'));
-    if (j && typeof j.ruta === 'string' && j.ruta) { rutaUUT = j.ruta; return rutaUUT; }
-  } catch (e) {}
-  rutaUUT = path.join(os.homedir(), CONFIG.NOMBRE_ARCHIVO);
+  const j = leerCfg();
+  rutaUUT = typeof j.ruta === 'string' && j.ruta ? j.ruta : path.join(os.homedir(), CONFIG.NOMBRE_ARCHIVO);
   return rutaUUT;
 }
 function guardarRutaCfg(r) {
   rutaUUT = r;
-  try {
-    fs.mkdirSync(path.dirname(rutaCfg()), { recursive: true });
-    fs.writeFileSync(rutaCfg(), JSON.stringify({ ruta: r }));
-  } catch (e) {}
+  escribirCfg({ ruta: r });
+}
+
+// Script de Python que genera el UUT_case (uut_case.py, el piloto, o como lo hayas renombrado)
+const NOMBRES_SCRIPT_UUT = ['uut_case.py', 'uut_case_piloto.py'];
+function buscarScriptUUT() {
+  const h = os.homedir();
+  const carpetas = [h, 'Desktop', 'Escritorio', 'Documents', 'Documentos', 'Downloads', 'Descargas', 'scripts']
+    .map((c) => (path.isAbsolute(c) ? c : path.join(h, c)));
+  for (const nombre of NOMBRES_SCRIPT_UUT) {
+    for (const c of carpetas) {
+      const p = path.join(c, nombre);
+      if (fs.existsSync(p)) return p;
+      try {   // un nivel más adentro (ej. ~/Desktop/ghostfish/uut_case.py)
+        for (const d of fs.readdirSync(c, { withFileTypes: true })) {
+          if (d.isDirectory() && !d.name.startsWith('.') && d.name !== 'node_modules') {
+            const q = path.join(c, d.name, nombre);
+            if (fs.existsSync(q)) return q;
+          }
+        }
+      } catch (e) {}
+    }
+  }
+  return null;
+}
+function obtenerScript() {
+  if (rutaScript === undefined) {
+    const j = leerCfg();
+    rutaScript = typeof j.script === 'string' && j.script ? j.script : null;
+  }
+  if (rutaScript && fs.existsSync(rutaScript)) return rutaScript;
+  if (!rutaScript) {               // nunca se eligió: se busca por nombre
+    const hallado = buscarScriptUUT();
+    if (hallado) { rutaScript = hallado; escribirCfg({ script: hallado }); }
+  }
+  return rutaScript;
 }
 
 /* ---------- Salida hacia la ventana ---------- */
@@ -80,9 +120,12 @@ function enviar(canal, datos) {
   for (const w of BrowserWindow.getAllWindows()) if (!w.isDestroyed()) w.webContents.send(canal, datos);
 }
 function estadoPublico() {
+  const sc = obtenerScript();
   return {
     ruta: obtenerRuta(),
     existe: fs.existsSync(obtenerRuta()),
+    script: sc || null,
+    scriptExiste: !!(sc && fs.existsSync(sc)),
     job: trabajo ? { tipo: trabajo.tipo, inicio: trabajo.inicio, total: trabajo.total, hechos: trabajo.hechos, log: trabajo.log } : null
   };
 }
@@ -383,6 +426,59 @@ async function escanear() {
   }
 }
 
+/* ---------- Generar con el script de Python (en segundo plano) ---------- */
+async function correrScript() {
+  const script = obtenerScript();
+  if (!script || !fs.existsSync(script)) return { ok: false, error: 'No se encontró el script. Usa "Elegir script…".' };
+  const t = abrirTrabajo('script', 0);
+  if (!t) return ocupado();
+  const salida = obtenerRuta();
+  // --generar: corre sin menú · --archivo: escribe en el mismo UUT_case que usa esta pantalla
+  const args = ['-u', script, '--generar', '--archivo', salida];
+  linea('sys', '▶ Generando con ' + path.basename(script));
+  linea('sys', '$ python3 ' + args.slice(1).map((a) => (/\s/.test(a) ? '"' + a + '"' : a)).join(' '));
+  const interpretes = process.platform === 'win32' ? ['python', 'py'] : ['python3', 'python'];
+  const codigo = await new Promise((resolve) => {
+    const intentar = (i) => {
+      if (i >= interpretes.length) { linea('err', 'No se encontró Python instalado.'); return resolve(-1); }
+      let manejado = false;
+      let proc;
+      try {
+        proc = spawn(interpretes[i], args, {
+          cwd: path.dirname(script),
+          detached: process.platform !== 'win32',
+          windowsHide: true,
+          stdio: ['ignore', 'pipe', 'pipe'],
+          env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8', NO_COLOR: '1', TERM: 'dumb' }
+        });
+      } catch (e) { return intentar(i + 1); }
+      t.proc = proc;
+      const out = crearLector('out'), err = crearLector('err');
+      proc.stdout.on('data', (d) => out.push(d));
+      proc.stderr.on('data', (d) => err.push(d));
+      proc.on('spawn', () => linea('sys', interpretes[i] + ' · PID ' + proc.pid));
+      proc.on('error', (e) => {
+        if (manejado) return; manejado = true;
+        out.flush(); err.flush();
+        if (e.code === 'ENOENT') intentar(i + 1); else { linea('err', 'Error: ' + e.message); resolve(-1); }
+      });
+      proc.on('close', (c) => { if (manejado) return; manejado = true; out.flush(); err.flush(); resolve(c === null ? -1 : c); });
+    };
+    intentar(0);
+  });
+  const seg = ((Date.now() - t.inicio) / 1000).toFixed(1);
+  if (t.abort) linea('sys', '■ Script detenido por el usuario · ' + seg + ' s');
+  else if (codigo === 0) linea('sys', '✓ Script terminado (código 0) · ' + seg + ' s');
+  else linea('sys', '✕ El script terminó con código ' + codigo + ' · ' + seg + ' s');
+  // La tabla se llena con lo que quedó en el archivo
+  try {
+    const leido = leerArchivo();
+    if (leido.existe) enviar('tc-slots', { slots: leido.slots });
+  } catch (e) {}
+  cerrarTrabajo();
+  return { ok: codigo === 0, codigo };
+}
+
 /* ---------- Ejecución del UUT_case ---------- */
 async function correr(slotsEntrada, seleccion) {
   const norm = normalizarSlots(slotsEntrada);
@@ -492,6 +588,25 @@ ipcMain.handle('tc-set-path', async (e) => {
 });
 
 ipcMain.handle('tc-scan', () => { if (trabajo) return ocupado(); escanear(); return { ok: true }; });
+ipcMain.handle('tc-script-run', () => { if (trabajo) return ocupado(); correrScript(); return { ok: true }; });
+ipcMain.handle('tc-script-set', async (e) => {
+  if (trabajo) return { ok: false, error: 'Espera a que termine el trabajo en curso.' };
+  const win = BrowserWindow.fromWebContents(e.sender) || undefined;
+  const actual = obtenerScript();
+  const r = await dialog.showOpenDialog(win, {
+    title: 'Elige el script que genera el UUT_case',
+    defaultPath: actual || os.homedir(),
+    properties: ['openFile'],
+    filters: [{ name: 'Python', extensions: ['py'] }, { name: 'Todos los archivos', extensions: ['*'] }]
+  });
+  if (r.canceled || !r.filePaths || !r.filePaths[0]) return { ok: true, cambio: false };
+  rutaScript = r.filePaths[0];
+  escribirCfg({ script: rutaScript });
+  linea('sys', 'Script para generar: ' + rutaScript);
+  flush();
+  emitirEstado();
+  return { ok: true, cambio: true };
+});
 ipcMain.handle('tc-run', (_e, slots, seleccion) => correr(slots, seleccion));
 
 // Visor: contenido del archivo UUT_case generado

@@ -1434,10 +1434,17 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <button id="tc-cambiar" class="btn btn-secundario btn-mini" type="button">Cambiar…</button>
           <button id="tc-ver" class="btn btn-secundario btn-mini" type="button" title="Mostrar el contenido del archivo generado">Ver archivo</button>
         </div>
+        <div class="tc-path">
+          <span class="tc-path-lbl">Script</span>
+          <code id="tc-script" class="tc-ruta">—</code>
+          <span id="tc-script-st" class="tc-badge">sin elegir</span>
+          <button id="tc-script-elegir" class="btn btn-secundario btn-mini" type="button" title="Elige el .py que genera el UUT_case (puede tener cualquier nombre)">Elegir script…</button>
+        </div>
 
         <div class="tc-bar">
           <div class="tc-group">
             <button id="tc-auto" class="btn" type="button" title="Hace ping y telnet a los 16 slots y rellena la tabla">Generar automático</button>
+            <button id="tc-script-run" class="btn" type="button" title="Corre el script elegido en segundo plano y llena la tabla con lo que genere">Generar con script</button>
             <button id="tc-guardar" class="btn btn-secundario" type="button">Guardar</button>
             <button id="tc-recargar" class="btn btn-secundario" type="button">Recargar</button>
           </div>
@@ -3553,10 +3560,11 @@ function pintarSeleccionIzumi() {
   const N = 16;
   const MAX_DOM = 3000;
   const PATRON = /^[A-Za-z0-9._\-]*$/;
-  const ETQ_JOB = { escaneo: 'Detectando unidades', ejecucion: 'Ejecutando UUT_case' };
+  const ETQ_JOB = { escaneo: 'Detectando unidades', ejecucion: 'Ejecutando UUT_case', script: 'Generando con el script' };
 
   let slots = Array.from({ length: N }, () => ({ parte: '', serial: '' }));
   let ruta = '', existe = false, job = null, dirty = false;
+  let script = null, scriptExiste = false;
   const sel = new Set();
   const filas = [];           // { tr, chk, parte, serial, det }
 
@@ -3638,8 +3646,9 @@ function pintarSeleccionIzumi() {
 
   function aplicarJob() {
     const b = ocupado();
-    const disab = ['tc-auto', 'tc-guardar', 'tc-recargar', 'tc-run-all', 'tc-run-sel', 'tc-cambiar'];
+    const disab = ['tc-auto', 'tc-guardar', 'tc-recargar', 'tc-run-all', 'tc-run-sel', 'tc-cambiar', 'tc-script-elegir'];
     for (const id of disab) q(id).disabled = b;
+    q('tc-script-run').disabled = b || !scriptExiste;
     q('tc-all').disabled = b;
     for (const f of filas) { f.parte.disabled = b; f.serial.disabled = b; f.chk.disabled = b; }
     q('tc-stop').hidden = !b;
@@ -3655,6 +3664,12 @@ function pintarSeleccionIzumi() {
   }
 
   function aplicarRuta() {
+    q('tc-script').textContent = script ? script.split('/').pop() : '—';
+    q('tc-script').title = script || 'No se ha elegido ni encontrado un script (uut_case.py)';
+    const st = q('tc-script-st');
+    st.textContent = !script ? 'sin elegir' : scriptExiste ? 'listo' : 'no existe';
+    st.classList.toggle('ok', !!(script && scriptExiste));
+    q('tc-script-run').title = scriptExiste ? 'Corre ' + script + ' en segundo plano y llena la tabla' : 'Primero elige el script con "Elegir script…"';
     q('tc-ruta').textContent = ruta || '—';
     q('tc-ruta').title = ruta || '';
     const e = q('tc-existe');
@@ -3668,6 +3683,7 @@ function pintarSeleccionIzumi() {
     const rutaAntes = ruta;
     if (typeof s.ruta === 'string') ruta = s.ruta;
     if (typeof s.existe === 'boolean') existe = s.existe;
+    if ('script' in s) { script = s.script || null; scriptExiste = !!s.scriptExiste; }
     job = s.job || null;
     if ((habiaJob && !job) || (rutaAntes && rutaAntes !== ruta)) refrescarVisor();
     aplicarRuta();
@@ -3912,6 +3928,16 @@ function pintarSeleccionIzumi() {
   actualizarMeta();
 
   q('tc-auto').addEventListener('click', auto);
+  q('tc-script-run').addEventListener('click', async () => {
+    const hay = existe || slots.some((s) => s.parte || s.serial);
+    if (hay && !window.confirm('El script va a sobrescribir ' + (ruta || 'el archivo UUT_case') + ' y la tabla se llenará con lo que genere. ¿Continuar?')) return;
+    limpiarEstados(['det']);
+    await llamar(() => window.sistema.tcCorrerScript());
+  });
+  q('tc-script-elegir').addEventListener('click', async () => {
+    const r = await llamar(() => window.sistema.tcElegirScript());
+    if (r && r.ok && r.cambio) { const e = await window.sistema.tcObtener(); aplicarEstado(e); }
+  });
   q('tc-guardar').addEventListener('click', guardar);
   q('tc-recargar').addEventListener('click', recargar);
   q('tc-run-all').addEventListener('click', () => correr('todos'));
