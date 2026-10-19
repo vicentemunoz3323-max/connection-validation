@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'">
+<title>Izumi</title>
+<link rel="icon" type="image/png" href="icons/32x32.png">
+<style>
+:root {
+  --bg: #0e1116; --panel: #151a21; --panel2: #1b212a; --line: #262d38;
+  --text: #d6dbe3; --muted: #8791a1; --blue: #3d8bfd; --green: #2fbf71; --red: #ff6b6b; --amber: #f2b33d;
+  --lh: 18px;
+  --mono: "DejaVu Sans Mono", "Ubuntu Mono", SFMono-Regular, Consolas, monospace;
+  --sans: Inter, "Segoe UI", Ubuntu, system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--text); font: 13px/1.4 var(--sans); display: flex; flex-direction: column; overflow: hidden; }
+button, input, select { font: inherit; color: inherit; }
+
+/* ----- Encabezado ----- */
+.top { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--panel); border-bottom: 1px solid var(--line); min-width: 0; }
+.tit { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { width: 34px; height: 34px; display: grid; place-items: center; background: #2a1330; color: #ff9bd0; font: 700 13px var(--mono); border-radius: 7px; flex: none; }
+h1 { font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
+.sub { font: 12px var(--mono); color: var(--muted); }
+.estado { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border: 1px solid var(--line); background: var(--panel2); font-size: 12px; font-weight: 600; white-space: nowrap; }
+.estado i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.estado.conectado { color: var(--green); border-color: rgba(47,191,113,.4); background: rgba(47,191,113,.08); }
+.estado.conectado i { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.estado.conectando { color: var(--amber); border-color: rgba(242,179,61,.4); background: rgba(242,179,61,.08); }
+.estado.conectando i { background: var(--amber); animation: lat 1s ease-in-out infinite; }
+.estado.desconectado { color: var(--red); border-color: rgba(255,107,107,.4); background: rgba(255,107,107,.07); }
+.estado.desconectado i { background: var(--red); }
+@keyframes lat { 50% { opacity: .3; } }
+.motivo { color: var(--muted); font-size: 12px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 0; }
+.stats { display: flex; gap: 12px; font: 11px var(--mono); color: var(--muted); white-space: nowrap; }
+.stats b { color: var(--text); font-weight: 600; }
+.acc { display: flex; gap: 8px; margin-left: auto; flex: none; }
+
+.btn { padding: 6px 12px; border: 1px solid var(--line); background: var(--panel2); cursor: pointer; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.btn:hover:not(:disabled) { border-color: #3a4352; background: #222935; }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn.prim { background: var(--blue); border-color: var(--blue); color: #fff; }
+.btn.prim:hover:not(:disabled) { background: #2f7cf0; }
+.btn.on { color: var(--blue); border-color: rgba(61,139,253,.6); background: rgba(61,139,253,.12); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
+
+/* ----- Barra de herramientas ----- */
+.barra { display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--line); background: var(--bg); min-width: 0; }
+.barra > .btn, .barra > .check { flex: none; }
+.buscar { display: flex; align-items: center; border: 1px solid var(--line); background: var(--panel); min-width: 180px; flex: 0 1 300px; }
+.buscar input { flex: 1; min-width: 0; padding: 6px 10px; background: none; border: 0; outline: none; font: 12px var(--mono); }
+.buscar span { padding: 0 10px; font: 11px var(--mono); color: var(--muted); white-space: nowrap; }
+.aviso-omit { font: 11px var(--mono); color: var(--amber); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sep { flex: 1 1 0; min-width: 0; }
+.check { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); cursor: pointer; user-select: none; }
+
+/* ----- Consola virtual: solo se dibujan las líneas visibles ----- */
+.vista { position: relative; flex: 1; min-height: 0; overflow: auto; background: var(--bg); outline: none; }
+.lienzo { position: relative; min-width: 100%; }
+.lineas { position: absolute; top: 0; left: 0; min-width: 100%; padding: 0 16px; font: 13px/var(--lh) var(--mono); white-space: pre; will-change: transform; }
+.l { height: var(--lh); }
+.l.e { color: #ff8a8a; }
+.l.w { color: #f3c467; }
+.l.s { color: #7fb4ff; }
+.l.hit { background: rgba(61,139,253,.22); }
+mark { background: #f2b33d; color: #111; border-radius: 2px; }
+.vista::-webkit-scrollbar { width: 12px; height: 12px; }
+.vista::-webkit-scrollbar-thumb { background: #2c3440; border: 3px solid var(--bg); border-radius: 8px; }
+.vista::-webkit-scrollbar-corner { background: var(--bg); }
+.vacio { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font: 13px var(--mono); pointer-events: none; }
+
+.ir-final { position: absolute; right: 28px; bottom: 96px; padding: 8px 14px; background: var(--blue); color: #fff; border: 0; cursor: pointer; font-weight: 600; font-size: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.4); }
+.ir-final[hidden] { display: none; }
+
+/* ----- Envío de comandos y log ----- */
+.pie { border-top: 1px solid var(--line); background: var(--panel); padding: 10px 16px 8px; display: flex; flex-direction: column; gap: 6px; }
+.envio { display: flex; gap: 8px; align-items: center; }
+.campo { flex: 1; display: flex; align-items: center; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
+.campo span { padding: 0 4px 0 10px; color: var(--green); font: 700 13px var(--mono); }
+.campo input { flex: 1; min-width: 0; padding: 7px 10px 7px 4px; background: none; border: 0; outline: none; font: 13px var(--mono); }
+.campo:focus-within { border-color: var(--blue); }
+.campo.modo-telnet { border-color: var(--amber); background: rgba(242,179,61,.06); }
+.campo.modo-telnet span { color: var(--amber); }
+select { padding: 6px 8px; border: 1px solid var(--line); background: var(--panel2); font-size: 12px; }
+.log { font: 11px var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log b { color: var(--text); font-weight: 500; }
+@media (max-width: 1100px) { .st-extra { display: none; } }
+@media (max-width: 900px) { .stats { display: none; } #b-carpeta { display: none; } }
+@media (max-width: 720px) { .motivo { display: none; } .check { display: none; } }
+</style>
+</head>
+<body>
+  <header class="top">
+    <div class="tit">
+      <span class="logo">&gt;_</span>
+      <div><h1 id="titulo">Izumi</h1><div class="sub" id="destino">—</div></div>
+    </div>
+    <span class="estado conectando" id="estado"><i></i><span id="estado-txt">Conectando…</span></span>
+    <span class="motivo" id="motivo"></span>
+    <div class="stats">
+      <span class="st-extra">Tiempo <b id="st-tiempo">00:00</b></span>
+      <span>Líneas <b id="st-lineas">0</b></span>
+      <span><b id="st-vel">0 KB/s</b></span>
+      <span class="st-extra">Recibido <b id="st-tam">0 KB</b></span>
+    </div>
+    <div class="acc">
+      <button class="btn" id="b-recon" type="button" title="Cierra y vuelve a abrir la conexión">Reconectar</button>
+      <button class="btn" id="b-desc" type="button" title="Atajo como en telnet: Ctrl+5 (o Ctrl+]), luego q y Enter">Desconectar</button>
+    </div>
+  </header>
+
+  <div class="barra">
+    <label class="buscar" title="Enter: siguiente · Shift+Enter: anterior · Ctrl+F para enfocar">
+      <input id="q" type="text" placeholder="Buscar en la consola…" spellcheck="false" autocomplete="off">
+      <span id="q-res"></span>
+    </label>
+    <span class="aviso-omit" id="omit" hidden></span>
+    <span class="sep"></span>
+    <label class="check" title="Si se cae la conexión, se vuelve a conectar sola cada 3 s"><input type="checkbox" id="auto" checked> Reconectar solo</label>
+    <button class="btn on" id="b-seguir" type="button" title="Mantener la vista en la última línea (tecla Fin)">Seguir salida</button>
+    <button class="btn" id="b-limpiar" type="button" title="Limpia la pantalla; el log conserva todo">Limpiar pantalla</button>
+    <button class="btn" id="b-guardar" type="button" title="Guarda una copia del log completo">Guardar log…</button>
+    <button class="btn" id="b-carpeta" type="button">Carpeta de logs</button>
+  </div>
+
+  <div class="vista" id="vista" tabindex="0">
+    <div class="lienzo" id="lienzo"><div class="lineas" id="lineas"></div></div>
+    <div class="vacio" id="vacio">Esperando datos de la Izumi…</div>
+  </div>
+  <button class="ir-final" id="ir-final" type="button" hidden>↓ Ir al final</button>
+
+  <footer class="pie">
+    <form class="envio" id="f-enviar" autocomplete="off">
+      <label class="campo" id="campo"><span id="prompt">›</span><input id="cmd" type="text" placeholder="Escribe un comando y presiona Enter para mandarlo a la Izumi" spellcheck="false"></label>
+      <select id="fin" title="Qué se manda al final de cada comando">
+        <option value="crlf">CR+LF</option>
+        <option value="cr">CR</option>
+        <option value="lf">LF</option>
+      </select>
+      <button class="btn prim" type="submit" id="b-enviar">Enviar</button>
+      <button class="btn" type="button" id="b-enter" title="Manda solo Enter (para detener el arranque)">Enter ↵</button>
+      <button class="btn" type="button" id="b-ctrlc" title="Manda Ctrl+C">Ctrl+C</button>
+    </form>
+    <div class="log" id="log">Log: —</div>
+  </footer>
+
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const api = window.izumi;
+const N = Number(new URLSearchParams(location.search).get('n')) || 0;
+
+/* ===== Ajustes ===== */
+const LH = 18;                  // alto de cada línea (igual que --lh)
+const MAX_LINEAS = 250000;      // líneas en memoria para la pantalla (el log guarda todo)
+const RECORTE = 50000;          // cuántas se sueltan de golpe al llegar al tope
+const MAX_LARGO = 2000;         // caracteres visibles por línea
+const MARGEN = 30;              // líneas extra dibujadas arriba y abajo
+const RX_ERR = /\b(error|fail(ed|ure)?|panic|fatal|exception|segfault|oops)\b/i;
+const RX_WARN = /\b(warn(ing)?)\b/i;
+const RX_SIS = /^──── /;
+
+/* ===== Estado ===== */
+let lineas = [];
+let parcial = '';               // última línea, todavía sin salto
+let version = 0;                // cambia cada que llega algo (para saber si redibujar)
+let descartadas = 0;
+let totalLineas = 0;
+let bytes = 0;
+let seguir = true;
+let pendiente = false;
+let ultimaClave = '';
+let q = '', qLower = '', hit = -1;
+let estado = null;
+let muestras = [];              // para calcular KB/s
+
+const vista = $('vista'), lienzo = $('lienzo'), cont = $('lineas');
+
+$('titulo').textContent = 'Izumi ' + N;
+document.title = 'Izumi ' + N;
+
+/* ===== Entrada de datos ===== */
+// \r sin \n = el equipo reescribe la línea (barras de progreso): se queda lo último
+function sinCR(s) {
+  if (s.charCodeAt(s.length - 1) === 13) s = s.slice(0, -1);
+  const i = s.lastIndexOf('\r');
+  return i >= 0 ? s.slice(i + 1) : s;
+}
+
+function agregar(texto) {
+  bytes += texto.length;
+  muestras.push([performance.now(), texto.length]);
+  const partes = texto.split('\n');
+  partes[0] = parcial + partes[0];
+  parcial = partes.pop();
+  for (let i = 0; i < partes.length; i++) lineas.push(sinCR(partes[i]));
+  totalLineas += partes.length;
+  // Una línea sin salto que crece sin fin (progreso con \r) no debe comerse la memoria
+  if (parcial.length > 16384) {
+    const i = parcial.lastIndexOf('\r', parcial.length - 2);
+    if (i >= 0) parcial = parcial.slice(i + 1);
+    if (parcial.length > 16384) { lineas.push(parcial); parcial = ''; totalLineas++; }
+  }
+  if (lineas.length > MAX_LINEAS) {
+    lineas.splice(0, RECORTE);
+    descartadas += RECORTE;
+    if (hit >= 0) hit = hit >= RECORTE ? hit - RECORTE : -1;
+    if (!seguir) vista.scrollTop = Math.max(0, vista.scrollTop - RECORTE * LH);
+    pintarOmitidas();
+  }
+  version++;
+  programar();
+}
+
+function pintarOmitidas() {
+  $('omit').hidden = descartadas === 0;
+  $('omit').textContent = descartadas.toLocaleString('es') + ' líneas antiguas solo en el log';
+  $('omit').title = 'Para que la pantalla no se trabe, las líneas más viejas se quitan de la vista. El log las tiene todas.';
+}
+
+/* ===== Dibujo (solo lo visible) ===== */
+function programar() {
+  if (!pendiente) { pendiente = true; requestAnimationFrame(dibujar); }
+}
+
+function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+function lineaHtml(t, i) {
+  if (t.length > MAX_LARGO) t = t.slice(0, MAX_LARGO) + ' …';
+  let cls = 'l';
+  if (RX_SIS.test(t)) cls += ' s';
+  else if (RX_ERR.test(t)) cls += ' e';
+  else if (RX_WARN.test(t)) cls += ' w';
+  if (i === hit) cls += ' hit';
+  let html;
+  if (qLower && t.toLowerCase().includes(qLower)) {
+    const low = t.toLowerCase();
+    html = '';
+    let p = 0, k;
+    while ((k = low.indexOf(qLower, p)) >= 0) {
+      html += esc(t.slice(p, k)) + '<mark>' + esc(t.slice(k, k + qLower.length)) + '</mark>';
+      p = k + qLower.length;
+    }
+    html += esc(t.slice(p));
+  } else {
+    html = esc(t);
+  }
+  return '<div class="' + cls + '">' + (html || ' ') + '</div>';
+}
+
+function dibujar() {
+  pendiente = false;
+  const n = lineas.length + (parcial ? 1 : 0);
+  lienzo.style.height = (n * LH) + 'px';
+  if (seguir) vista.scrollTop = vista.scrollHeight;
+  $('vacio').hidden = n > 0;
+
+  const top = vista.scrollTop, alto = vista.clientHeight;
+  const a = Math.max(0, Math.floor(top / LH) - MARGEN);
+  const b = Math.min(n, Math.ceil((top + alto) / LH) + MARGEN);
+  // Si lo visible no cambió, no se toca el DOM (así puedes seleccionar y copiar texto)
+  const tocaFinal = b >= n - 1;
+  const clave = a + ':' + b + ':' + descartadas + ':' + (tocaFinal ? version : '') + ':' + qLower + ':' + hit;
+  if (clave !== ultimaClave) {
+    ultimaClave = clave;
+    let html = '';
+    for (let i = a; i < b; i++) html += lineaHtml(i < lineas.length ? lineas[i] : sinCR(parcial), i);
+    cont.style.transform = 'translateY(' + (a * LH) + 'px)';
+    cont.innerHTML = html;
+  }
+}
+
+/* ===== Seguir salida ===== */
+function ponerSeguir(on) {
+  seguir = on;
+  $('b-seguir').classList.toggle('on', on);
+  $('ir-final').hidden = on;
+  if (on) { vista.scrollTop = vista.scrollHeight; programar(); }
+}
+vista.addEventListener('scroll', () => {
+  const alFinal = vista.scrollTop + vista.clientHeight >= vista.scrollHeight - LH * 1.5;
+  if (alFinal !== seguir) ponerSeguir(alFinal);
+  programar();
+}, { passive: true });
+$('b-seguir').addEventListener('click', () => ponerSeguir(!seguir));
+$('ir-final').addEventListener('click', () => ponerSeguir(true));
+window.addEventListener('resize', programar);
+
+$('b-limpiar').addEventListener('click', () => {
+  lineas = []; parcial = ''; descartadas = 0; hit = -1; version++;
+  pintarOmitidas(); $('q-res').textContent = '';
+  ponerSeguir(true);
+});
+
+/* ===== Buscar ===== */
+function buscar(atras) {
+  q = $('q').value; qLower = q.toLowerCase();
+  if (!qLower) { hit = -1; $('q-res').textContent = ''; programar(); return; }
+  const n = lineas.length;
+  let total = 0;
+  for (let i = 0; i < n; i++) if (lineas[i].toLowerCase().includes(qLower)) total++;
+  if (!total) { hit = -1; $('q-res').textContent = 'sin resultados'; programar(); return; }
+  // la primera búsqueda empieza desde lo que estás viendo
+  let i = hit >= 0 ? hit : Math.max(-1, Math.floor(vista.scrollTop / LH) - 1), vueltas = 0;
+  if (hit < 0 && atras) i = Math.min(n, Math.ceil((vista.scrollTop + vista.clientHeight) / LH));
+  do {
+    i = atras ? (i <= 0 ? n - 1 : i - 1) : (i >= n - 1 ? 0 : i + 1);
+    if (lineas[i].toLowerCase().includes(qLower)) break;
+  } while (++vueltas <= n);
+  hit = i;
+  let pos = 0;
+  for (let k = 0; k <= hit; k++) if (lineas[k].toLowerCase().includes(qLower)) pos++;
+  $('q-res').textContent = pos + ' de ' + total;
+  ponerSeguir(false);
+  vista.scrollTop = Math.max(0, hit * LH - vista.clientHeight / 3);
+  programar();
+}
+$('q').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); buscar(e.shiftKey); }
+  else if (e.key === 'Escape') { $('q').value = ''; buscar(); vista.focus(); }
+});
+$('q').addEventListener('input', () => {
+  // resalta mientras escribes; Enter salta a la siguiente
+  q = $('q').value; qLower = q.toLowerCase(); hit = -1;
+  $('q-res').textContent = qLower ? 'Enter para buscar' : '';
+  programar();
+});
+document.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); $('q').focus(); $('q').select(); }
+  else if (e.key === 'End' && document.activeElement === vista) { e.preventDefault(); ponerSeguir(true); }
+});
+
+/* ===== Estado de la conexión ===== */
+const TXT_ESTADO = { conectado: 'Conectado', conectando: 'Conectando…', desconectado: 'Desconectado' };
+function aplicarEstado(s) {
+  if (!s) return;
+  estado = s;
+  $('destino').textContent = 'telnet ' + s.host + ' ' + s.puerto;
+  $('estado').className = 'estado ' + s.estado;
+  $('estado-txt').textContent = TXT_ESTADO[s.estado] || s.estado;
+  $('motivo').textContent = s.motivo || '';
+  $('motivo').title = s.motivo || '';
+  $('b-desc').disabled = s.estado === 'desconectado' && !s.reintento;
+  const ok = s.estado === 'conectado';
+  for (const id of ['cmd', 'b-enviar', 'b-enter', 'b-ctrlc']) $(id).disabled = !ok && !modoTelnet;
+  $('auto').checked = !!s.auto;
+  if (s.log) { $('log').innerHTML = 'Log: <b></b>'; $('log').querySelector('b').textContent = s.log; $('log').title = s.log; }
+}
+
+function fmtTiempo(ms) {
+  const t = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60;
+  const d = (x) => String(x).padStart(2, '0');
+  return (h ? h + ':' : '') + d(m) + ':' + d(s);
+}
+function fmtTam(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+setInterval(() => {
+  const ahora = performance.now();
+  muestras = muestras.filter((m) => ahora - m[0] < 2000);
+  const vel = muestras.reduce((a, m) => a + m[1], 0) / 2;
+  $('st-vel').textContent = (vel / 1024).toFixed(vel < 10240 ? 1 : 0) + ' KB/s';
+  $('st-lineas').textContent = totalLineas.toLocaleString('es');
+  $('st-tam').textContent = fmtTam(bytes);
+  $('st-tiempo').textContent = estado && estado.desde ? fmtTiempo(Date.now() - estado.desde) : '--:--';
+}, 500);
+
+/* ===== Botones ===== */
+$('b-recon').addEventListener('click', () => api.reconectar());
+$('b-desc').addEventListener('click', () => api.desconectar());
+$('auto').addEventListener('change', () => api.autoReconectar($('auto').checked));
+$('b-carpeta').addEventListener('click', () => api.carpetaLogs());
+$('b-guardar').addEventListener('click', async () => {
+  const b = $('b-guardar');
+  const r = await api.guardarComo();
+  if (r && r.ok && r.ruta) { b.textContent = 'Guardado ✓'; setTimeout(() => { b.textContent = 'Guardar log…'; }, 1500); }
+  else if (r && r.ok === false) alert('No se pudo guardar: ' + (r.error || 'error desconocido'));
+});
+
+/* ===== Mandar comandos ===== */
+const historial = [];
+let posHist = 0;
+/* ----- Modo "telnet>" igual que en la terminal: Ctrl+5 (Ctrl+]) y luego q + Enter ----- */
+let modoTelnet = false;
+const PH_NORMAL = $('cmd').placeholder;
+function entrarModoTelnet() {
+  modoTelnet = true;
+  $('campo').classList.add('modo-telnet');
+  $('prompt').textContent = 'telnet>';
+  $('cmd').disabled = false;
+  $('b-enviar').disabled = false;   // si no, Enter no funciona estando desconectado
+  $('cmd').value = '';
+  $('cmd').placeholder = 'q + Enter para desconectar · Esc para regresar';
+  $('cmd').focus();
+}
+function salirModoTelnet() {
+  modoTelnet = false;
+  $('campo').classList.remove('modo-telnet');
+  $('prompt').textContent = '›';
+  $('cmd').placeholder = PH_NORMAL;
+  $('cmd').value = '';
+  if (estado) aplicarEstado(estado);   // vuelve a habilitar/deshabilitar según la conexión
+}
+document.addEventListener('keydown', (e) => {
+  // Ctrl+5 en teclado español = Ctrl+] (la tecla de escape de telnet)
+  if (e.ctrlKey && !e.altKey && (e.code === 'Digit5' || e.key === '5' || e.key === ']' || e.code === 'BracketRight' || e.key === '\x1d')) {
+    e.preventDefault();
+    entrarModoTelnet();
+  } else if (modoTelnet && e.key === 'Escape') {
+    e.preventDefault();
+    salirModoTelnet();
+  }
+}, true);
+
+$('f-enviar').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (modoTelnet) {
+    const c = $('cmd').value.trim().toLowerCase();
+    if (c === 'q' || c === 'quit' || c === 'close' || c === 'c') { salirModoTelnet(); await api.desconectar(); }
+    else if (c === 'o' || c === 'open') { salirModoTelnet(); await api.reconectar(); }
+    else if (c === '') salirModoTelnet();
+    else { $('cmd').value = ''; $('cmd').placeholder = '"' + c + '" no existe · q = desconectar · open = reconectar · Esc = regresar'; }
+    return;
+  }
+  const t = $('cmd').value;
+  const r = await api.enviar(t, $('fin').value);
+  if (r && r.ok) {
+    if (t && historial[historial.length - 1] !== t) historial.push(t);
+    posHist = historial.length;
+    $('cmd').value = '';
+    ponerSeguir(true);
+  }
+});
+$('cmd').addEventListener('keydown', (e) => {
+  if (modoTelnet) return;
+  if (e.key === 'ArrowUp' && historial.length) { e.preventDefault(); posHist = Math.max(0, posHist - 1); $('cmd').value = historial[posHist]; }
+  else if (e.key === 'ArrowDown' && historial.length) { e.preventDefault(); posHist = Math.min(historial.length, posHist + 1); $('cmd').value = historial[posHist] || ''; }
+  else if (e.ctrlKey && e.key.toLowerCase() === 'c' && $('cmd').selectionStart === $('cmd').selectionEnd) { e.preventDefault(); api.enviar('\x03', 'nada'); }   // Ctrl+C sin texto seleccionado
+});
+$('b-enter').addEventListener('click', () => api.enviar('', $('fin').value));
+$('b-ctrlc').addEventListener('click', () => api.enviar('\x03', 'nada'));
+
+/* ===== Arranque ===== */
+if (api) {
+  api.onDatos(agregar);
+  api.onEstado(aplicarEstado);
+  api.info().then(aplicarEstado).catch(() => {});
+} else {
+  $('estado-txt').textContent = 'Sin conexión con la app';
+}
+programar();
+</script>
+</body>
+</html>

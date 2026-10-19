@@ -853,6 +853,17 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
   .firma { padding: 2px 16px 4px; font-size: 11px; }
   .firma .version { display: inline; margin-left: 8px; }
 }
+
+/* ===== Izumis: clic para abrir su consola ===== */
+.izumi { cursor: pointer; position: relative; }
+.izumi:hover { border-color: #c7c7cc; box-shadow: 0 2px 8px rgba(0,0,0,.06); }
+.izumi:active { transform: translateY(1px); }
+.izu-term {
+  display: none; margin-left: 6px; padding: 1px 4px 2px; line-height: 10px; vertical-align: 1px;
+  font: 700 9px SFMono-Regular, Consolas, monospace; color: #fff; background: #8e8e93; border-radius: 2px;
+}
+.izumi.con-consola .izu-term { display: inline-block; }
+.izumi.consola-viva .izu-term { background: var(--blue); }
 </style>
 </head>
 <body>
@@ -1533,9 +1544,12 @@ function dibujarIzumis() {
   for (let i = 1; i <= 16; i++) {
     const d = document.createElement('div');
     d.className = 'izumi';
+    d.dataset.n = i;
+    d.setAttribute('role', 'button');
+    d.tabIndex = 0;
     d.innerHTML = 
       '<div class="izumi-info-col">' +
-        '<span class="izumi-name">Izumi ' + i + '</span>' +
+        '<span class="izumi-name">Izumi ' + i + '<span class="izu-term" title="Consola abierta">&gt;_</span></span>' +
         '<span class="izumi-status-text" id="izumi-txt-' + i + '">--</span>' +
       '</div>' +
       '<div class="led-frame"><span class="izumi-led" id="izumi-led-' + i + '" style="animation-delay:' + ((i * 0.25) % 1.2).toFixed(2) + 's"></span></div>';
@@ -1543,6 +1557,40 @@ function dibujarIzumis() {
     izumiStatusEls[i] = d.querySelector('.izumi-status-text');
     cont.appendChild(d);
   }
+  if (!cont.dataset.consola) {
+    cont.dataset.consola = '1';
+    cont.addEventListener('click', (e) => { const c = e.target.closest('.izumi'); if (c) abrirConsolaIzumi(+c.dataset.n); });
+    cont.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      const c = e.target.closest('.izumi');
+      if (c) { e.preventDefault(); abrirConsolaIzumi(+c.dataset.n); }
+    });
+  }
+}
+
+/* ---------- Consola telnet de cada Izumi ---------- */
+const ZPE_IZUMI = { ip: '10.0.0.253', base: 7000 };
+async function abrirConsolaIzumi(n) {
+  if (!window.sistema || typeof window.sistema.abrirConsolaIzumi !== 'function') {
+    alert('Reinicia la app: falta actualizar main.js y preload.js.');
+    return;
+  }
+  try {
+    const r = await window.sistema.abrirConsolaIzumi(n);
+    if (r && r.ok === false) alert(r.error || 'No se pudo abrir la consola.');
+  } catch (e) { alert('No se pudo abrir la consola: ' + e.message); }
+}
+function marcarConsolas(sesiones) {
+  for (let i = 1; i <= 16; i++) {
+    const el = izumiEls[i];
+    if (!el) continue;
+    const st = sesiones && sesiones[i];
+    el.classList.toggle('con-consola', !!st);
+    el.classList.toggle('consola-viva', st === 'conectado');
+  }
+}
+function tituloIzumi(i, extra) {
+  return (extra ? extra + '\n' : '') + 'Clic para abrir la consola · telnet ' + ZPE_IZUMI.ip + ' ' + (ZPE_IZUMI.base + i);
 }
 
 const limpiar = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -1622,7 +1670,7 @@ function limpiarColores() {
     const el = izumiEls[i];
     if (!el) continue;
     el.classList.remove('ok', 'bad');
-    el.title = 'Izumi ' + i + ': sin resultado';
+    el.title = tituloIzumi(i, 'Izumi ' + i + ': sin resultado');
     if (izumiStatusEls[i]) izumiStatusEls[i].textContent = '--';
   }
 }
@@ -1634,7 +1682,7 @@ function pintarResultados(parsed) {
     const item = parsed.izumis[i];
     const ok = item && item.ok === true;
     if (!ok) fallas++;
-    setEstadoIzumi(izumiEls[i], izumiStatusEls[i], ok, item ? `Izumi ${i} (${item.ip})` : `Izumi ${i}: Sin datos`);
+    setEstadoIzumi(izumiEls[i], izumiStatusEls[i], ok, tituloIzumi(i, item ? `Izumi ${i} (${item.ip})` : `Izumi ${i}: Sin datos`));
   }
 
   for (let n = 1; n <= 24; n++) {
@@ -1723,7 +1771,12 @@ for (const [btn, id] of [['open-opentest', 'opentest'], ['open-chiller', 'chille
 
 dibujarRectificadores();
 dibujarIzumis();
+for (let i = 1; i <= 16; i++) if (izumiEls[i]) izumiEls[i].title = tituloIzumi(i);
 mostrarIP();
+if (window.sistema && typeof window.sistema.onConsolasIzumi === 'function') {
+  window.sistema.onConsolasIzumi(marcarConsolas);
+  window.sistema.consolasIzumi().then(marcarConsolas).catch(() => {});
+}
 
 if (window.sistema) {
   window.sistema.onEstado(aplicarEstado);

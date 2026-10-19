@@ -53,8 +53,13 @@ contextBridge.exposeInMainWorld('sistema', {
   onTcEstado: (cb) => ipcRenderer.on('tc-state', (_e, s) => cb(s)),
   onTcSalida: (cb) => ipcRenderer.on('tc-output', (_e, l) => cb(l)),
   onTcSlot: (cb) => ipcRenderer.on('tc-slot', (_e, d) => cb(d)),
-  onTcSlots: (cb) => ipcRenderer.on('tc-slots', (_e, d) => cb(d))
+  onTcSlots: (cb) => ipcRenderer.on('tc-slots', (_e, d) => cb(d)),
   // TC-FIN
+
+  // Consola telnet de cada Izumi (abre su propia ventana)
+  abrirConsolaIzumi: (n) => ipcRenderer.invoke('izu:abrir', n),
+  consolasIzumi: () => ipcRenderer.invoke('izu:sesiones'),
+  onConsolasIzumi: (cb) => ipcRenderer.on('izumi-sesiones', (_e, s) => cb(s))
 });
 
 // Actualizaciones

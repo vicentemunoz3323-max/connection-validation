@@ -19,6 +19,9 @@ require('./configuracion_main.js');
 require('./testcase_main.js');
 // TC-FIN
 
+// Consolas telnet de las Izumi (una ventana por Izumi)
+const consolasIzumi = require('./izumi_main.js');
+
 
 
 // Recarga automática solo al desarrollar (npm start), nunca en la app instalada
@@ -33,7 +36,7 @@ if (!esInstanciaPrincipal) {
   app.quit();
 } else {
   app.on('second-instance', () => {
-    const w = BrowserWindow.getAllWindows()[0];
+    const w = ventanaPrincipal && !ventanaPrincipal.isDestroyed() ? ventanaPrincipal : BrowserWindow.getAllWindows()[0];
     if (w) { if (w.isMinimized()) w.restore(); w.show(); w.focus(); }
   });
 }
@@ -712,6 +715,8 @@ function iconoVentana() {
   }
 }
 
+let ventanaPrincipal = null;
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
@@ -735,6 +740,9 @@ function createWindow() {
   win.webContents.on('will-navigate', (e, url) => {
     if (!url.startsWith('file://')) { e.preventDefault(); if (/^https?:\/\//i.test(url)) shell.openExternal(url); }
   });
+  ventanaPrincipal = win;
+  // Al cerrar la ventana principal se cierran también las consolas de Izumi
+  win.on('closed', () => { ventanaPrincipal = null; consolasIzumi.cerrarTodas(); });
   win.loadFile(path.join(__dirname, 'index.html'));
 }
 
