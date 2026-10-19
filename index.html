@@ -1108,6 +1108,22 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 .cfg-dev.ok { border-left-color: var(--green); }
 .cfg-dev.ok .n { color: var(--green); font-weight: 700; }
 .cfg-dev.ok .dot { background: var(--green); box-shadow: 0 0 5px rgba(40,167,69,.5); }
+
+/* Generar: estado de cada slot */
+.tc-st.buscando { background: #eef4ff; color: var(--blue); display: inline-flex; align-items: center; gap: 6px; }
+.tc-st.buscando::before { content: ""; width: 9px; height: 9px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: tcGira .7s linear infinite; }
+.tc-st.lista { background: #1e9e48; color: #fff; display: inline-flex; align-items: center; gap: 5px; animation: tcPop .45s cubic-bezier(.2,1.6,.4,1); box-shadow: 0 0 0 0 rgba(30,158,72,.5); }
+.tc-st.lista::before { content: "✓"; font-weight: 800; }
+.tc-st.nolista { background: #d93025; color: #fff; display: inline-flex; align-items: center; gap: 5px; animation: tcSacude .45s ease; }
+.tc-st.nolista::before { content: "✕"; font-weight: 800; }
+.tc-table tr.gen-ok td { animation: tcFlashOk 1.2s ease-out; }
+.tc-table tr.gen-mal td { animation: tcFlashMal 1.2s ease-out; }
+.tc-table tr.gen-ok .tc-in { color: #1e7e34; font-weight: 600; }
+@keyframes tcGira { to { transform: rotate(360deg); } }
+@keyframes tcPop { 0% { transform: scale(.4); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+@keyframes tcSacude { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-4px); } 40% { transform: translateX(4px); } 60% { transform: translateX(-3px); } 80% { transform: translateX(2px); } }
+@keyframes tcFlashOk { 0% { background: rgba(30,158,72,.22); } 100% { background: transparent; } }
+@keyframes tcFlashMal { 0% { background: rgba(217,48,37,.18); } 100% { background: transparent; } }
 </style>
 </head>
 <body>
@@ -3897,6 +3913,7 @@ function pintarSeleccionIzumi() {
     if (typeof s.existe === 'boolean') existe = s.existe;
     if ('script' in s) { script = s.script || null; scriptExiste = !!s.scriptExiste; }
     job = s.job || null;
+    if (habiaJob && !job && generando) cerrarGeneracion();   // terminó o se detuvo sin dejar archivo
     if ((habiaJob && !job) || (rutaAntes && rutaAntes !== ruta)) refrescarVisor();
     aplicarRuta();
     aplicarJob();
@@ -3990,6 +4007,53 @@ function pintarSeleccionIzumi() {
     existe = true;
     pintarValores();
     aplicarRuta();
+    if (generando) cerrarGeneracion();
+  }
+
+  /* ---------- Generar: estado de cada slot en vivo ---------- */
+  // Verde "Lista" cuando el script obtiene parte y serial; rojo cuando no.
+  var generando = false;
+  const marcados = new Set();
+  function iniciarGeneracion() {
+    generando = true;
+    marcados.clear();
+    for (const f of filas) { f.tr.classList.remove('gen-ok', 'gen-mal'); pintarPill(f.det, 'buscando', 'Buscando'); }
+  }
+  function marcarSlot(n, ok, motivo, parte, serial) {
+    const f = filas[n - 1];
+    if (!f) return;
+    marcados.add(n);
+    if (ok) {
+      if (parte) { slots[n - 1].parte = parte; f.parte.value = parte; }
+      if (serial) { slots[n - 1].serial = serial; f.serial.value = serial; }
+      pintarPill(f.det, 'lista', 'Lista', 'Parte y serial obtenidos');
+    } else {
+      pintarPill(f.det, 'nolista', 'Sin serial', motivo || 'No se obtuvo el serial');
+    }
+    f.tr.classList.remove('gen-ok', 'gen-mal');
+    void f.tr.offsetWidth;               // reinicia la animación
+    f.tr.classList.add(ok ? 'gen-ok' : 'gen-mal');
+  }
+  function leerLineaGen(txt) {
+    const t = txt.replace(/\x1b\[[0-9;]*m/g, '');
+    let m = t.match(/Slot\s+(\d+):\s*SUCCESS.*?Parte:\s*([^,\s]*),?\s*Serial:\s*(\S*)/i);
+    if (m) {
+      const parte = m[2], serial = m[3];
+      marcarSlot(+m[1], !!(parte && serial), 'Falta parte o serial', parte, serial);
+      return;
+    }
+    m = t.match(/Slot\s+(\d+):\s*FAIL\s*(?:->\s*)?(.*)/i);
+    if (m) marcarSlot(+m[1], false, m[2].replace(/\.$/, '') || 'Sin respuesta');
+  }
+  function cerrarGeneracion() {
+    if (!generando) return;
+    generando = false;
+    for (let n = 1; n <= N; n++) {
+      if (marcados.has(n)) continue;
+      const s = slots[n - 1];
+      const ok = !!(s.parte.trim() && s.serial.trim() && !/CORRIJA/i.test(s.parte + s.serial));
+      marcarSlot(n, ok, job === null ? 'No se obtuvo el serial' : 'Detenido');
+    }
   }
 
 
@@ -4005,6 +4069,7 @@ function pintarSeleccionIzumi() {
     if (!Array.isArray(arr)) return;
     for (const r of arr) {
       if (typeof r.i === 'number') { if (r.i <= ultimoId) continue; ultimoId = r.i; }
+      if (generando) leerLineaGen(String(r.s));
       cola.push(r);
     }
     programar();
@@ -4167,8 +4232,9 @@ function pintarSeleccionIzumi() {
     if (!scriptExiste && !(await elegirScript())) return;   // sin script: primero se elige
     const hay = existe || slots.some((s) => s.parte || s.serial);
     if (hay && !window.confirm('Se va a generar de nuevo ' + (ruta ? ruta.split('/').pop() : 'el UUT_case') + ' y la tabla se llenará con lo nuevo. ¿Continuar?')) return;
-    limpiarEstados(['det']);
-    await llamar(() => window.sistema.tcCorrerScript());
+    iniciarGeneracion();
+    const res = await llamar(() => window.sistema.tcCorrerScript());
+    if (res && res.ok === false) { generando = false; limpiarEstados(['det']); }
   });
   q('tc-script-elegir').addEventListener('click', (e) => { e.preventDefault(); elegirScript(); });
   q('tc-run-all').addEventListener('click', () => correr(sel.size ? 'sel' : 'todos'));
