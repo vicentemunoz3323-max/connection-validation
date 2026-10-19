@@ -623,6 +623,27 @@ ipcMain.handle('tc-read-file', async () => {
   }
 });
 
+// Guardar el UUT_case editado a mano en el visor
+ipcMain.handle('tc-write-file', async (_e, texto) => {
+  if (trabajo) return { ok: false, error: 'Espera a que termine el trabajo en curso.' };
+  if (typeof texto !== 'string') return { ok: false, error: 'Texto no válido.' };
+  if (texto.length > 2 * 1024 * 1024) return { ok: false, error: 'El texto es demasiado grande.' };
+  const ruta = obtenerRuta();
+  try {
+    fs.mkdirSync(path.dirname(ruta), { recursive: true });
+    const tmp = ruta + '.guardando';
+    await fs.promises.writeFile(tmp, texto.endsWith('\n') ? texto : texto + '\n', 'utf8');
+    await fs.promises.rename(tmp, ruta);            // se reemplaza de golpe: nunca queda a medias
+    try { fs.chmodSync(ruta, 0o755); } catch (e) {}
+    linea('sys', '✎ Archivo editado a mano y guardado: ' + ruta);
+    flush();
+    emitirEstado();
+    return { ok: true, ruta, ...leerArchivo() };
+  } catch (e) {
+    return { ok: false, error: 'No se pudo guardar: ' + e.message };
+  }
+});
+
 ipcMain.handle('tc-open-file', async () => {
   const ruta = obtenerRuta();
   if (!fs.existsSync(ruta)) return { ok: false, error: 'El archivo aún no existe: ' + ruta };

@@ -53,6 +53,7 @@ contextBridge.exposeInMainWorld('sistema', {
   tcCorrer: (slots, seleccion) => ipcRenderer.invoke('tc-run', slots, seleccion),
   tcDetener: () => ipcRenderer.invoke('tc-stop'),
   tcLeerArchivo: () => ipcRenderer.invoke('tc-read-file'),
+  tcEscribirArchivo: (texto) => ipcRenderer.invoke('tc-write-file', texto),
   tcAbrirArchivo: () => ipcRenderer.invoke('tc-open-file'),
   tcAbrirLog: () => ipcRenderer.invoke('tc-open-log'),
   onTcEstado: (cb) => ipcRenderer.on('tc-state', (_e, s) => cb(s)),

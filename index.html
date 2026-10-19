@@ -1039,6 +1039,71 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .tcs-detalles .upd-console { margin-top: 6px; }
 .tcs-detalles .uc-body { height: 220px; }
 .tc-simple .tc-prog { margin-bottom: 12px; }
+
+.tcs-visor { margin: 0 0 14px; height: auto; max-height: 300px; }
+.tcs-visor .dhcp-box-body { max-height: 250px; overflow: auto; }
+#tc-ver.is-on { background: rgba(0,113,227,.08); color: var(--blue); border-color: rgba(0,113,227,.45); }
+
+.tv-edit {
+  display: block; width: 100%; min-height: 220px; max-height: 320px; resize: vertical; box-sizing: border-box;
+  padding: 10px 14px; border: 0; outline: none; background: #1e1e1e; color: #d4d4d4;
+  font: 12px/1.6 SFMono-Regular, Consolas, "DejaVu Sans Mono", monospace; tab-size: 2; white-space: pre; overflow: auto;
+}
+.tv-edit:focus { box-shadow: inset 0 0 0 1px #3d8bfd; }
+.tcs-visor.editado { border-top-color: #e5c07b; }
+.tcs-visor.editado .tv-meta { color: #e5c07b; }
+
+/* ===== Ver archivo (Test case): versión clara, igual que el resto de la app ===== */
+.tcs-visor { background: #fff; border: 1px solid var(--line); border-top: 2px solid var(--blue); box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.tcs-visor .dhcp-box-header { background: var(--bg-soft); border-bottom: 1px solid var(--line); color: var(--text); }
+.tcs-visor .dhcp-box-header code, .tcs-visor #tv-ruta { color: var(--text); font-weight: 600; }
+.tcs-visor .tv-meta { color: var(--muted); }
+.tcs-visor .btn-secundario { background: #fff; color: var(--text); border-color: var(--line); }
+.tcs-visor .btn-secundario:hover { background: var(--bg-soft); }
+.tcs-visor .tv-edit { background: #fff; color: var(--text); }
+.tcs-visor .tv-edit:focus { box-shadow: inset 0 0 0 1px var(--blue); }
+.tcs-visor.editado { border-top-color: #f5a623; }
+.tcs-visor.editado .tv-meta { color: #b7791f; font-weight: 600; }
+
+/* ===== Guía OMRON E8FC ===== */
+.om-guia { padding: 20px 22px; }
+.om-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.om-tit { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.om-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.om-estado { font-size: 11px; font-weight: 700; padding: 4px 10px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--muted); white-space: nowrap; }
+.om-estado.ok { color: var(--green); background: rgba(40,167,69,.08); border-color: rgba(40,167,69,.35); }
+.om-entrar { margin: 14px 0 12px; padding: 10px 12px; background: rgba(0,113,227,.06); border-left: 3px solid var(--blue); font-size: 12px; }
+kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border-bottom-width: 2px; background: #fff; font: 700 10px Inter, sans-serif; letter-spacing: .04em; border-radius: 3px; }
+.om-entrar code, .om-paso code { font: 700 12px SFMono-Regular, Consolas, monospace; }
+.om-pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.om-paso {
+  display: grid; grid-template-columns: 26px 118px minmax(0, 1fr) auto 26px; align-items: center; gap: 14px;
+  padding: 10px 14px; border: 1px solid var(--line); border-left: 3px solid #c7c7cc; background: #fff; cursor: pointer; transition: background .15s, border-color .15s;
+}
+.om-paso:hover { background: var(--bg-soft); }
+.om-paso.hecho { border-left-color: var(--green); background: rgba(40,167,69,.04); }
+.om-paso.actual { border-left-color: var(--blue); box-shadow: 0 2px 10px rgba(0,113,227,.10); }
+.om-num { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; background: var(--bg-soft); font-size: 12px; font-weight: 700; color: var(--muted); }
+.om-paso.actual .om-num { background: var(--blue); color: #fff; }
+.om-paso.hecho .om-num { background: var(--green); color: #fff; }
+/* Imitación de la pantalla del sensor: alterna código y valor como el real */
+.om-lcd { height: 40px; display: grid; place-items: center; background: #1b2420; border: 2px solid #2f3a35; border-radius: 4px; overflow: hidden; }
+.om-lcd span { font: 700 19px "DejaVu Sans Mono", SFMono-Regular, Consolas, monospace; color: #7dff9a; letter-spacing: .06em; text-shadow: 0 0 6px rgba(125,255,154,.55); text-transform: lowercase; }
+.om-que b { display: block; font-size: 13px; }
+.om-que small { display: block; font-size: 11px; color: var(--muted); margin-top: 2px; }
+.om-valor select { font: 600 12px SFMono-Regular, Consolas, monospace; padding: 5px 8px; border: 1px solid var(--line); background: #fff; }
+.om-valor .fijo { font: 700 13px SFMono-Regular, Consolas, monospace; color: var(--blue); }
+.om-check { width: 22px; height: 22px; border: 1.5px solid #8e8e93; display: grid; place-items: center; background: #fff; }
+.om-paso.hecho .om-check { background: var(--green); border-color: var(--green); }
+.om-paso.hecho .om-check::after { content: "✓"; color: #fff; font-size: 13px; font-weight: 700; }
+.om-pie { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.om-avance { font-size: 12px; color: var(--muted); }
+.om-acc { display: flex; gap: 8px; }
+.om-archivos { display: inline-block; margin-top: 12px; font-size: 11px; }
+@media (max-width: 900px) {
+  .om-paso { grid-template-columns: 26px 96px minmax(0, 1fr) 26px; }
+  .om-valor { grid-column: 3; }
+}
 </style>
 </head>
 <body>
@@ -1460,6 +1525,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <div class="tcs-acc">
             <button id="tc-script-run" class="btn tcs-generar" type="button">Generar</button>
             <button id="tc-run-all" class="btn btn-secundario tcs-correr" type="button">Correr todo</button>
+            <button id="tc-ver" class="btn btn-secundario" type="button" title="Muestra el contenido del archivo UUT_case">Ver archivo</button>
             <button id="tc-stop" class="btn tc-stop" type="button" hidden>Detener</button>
           </div>
         </div>
@@ -1472,6 +1538,20 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         <div id="tc-prog" class="tc-prog" hidden>
           <div class="tc-prog-top"><span id="tc-prog-txt">—</span><span id="tc-prog-n"></span></div>
           <div class="tc-prog-bar"><div id="tc-prog-fill" class="tc-prog-fill"></div></div>
+        </div>
+
+        <div id="tc-viewer" class="dhcp-box tc-viewer tcs-visor" hidden>
+          <div class="dhcp-box-header">
+            <code id="tv-ruta">UUT_case</code>
+            <span class="tv-meta" id="tv-meta"></span>
+            <div class="uc-actions">
+              <button id="tv-guardar" class="btn btn-mini" type="button" disabled title="Guarda los cambios (Ctrl+S)">Guardar</button>
+              <button id="tv-deshacer" class="btn btn-secundario btn-mini" type="button" disabled title="Regresa a como está el archivo">Deshacer</button>
+              <button id="tv-copiar" class="btn btn-secundario btn-mini" type="button">Copiar</button>
+              <button id="tv-cerrar" class="btn btn-secundario btn-mini" type="button">Cerrar</button>
+            </div>
+          </div>
+          <textarea id="tv-edit" class="tv-edit" spellcheck="false" wrap="off" aria-label="Contenido del UUT_case"></textarea>
         </div>
 
         <table class="tc-table">
@@ -1530,6 +1610,28 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         <aside id="cfg-devs" class="cfg-devs" aria-label="Equipos"></aside>
 
         <div class="cfg-main">
+          <!-- Guía del sensor de flujo OMRON E8FC (solo se ve en SENSOR OMRON) -->
+          <div class="card om-guia" id="om-guia" hidden>
+            <div class="om-head">
+              <div>
+                <div class="om-tit">Sensor de flujo OMRON E8FC</div>
+                <div class="om-sub">Se configura con sus botones. Sigue los pasos y marca cada uno.</div>
+              </div>
+              <span class="om-estado" id="om-estado">Sin configurar</span>
+            </div>
+            <div class="om-entrar"><b>Para empezar:</b> mantén presionado <kbd>MODE</kbd> 2 segundos hasta que aparezca <code>pipe</code>.</div>
+            <ol class="om-pasos" id="om-pasos"></ol>
+            <div class="om-pie">
+              <span class="om-avance" id="om-avance">0 de 6 pasos</span>
+              <div class="om-acc">
+                <button type="button" class="btn btn-secundario" id="om-reiniciar">Empezar de nuevo</button>
+                <button type="button" class="btn" id="om-listo" disabled>Listo, sensor configurado</button>
+              </div>
+            </div>
+            <a href="#" class="tcs-link om-archivos" id="om-archivos">Ver archivos de este equipo</a>
+          </div>
+
+          <div id="cfg-archivos">
           <div class="card">
             <div class="card-head">
               <span class="card-title" id="cfg-dev-title">SERVER</span>
@@ -1553,6 +1655,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
               </div>
             </div>
             <div id="cfg-body" class="uc-body" tabindex="0"></div>
+          </div>
           </div>
         </div>
       </div>
@@ -3271,7 +3374,95 @@ function pintarSeleccionIzumi() {
     return wrap;
   }
 
+  /* ---------- Guía OMRON E8FC ---------- */
+  const OM_KEY = 'omron_e8fc_v1';
+  const OM_PASOS = [
+    { id: 'pipe', codigo: 'pipe', que: 'Diámetro del tubo', opciones: ['10a', '15a', '20a', '25a'], def: '20a' },
+    { id: 'fset', codigo: 'f.set', que: 'Líquido', opciones: ['agua', 'oil'], def: 'agua', nota: 'agua = agua o refrigerante soluble · oil = aceite' },
+    { id: 'pol', codigo: 'type', que: 'Tipo de salida', opciones: ['pnp', 'npn'], def: 'pnp' },
+    { id: 'out1', codigo: 'out1', que: 'Salida 1 (pin 4)', opciones: ['ao', 'ao.t', '1p', '2p', '1p.t', '2p.t', 'pls'], def: 'ao', nota: 'ao = analógica de flujo' },
+    { id: 'out2', codigo: 'out2', que: 'Salida 2 (pin 2)', opciones: ['ao.t', 'ao', '1p', '2p', '1p.t', '2p.t', 'pls'], def: 'ao.t', nota: 'ao.t = analógica de temperatura' },
+    { id: 'set', codigo: 'set', que: 'Guardar', opciones: ['yes'], def: 'yes', nota: 'luego confirma OK? con MODE' }
+  ];
+  let om = { valores: {}, hechos: [], fecha: null };
+  try { om = { ...om, ...JSON.parse(localStorage.getItem(OM_KEY) || '{}') }; } catch (e) {}
+  const omGuardar = () => { try { localStorage.setItem(OM_KEY, JSON.stringify(om)); } catch (e) {} };
+  const omValor = (p) => om.valores[p.id] || p.def;
+  let omVerArchivos = false;
+
+  function omPintar() {
+    const ol = q('om-pasos');
+    ol.textContent = '';
+    const actual = OM_PASOS.findIndex((p) => !om.hechos.includes(p.id));
+    OM_PASOS.forEach((p, i) => {
+      const li = document.createElement('li');
+      const hecho = om.hechos.includes(p.id);
+      li.className = 'om-paso' + (hecho ? ' hecho' : '') + (i === actual ? ' actual' : '');
+      const v = omValor(p);
+      const enPantalla = v;
+      li.innerHTML =
+        '<span class="om-num"></span>' +
+        '<div class="om-lcd" title="Así se ve en la pantalla del sensor"><span></span></div>' +
+        '<div class="om-que"><b></b><small></small></div>' +
+        '<div class="om-valor"></div>' +
+        '<span class="om-check" role="checkbox"></span>';
+      li.querySelector('.om-num').textContent = i + 1;
+      const codigo = p.codigo;
+      li.querySelector('.om-lcd span').textContent = codigo;
+      li.querySelector('.om-lcd span').dataset.a = codigo;
+      li.querySelector('.om-lcd span').dataset.b = enPantalla === 'agua' ? '— —' : enPantalla;
+      li.querySelector('.om-que b').textContent = p.que;
+      const instr = p.id === 'set'
+        ? 'Con ▲ elige «yes» y presiona MODE · ' + p.nota
+        : 'Con ▲ / ▼ elige «' + v + '» y presiona MODE' + (p.nota ? ' · ' + p.nota : '');
+      li.querySelector('.om-que small').textContent = instr;
+      const val = li.querySelector('.om-valor');
+      if (p.opciones.length > 1) {
+        const sel2 = document.createElement('select');
+        sel2.title = 'Valor que debe tener';
+        for (const o of p.opciones) { const op = document.createElement('option'); op.value = o; op.textContent = o; sel2.appendChild(op); }
+        sel2.value = v;
+        sel2.addEventListener('click', (e) => e.stopPropagation());
+        sel2.addEventListener('change', () => { om.valores[p.id] = sel2.value; omGuardar(); omPintar(); });
+        val.appendChild(sel2);
+      } else {
+        const f = document.createElement('span'); f.className = 'fijo'; f.textContent = v; val.appendChild(f);
+      }
+      li.querySelector('.om-check').setAttribute('aria-checked', hecho ? 'true' : 'false');
+      li.addEventListener('click', () => {
+        if (hecho) om.hechos = om.hechos.filter((x) => x !== p.id); else om.hechos.push(p.id);
+        omGuardar(); omPintar();
+      });
+      ol.appendChild(li);
+    });
+    const n = om.hechos.length;
+    q('om-avance').textContent = n === OM_PASOS.length ? 'Todos los pasos listos ✓' : n + ' de ' + OM_PASOS.length + ' pasos';
+    q('om-listo').disabled = n !== OM_PASOS.length;
+    const est = q('om-estado');
+    est.classList.toggle('ok', !!om.fecha);
+    est.textContent = om.fecha ? 'Configurado ' + new Date(om.fecha).toLocaleString('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin configurar';
+  }
+  // La "pantalla" alterna código y valor cada segundo, como el sensor real
+  let omTick = false;
+  setInterval(() => {
+    if (q('om-guia').hidden) return;
+    omTick = !omTick;
+    document.querySelectorAll('#om-pasos .om-lcd span').forEach((sp) => { sp.textContent = omTick ? sp.dataset.b : sp.dataset.a; });
+  }, 1000);
+  q('om-reiniciar').addEventListener('click', () => { om.hechos = []; omGuardar(); omPintar(); });
+  q('om-listo').addEventListener('click', () => { om.fecha = Date.now(); om.hechos = []; omGuardar(); omPintar(); });
+  q('om-archivos').addEventListener('click', (e) => { e.preventDefault(); omVerArchivos = !omVerArchivos; pintarModo(); });
+
+  function pintarModo() {
+    const esOmron = sel === 'omron';
+    q('om-guia').hidden = !esOmron;
+    q('cfg-archivos').hidden = esOmron && !omVerArchivos;
+    q('om-archivos').textContent = omVerArchivos ? 'Ocultar archivos de este equipo' : 'Ver archivos de este equipo';
+    if (esOmron) omPintar();
+  }
+
   function renderFiles() {
+    pintarModo();
     const lista = archivos[sel] || [];
     q('cfg-dev-title').textContent = nombreDe(sel);
     q('cfg-console-dev').textContent = nombreDe(sel);
@@ -3496,6 +3687,7 @@ function pintarSeleccionIzumi() {
 
   function seleccionar(id) {
     sel = id;
+    omVerArchivos = false;
     renderDevs();
     renderFiles();
     cargarHistorial();
@@ -3862,47 +4054,40 @@ function pintarSeleccionIzumi() {
 
   /* ---------- Visor del archivo generado ---------- */
   let visorTexto = '';
+  let visorCambiado = false;
+  function marcarCambio(on) {
+    visorCambiado = on;
+    q('tv-guardar').disabled = !on || ocupado();
+    q('tv-deshacer').disabled = !on;
+    q('tc-viewer').classList.toggle('editado', on);
+    if (on) q('tv-meta').textContent = 'cambios sin guardar';
+  }
   function pintarVisor(r) {
-    const body = q('tv-body');
-    body.textContent = '';
+    const ed = q('tv-edit');
     q('tv-ruta').textContent = (r && r.ruta) || ruta || 'UUT_case';
     q('tv-ruta').title = (r && r.ruta) || ruta || '';
     if (!r || r.ok === false) {
       visorTexto = '';
+      ed.value = '# ' + ((r && r.error) || 'No se pudo leer el archivo.');
+      ed.readOnly = true;
       q('tv-meta').textContent = '';
-      const d = document.createElement('div'); d.className = 'ln';
-      const sp = document.createElement('span'); sp.className = 'ln-text cmt';
-      sp.textContent = '# ' + ((r && r.error) || 'No se pudo leer el archivo.');
-      d.appendChild(sp); body.appendChild(d);
+      marcarCambio(false);
       return;
     }
-    if (!r.existe) {
-      visorTexto = '';
-      q('tv-meta').textContent = 'sin crear';
-      const d = document.createElement('div'); d.className = 'ln';
-      const sp = document.createElement('span'); sp.className = 'ln-text cmt';
-      sp.textContent = '# El archivo aún no existe. Usa "Generar automático" o "Guardar".';
-      d.appendChild(sp); body.appendChild(d);
-      return;
-    }
-    visorTexto = r.texto || '';
-    const lineas = visorTexto.replace(/\n$/, '').split(/\r?\n/);
-    q('tv-meta').textContent = lineas.length + (lineas.length === 1 ? ' línea' : ' líneas') + (r.mtime ? ' · modificado ' + hora(r.mtime) : '');
-    const frag = document.createDocumentFragment();
-    for (const l of lineas) {
-      const d = document.createElement('div'); d.className = 'ln';
-      const sp = document.createElement('span');
-      sp.className = 'ln-text' + (l.trim().startsWith('#') ? ' cmt' : '');
-      sp.textContent = l === '' ? ' ' : l;
-      d.appendChild(sp); frag.appendChild(d);
-    }
-    body.appendChild(frag);
+    ed.readOnly = false;
+    visorTexto = r.existe ? (r.texto || '') : '';
+    ed.value = visorTexto;
+    const n = visorTexto ? visorTexto.replace(/\n$/, '').split(/\r?\n/).length : 0;
+    marcarCambio(false);
+    q('tv-meta').textContent = r.existe ? n + (n === 1 ? ' línea' : ' líneas') + (r.mtime ? ' · modificado ' + hora(r.mtime) : '') : 'sin crear · escribe y guarda para crearlo';
   }
   async function refrescarVisor() {
-    if (!q('tc-viewer') || q('tc-viewer').hidden || !hayApi() || typeof window.sistema.tcLeerArchivo !== 'function') return;
+    if (!q('tc-viewer') || q('tc-viewer').hidden || visorCambiado || !hayApi() || typeof window.sistema.tcLeerArchivo !== 'function') return;
     try { pintarVisor(await window.sistema.tcLeerArchivo()); } catch (e) { pintarVisor({ ok: false, error: e.message }); }
   }
   function mostrarVisor(on) {
+    if (!on && visorCambiado && !window.confirm('Hay cambios sin guardar en el archivo. ¿Cerrar sin guardar?')) return;
+    if (!on) marcarCambio(false);
     q('tc-viewer').hidden = !on;
     q('tc-ver').classList.toggle('is-on', on);
     q('tc-ver').textContent = on ? 'Ocultar archivo' : 'Ver archivo';
@@ -3915,7 +4100,46 @@ function pintarSeleccionIzumi() {
       q('tc-viewer').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }
-  // (el visor del archivo se quitó: la tabla ya muestra lo que tiene el UUT_case)
+  // Ver archivo: muestra el UUT_case tal cual quedó
+  q('tc-ver').addEventListener('click', () => mostrarVisor(q('tc-viewer').hidden));
+  q('tv-cerrar').addEventListener('click', () => mostrarVisor(false));
+  q('tv-edit').addEventListener('input', () => marcarCambio(q('tv-edit').value !== visorTexto));
+  q('tv-edit').addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); if (visorCambiado) guardarVisor(); }
+    else if (e.key === 'Tab') {   // Tab escribe espacios en vez de salirse del cuadro
+      e.preventDefault();
+      const ed = q('tv-edit'), a = ed.selectionStart;
+      ed.setRangeText('  ', a, ed.selectionEnd, 'end');
+      marcarCambio(ed.value !== visorTexto);
+    }
+  });
+  q('tv-deshacer').addEventListener('click', () => { q('tv-edit').value = visorTexto; marcarCambio(false); refrescarVisor(); });
+  q('tv-guardar').addEventListener('click', guardarVisor);
+  async function guardarVisor() {
+    if (!hayApi() || typeof window.sistema.tcEscribirArchivo !== 'function') return;
+    const b = q('tv-guardar');
+    b.disabled = true; b.textContent = 'Guardando…';
+    const r = await llamar(() => window.sistema.tcEscribirArchivo(q('tv-edit').value));
+    b.textContent = 'Guardar';
+    if (r && r.ok) {
+      // La tabla toma lo que quedó en el archivo
+      if (Array.isArray(r.slots)) { slots = r.slots.map((x) => ({ parte: x.parte || '', serial: x.serial || '' })); dirty = false; pintarValores(); }
+      existe = true;
+      marcarCambio(false);
+      aplicarRuta();
+      refrescarVisor();
+      b.textContent = 'Guardado ✓'; setTimeout(() => { b.textContent = 'Guardar'; }, 1200);
+    } else {
+      marcarCambio(true);
+    }
+  }
+  q('tv-copiar').addEventListener('click', async () => {
+    const t = q('tv-edit').value;
+    if (!t) return;
+    await copiarTexto(t);
+    const b = q('tv-copiar'); b.textContent = 'Copiado';
+    setTimeout(() => { b.textContent = 'Copiar'; }, 900);
+  });
 
   /* ---------- Arranque ---------- */
   construirTabla();
@@ -3949,10 +4173,10 @@ function pintarSeleccionIzumi() {
   function guardarSolo() {
     clearTimeout(timerGuardar);
     timerGuardar = setTimeout(async () => {
-      if (ocupado() || !dirty || !hayApi()) return;
+      if (ocupado() || !dirty || !hayApi() || visorCambiado) return;
       for (let i = 0; i < N; i++) for (const c of ['parte', 'serial']) { const v = slots[i][c].trim(); if (v && !PATRON.test(v)) return; }
       const r = await window.sistema.tcGuardar(slots).catch(() => null);
-      if (r && r.ok) { dirty = false; existe = true; aplicarRuta(); }
+      if (r && r.ok) { dirty = false; existe = true; aplicarRuta(); refrescarVisor(); }
     }, 900);
   }
   q('tc-rows').addEventListener('input', () => { pintarResumen(); guardarSolo(); });
