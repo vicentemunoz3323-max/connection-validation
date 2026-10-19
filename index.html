@@ -933,7 +933,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .rz-fuente.err { color: var(--red); }
 .rz-tabla { display: flex; flex-direction: column; gap: 6px; }
 .rz-fila {
-  display: grid; grid-template-columns: 92px minmax(0, 1.1fr) 20px minmax(0, 1fr) 24px; align-items: center; gap: 12px;
+  display: grid; grid-template-columns: 84px minmax(0, 1fr) 16px minmax(0, 1fr) minmax(150px, .8fr) 22px; align-items: center; gap: 12px;
   padding: 8px 12px; border: 1px solid var(--line); border-left: 3px solid var(--blue); background: #fff;
   animation: rzEntra .18s ease-out;
 }
@@ -947,7 +947,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .rz-flecha { color: var(--muted); text-align: center; font-size: 14px; }
 .rz-nueva input {
   width: 100%; padding: 7px 10px; border: 1px solid var(--line); background: var(--bg-soft);
-  font: 600 13px SFMono-Regular, Consolas, monospace; letter-spacing: .02em; text-transform: lowercase;
+  font: 600 13px SFMono-Regular, Consolas, monospace; letter-spacing: .02em; text-transform: uppercase;
 }
 .rz-nueva input:focus { outline: 2px solid var(--blue); outline-offset: -1px; background: #fff; }
 .rz-nueva small { display: block; min-height: 13px; margin-top: 3px; font-size: 10px; color: var(--muted); }
@@ -965,6 +965,40 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
   .rz-flecha { display: none; }
   .rz-nueva { grid-column: 2 / 3; }
 }
+
+.rz-regla { font: 600 10px SFMono-Regular, Consolas, monospace; color: var(--blue); background: rgba(0,113,227,.08); padding: 2px 6px; }
+.rz-dhcp { min-width: 0; }
+.rz-dhcp span { display: block; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.rz-dhcp code { display: block; font: 700 13px SFMono-Regular, Consolas, monospace; letter-spacing: .02em; color: var(--muted); }
+.rz-fila.ok .rz-dhcp code { color: var(--green); }
+.rz-foot { flex-wrap: wrap; }
+.rz-sel { flex: 1 1 260px; }
+.rz-reiniciar { font-size: 12px; }
+.rz-pass { margin-top: 14px; padding: 12px 14px; border: 1px solid rgba(245,166,35,.6); border-left: 3px solid #f5a623; background: rgba(245,166,35,.08); }
+.rz-pass[hidden], .rz-res[hidden] { display: none; }
+.rz-pass-tit { font-size: 12px; font-weight: 600; margin-bottom: 8px; }
+.rz-pass-tit span { color: var(--red); font-weight: 700; margin-left: 6px; }
+.rz-pass-row { display: flex; gap: 8px; }
+.rz-pass-row input { flex: 0 1 320px; padding: 6px 10px; border: 1px solid var(--line); font: inherit; font-size: 13px; }
+.rz-pass-row input:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+.rz-pass-rec { margin-top: 8px; font-size: 11px; }
+.rz-res { margin-top: 14px; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--blue); background: var(--bg-soft); font-size: 12px; }
+.rz-res.ok { border-left-color: var(--green); background: rgba(40,167,69,.05); }
+.rz-res.err { border-left-color: var(--red); background: rgba(217,48,37,.04); }
+.rz-res h4 { font-size: 13px; margin: 0 0 8px; }
+.rz-res ul { list-style: none; padding: 0; margin: 0 0 6px; display: flex; flex-direction: column; gap: 4px; }
+.rz-res li { display: flex; gap: 8px; }
+.rz-res li b { width: 16px; text-align: center; }
+.rz-res li.ok b { color: var(--green); } .rz-res li.mal b { color: var(--red); } .rz-res li.na b { color: var(--muted); }
+.rz-res code { font: 12px SFMono-Regular, Consolas, monospace; }
+.rz-res pre { margin: 8px 0 0; padding: 8px 10px; background: #1e1e1e; color: #d4d4d4; font: 11px/1.4 SFMono-Regular, Consolas, monospace; white-space: pre-wrap; max-height: 180px; overflow: auto; }
+@media (max-width: 900px) {
+  .rz-fila { grid-template-columns: 70px minmax(0, 1fr) 22px; }
+  .rz-flecha { display: none; }
+  .rz-nueva, .rz-dhcp { grid-column: 2 / 3; }
+}
+
+.dhcp-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; font-size: 11px; color: var(--muted); }
 </style>
 </head>
 <body>
@@ -1291,15 +1325,29 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <div class="rz-macs" id="rz-macs" hidden>
             <div class="rz-macs-head">
               <span class="card-title">MAC nuevas</span>
+              <span class="rz-regla" title="Se le suma 3 al último dígito de la etiqueta. Si pasa de F (ej. E+3 = 11), ese resultado remplaza los dos últimos dígitos.">último dígito + 3 = DHCP</span>
               <span class="rz-fuente" id="rz-fuente">Leyendo /etc/dhcp/dhcpd.conf…</span>
               <button type="button" class="btn btn-secundario btn-mini" id="rz-recargar" title="Vuelve a leer las MAC actuales del archivo">Volver a leer</button>
             </div>
             <div class="rz-tabla" id="rz-tabla"></div>
           </div>
 
+          <div class="rz-pass" id="rz-pass" hidden>
+            <div class="rz-pass-tit">🔑 Contraseña de sudo para modificar /etc/dhcp/dhcpd.conf <span id="rz-pass-err"></span></div>
+            <form class="rz-pass-row" id="rz-pass-form" autocomplete="off">
+              <input type="password" id="rz-pass-in" placeholder="Tu contraseña de Ubuntu">
+              <button type="submit" class="btn btn-mini">Continuar</button>
+              <button type="button" class="btn btn-secundario btn-mini" id="rz-pass-cancelar">Cancelar</button>
+            </form>
+            <label class="chk rz-pass-rec"><input type="checkbox" id="rz-pass-recordar" checked><span>Recordarla mientras la app esté abierta</span></label>
+          </div>
+
+          <div class="rz-res" id="rz-res" hidden></div>
+
           <div class="rz-foot">
             <span class="rz-sel" id="rz-sel">Selecciona al menos una Izumi.</span>
-            <button type="button" class="btn" id="rz-continuar" disabled title="Siguiente paso: pendiente de definir">Continuar →</button>
+            <label class="chk rz-reiniciar" title="Reinicia isc-dhcp-server para que tome las MAC nuevas"><input type="checkbox" id="rz-reiniciar" checked><span>Reiniciar DHCP al terminar</span></label>
+            <button type="button" class="btn" id="rz-continuar" disabled>Remplazar en dhcpd.conf</button>
           </div>
         </div>
       </div>
@@ -1325,6 +1373,10 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         </div>
       </div>
 
+      <div class="dhcp-bar">
+        <span id="dhcp-hora">Sin cargar</span>
+        <button type="button" class="btn btn-secundario btn-mini" id="dhcp-refrescar">⟳ Refrescar</button>
+      </div>
       <div class="dhcp-layout">
         <div class="dhcp-box">
           <div class="dhcp-box-header"><span>/etc/dhcp/dhcpd.conf</span><span class="tag">Solo lectura</span></div>
@@ -1588,15 +1640,22 @@ function renderDhcp(id, texto) {
 
 async function cargarVistasDhcp() {
   if (!window.sistema) return;
+  const b = $('dhcp-refrescar');
+  if (b) { b.disabled = true; b.textContent = '⟳ Cargando…'; }
   try {
     const res = await window.sistema.leerDhcpConfigs();
     renderDhcp('dhcpd-content', res.dhcpd || '# Archivo vacío');
     renderDhcp('dhcpd6-content', res.dhcpd6 || '# Archivo vacío');
+    if ($('dhcp-hora')) $('dhcp-hora').textContent = 'Actualizado a las ' + new Date().toLocaleTimeString('es');
   } catch (err) {
     renderDhcp('dhcpd-content', '# Error al cargar');
     renderDhcp('dhcpd6-content', '# Error al cargar');
+    if ($('dhcp-hora')) $('dhcp-hora').textContent = 'No se pudo leer: ' + err.message;
+  } finally {
+    if (b) { b.disabled = false; b.textContent = '⟳ Refrescar'; }
   }
 }
+if ($('dhcp-refrescar')) $('dhcp-refrescar').addEventListener('click', () => { dhcpCargado = true; cargarVistasDhcp(); });
 
 $('toggle-console-btn').addEventListener('click', () => {$('console-panel').classList.toggle('open');
 });
@@ -2721,18 +2780,28 @@ const rzSel = new Set();
 })();
 
 /* ---------- MAC actual (de dhcpd.conf) y MAC nueva por Izumi ---------- */
-const rzNuevas = new Map();      // n -> texto escrito (se conserva aunque desmarques y vuelvas a marcar)
-let rzDhcp = null;               // lo que se leyó de /etc/dhcp/dhcpd.conf
-let rzLeyendo = null;
+var rzNuevas = new Map();      // n -> texto escrito (se conserva aunque desmarques y vuelvas a marcar)
+var rzDhcp = null;               // lo que se leyó de /etc/dhcp/dhcpd.conf
+var rzLeyendo = null;
 
 // Acepta 00:1a:2b:3c:4d:5e, 00-1A-2B-3C-4D-5E, 001a.2b3c.4d5e, 001a2b3c4d5e y la forma corta 0:1a:2b:3c:4d:5
 const rzNormalizar = (m) => {
   const t = String(m || '').trim();
   const partes = t.split(/[:\-]/);
-  if (partes.length === 6 && partes.every((p) => /^[0-9a-f]{1,2}$/i.test(p))) return partes.map((p) => p.padStart(2, '0').toLowerCase()).join(':');
+  if (partes.length === 6 && partes.every((p) => /^[0-9a-f]{1,2}$/i.test(p))) return partes.map((p) => p.padStart(2, '0').toUpperCase()).join(':');
   const x = t.replace(/[.\s]/g, '');
-  return /^[0-9a-f]{12}$/i.test(x) ? x.toLowerCase().match(/../g).join(':') : null;
+  return /^[0-9a-f]{12}$/i.test(x) ? x.toUpperCase().match(/../g).join(':') : null;
 };
+// MAC del DHCP = MAC de la etiqueta con +3 SOLO en el último dígito hexadecimal:
+//   …90:A2 -> …90:A5    …90:19 -> …90:1C    si pasa de F: …90:FE -> …90:11 (el resultado remplaza los dos últimos)
+var RZ_SUMA = 3;
+function rzSumar(mac, n) {
+  const h = mac.replace(/:/g, '');
+  const v = parseInt(h.slice(-1), 16) + Number(n);
+  const nuevo = v < 16 ? h.slice(0, -1) + v.toString(16) : h.slice(0, -2) + v.toString(16).padStart(2, '0');
+  return nuevo.toUpperCase().match(/../g).join(':');
+}
+const rzDhcpDe = (n) => { const m = rzNormalizar(rzNuevas.get(n)); return m ? rzSumar(m, (rzDhcp && rzDhcp.suma) || RZ_SUMA) : null; };
 
 async function rzLeerDhcp() {
   if (!window.sistema || typeof window.sistema.rzLeerMacs !== 'function') {
@@ -2752,20 +2821,22 @@ async function rzLeerDhcp() {
 // Revisa la MAC nueva de una Izumi: formato, que no sea la misma, que no la tenga otro equipo, que no se repita
 function rzValidar(n, todas) {
   const txt = (rzNuevas.get(n) || '').trim();
-  if (!txt) return { estado: 'vacia', msg: 'Pega o escribe la MAC nueva (ej. 00:1a:2b:3c:4d:5e)' };
-  const mac = rzNormalizar(txt);
+  if (!txt) return { estado: 'vacia', msg: 'Escribe la MAC de la etiqueta de la Izumi nueva' };
+  const etiqueta = rzNormalizar(txt);
+  const mac = etiqueta ? rzSumar(etiqueta, (rzDhcp && rzDhcp.suma) || RZ_SUMA) : null;
   if (!mac) {
     const dig = txt.replace(/[^0-9a-f]/gi, '').length;
     if (/[g-z]/i.test(txt)) return { estado: 'mal', msg: 'Solo se permiten números y letras de la A a la F' };
     return { estado: 'mal', msg: dig !== 12 ? 'Faltan o sobran dígitos: lleva ' + dig + ' de 12' : 'Formato no válido (usa 00:1a:2b:3c:4d:5e)' };
   }
   const info = rzDhcp && rzDhcp.izumis ? rzDhcp.izumis[n] : null;
-  if (info && info.mac === mac) return { estado: 'mal', msg: 'Es la misma MAC que ya tiene', mac };
+  if (info && info.mac === mac) return { estado: 'mal', msg: 'Es la misma Izumi que ya está en el archivo', mac };
   const otra = todas.find((x) => x.n !== n && x.mac === mac);
   if (otra) return { estado: 'mal', msg: 'Repetida: también la pusiste en la Izumi ' + otra.n, mac };
   const ajena = (rzDhcp && rzDhcp.macs || []).find((x) => x.mac === mac && (!info || x.host !== info.host));
-  if (ajena) return { estado: 'mal', msg: 'Esa MAC ya la tiene «' + ajena.host + '» en dhcpd.conf', mac };
-  return { estado: 'ok', msg: mac === txt.toLowerCase() ? 'MAC válida' : 'Se guardará como ' + mac, mac };
+  if (ajena) return { estado: 'mal', msg: 'La MAC ' + mac + ' ya la tiene «' + ajena.host + '» en dhcpd.conf', mac };
+  if (rzDhcp && info === null) return { estado: 'mal', msg: 'Esta Izumi no está en dhcpd.conf: no se puede remplazar', mac };
+  return { estado: 'ok', msg: 'Etiqueta ' + etiqueta + ' · último dígito + 3', mac };
 }
 
 function pintarMacs() {
@@ -2801,11 +2872,12 @@ function pintarMacs() {
         '<div class="rz-n">Izumi ' + n + '<small>10.0.0.' + n + '</small></div>' +
         '<div class="rz-vieja"><code></code><small></small></div>' +
         '<div class="rz-flecha">→</div>' +
-        '<div class="rz-nueva"><input type="text" maxlength="20" spellcheck="false" autocomplete="off" placeholder="MAC nueva"><small></small></div>' +
+        '<div class="rz-nueva"><input type="text" maxlength="20" spellcheck="false" autocomplete="off" placeholder="MAC de la etiqueta"><small></small></div>' +
+        '<div class="rz-dhcp"><span>En DHCP (+3)</span><code>—</code></div>' +
         '<div class="rz-st"></div>';
       const inp = fila.querySelector('input');
       inp.value = rzNuevas.get(n) || '';
-      inp.setAttribute('aria-label', 'MAC nueva de la Izumi ' + n);
+      inp.setAttribute('aria-label', 'MAC de la etiqueta de la Izumi ' + n);
       inp.addEventListener('input', () => { rzNuevas.set(n, inp.value); rzRevisarTodas(); });
       inp.addEventListener('blur', () => { const m = rzNormalizar(inp.value); if (m) { inp.value = m; rzNuevas.set(n, m); rzRevisarTodas(); } });
       inp.addEventListener('keydown', (e) => {
@@ -2842,7 +2914,7 @@ function pintarMacs() {
 
 function rzRevisarTodas() {
   const lista = [...rzSel].sort((a, b) => a - b);
-  const todas = lista.map((n) => ({ n, mac: rzNormalizar(rzNuevas.get(n)) }));
+  const todas = lista.map((n) => ({ n, mac: rzDhcpDe(n) }));
   let validas = 0;
   for (const n of lista) {
     const fila = document.querySelector('#rz-tabla .rz-fila[data-n="' + n + '"]');
@@ -2852,18 +2924,119 @@ function rzRevisarTodas() {
     fila.classList.toggle('mal', r.estado === 'mal');
     fila.querySelector('.rz-nueva small').textContent = r.msg;
     fila.querySelector('.rz-st').textContent = r.estado === 'ok' ? '✓' : r.estado === 'mal' ? '✕' : '';
+    fila.querySelector('.rz-dhcp code').textContent = r.mac || '—';
     if (r.estado === 'ok') validas++;
   }
   rzActualizarListo(validas, lista.length);
 }
 
+var rzAplicando = false;   // var: se usa antes de esta línea al arrancar
 function rzActualizarListo(validas, total) {
   const ex = document.querySelector('#rz-sel .rz-sel-mac');
   if (ex && total) ex.textContent = ' · ' + (validas === total ? 'todas las MAC listas ✓' : validas + ' de ' + total + ' MAC listas');
   const b = $('rz-continuar');
-  b.disabled = true;   // el siguiente paso se define después
-  if (total) b.title = validas === total ? 'Las ' + total + ' MAC están listas · siguiente paso pendiente de definir' : 'Faltan ' + (total - validas) + ' MAC por completar';
+  b.disabled = rzAplicando || !total || validas !== total;
+  b.title = !total ? 'Marca al menos una Izumi' : validas === total ? 'Escribe las ' + total + ' MAC nuevas en /etc/dhcp/dhcpd.conf' : 'Faltan ' + (total - validas) + ' MAC por completar';
 }
+
+/* ---------- Remplazar en dhcpd.conf ---------- */
+function rzCambios() {
+  const lista = [...rzSel].sort((a, b) => a - b);
+  return lista.map((n) => ({ n, vieja: rzDhcp.izumis[n].mac, nueva: rzDhcpDe(n), etiqueta: rzNormalizar(rzNuevas.get(n)) }));
+}
+
+async function rzAplicar(password, recordar) {
+  if (!window.sistema || typeof window.sistema.rzAplicar !== 'function') { alert('Reinicia la app: falta actualizar main.js y preload.js.'); return; }
+  const cambios = rzCambios();
+  if (password === undefined) {
+    const lista = cambios.map((c) => 'Izumi ' + c.n + ':  ' + c.vieja + '  →  ' + c.nueva).join('\n');
+    if (!window.confirm('Se van a remplazar ' + cambios.length + (cambios.length === 1 ? ' MAC' : ' MAC') + ' en /etc/dhcp/dhcpd.conf:\n\n' + lista +
+      ($('rz-reiniciar').checked ? '\n\nDespués se reinicia el DHCP.' : '') + '\n\n¿Continuar?')) return;
+  }
+  rzAplicando = true;
+  rzRevisarTodas();
+  const b = $('rz-continuar');
+  b.textContent = 'Remplazando…';
+  $('rz-res').hidden = true;
+  let r;
+  try {
+    r = await window.sistema.rzAplicar({ cambios, reiniciar: $('rz-reiniciar').checked, password, recordar });
+  } catch (e) {
+    r = { ok: false, error: e.message };
+  }
+  rzAplicando = false;
+  b.textContent = 'Remplazar en dhcpd.conf';
+  if (r && r.necesitaPassword) {
+    $('rz-pass').hidden = false;
+    $('rz-pass-err').textContent = r.error || '';
+    $('rz-pass-in').value = '';
+    $('rz-pass-in').focus();
+    rzRevisarTodas();
+    return;
+  }
+  $('rz-pass').hidden = true;
+  rzMostrarResultado(r || { ok: false, error: 'Sin respuesta' }, cambios);
+  if (r && r.ok) {
+    // Se limpia lo escrito y se vuelve a leer el archivo (ya con las MAC nuevas)
+    for (const c of cambios) rzNuevas.delete(c.n);
+    document.querySelectorAll('#rz-grid input').forEach((c) => { c.checked = false; });
+    rzSel.clear();
+    rzDhcp = null;
+    pintarSeleccionIzumi();
+    rzLeerDhcp();
+    dhcpCargado = false;   // la vista de Files DHCP se recarga al entrar
+  } else {
+    rzRevisarTodas();
+  }
+}
+
+function rzMostrarResultado(r, cambios) {
+  const caja = $('rz-res');
+  caja.hidden = false;
+  caja.className = 'rz-res ' + (r.ok ? 'ok' : 'err');
+  caja.textContent = '';
+  const h = document.createElement('h4');
+  h.textContent = r.ok ? '✓ MAC remplazadas en dhcpd.conf' : '✕ ' + (r.error || 'No se pudo remplazar');
+  caja.appendChild(h);
+  const P = r.pasos || {};
+  const ul = document.createElement('ul');
+  const paso = (clase, txt) => { const li = document.createElement('li'); li.className = clase; const b = document.createElement('b'); b.textContent = clase === 'ok' ? '✓' : clase === 'mal' ? '✕' : '–'; li.append(b, document.createTextNode(txt)); ul.appendChild(li); };
+  if (P.escribir) paso(P.escribir.estado === 'ok' ? 'ok' : 'mal', P.escribir.estado === 'ok' ? 'MAC cambiadas en dhcpd.conf'
+    : P.escribir.estado === 'no-encontrado' ? 'No se encontró la línea del host para cambiarla (no se tocó nada)' : 'No se pudo escribir el archivo');
+  if (P.revisar) paso(P.revisar.estado === 'ok' ? 'ok' : P.revisar.estado === 'omitido' ? 'na' : 'mal',
+    P.revisar.estado === 'ok' ? 'Revisión dhcpd -t: sin errores' : P.revisar.estado === 'omitido' ? 'Revisión omitida (dhcpd no está instalado en esta PC)' : 'El archivo quedó con errores: se regresó como estaba');
+  if (P.reiniciar) paso(P.reiniciar.estado === 'ok' ? 'ok' : (P.reiniciar.estado === 'fallo' ? 'mal' : 'na'),
+    P.reiniciar.estado === 'ok' ? 'Servicio ' + P.reiniciar.dato + ' reiniciado'
+    : P.reiniciar.estado === 'fallo' ? 'No arrancó ' + P.reiniciar.dato + ': el archivo se regresó como estaba'
+    : P.reiniciar.estado === 'sin-servicio' ? 'No se encontró el servicio DHCP (isc-dhcp-server) en esta PC'
+    : 'Sin reiniciar el DHCP (no se pidió)');
+  if (ul.children.length) caja.appendChild(ul);
+  if (r.ok && r.cambios) {
+    const l = document.createElement('div');
+    for (const c of r.cambios) {
+      const d = document.createElement('div');
+      const code = document.createElement('code');
+      code.textContent = c.host + ':  ' + c.vieja + '  →  ' + c.nueva;
+      d.appendChild(code);
+      l.appendChild(d);
+    }
+    caja.appendChild(l);
+  }
+  if (r.detalle && r.detalle.length) {
+    const pre = document.createElement('pre');
+    pre.textContent = r.detalle.join('\n');
+    caja.appendChild(pre);
+  }
+}
+
+$('rz-continuar').addEventListener('click', () => rzAplicar());
+$('rz-pass-form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const p = $('rz-pass-in').value;
+  if (!p) { $('rz-pass-in').focus(); return; }
+  rzAplicar(p, $('rz-pass-recordar').checked);
+});
+$('rz-pass-cancelar').addEventListener('click', () => { $('rz-pass').hidden = true; $('rz-pass-in').value = ''; });
 
 function pintarSeleccionIzumi() {
   const lista = [...rzSel].sort((a, b) => a - b);
@@ -2886,7 +3059,7 @@ function pintarSeleccionIzumi() {
   pintarMacs();
   // Resumen con cuántas MAC faltan
   if (lista.length) {
-    const listas = lista.filter((n) => rzValidar(n, lista.map((x) => ({ n: x, mac: rzNormalizar(rzNuevas.get(x)) }))).estado === 'ok').length;
+    const listas = lista.filter((n) => rzValidar(n, lista.map((x) => ({ n: x, mac: rzDhcpDe(x) }))).estado === 'ok').length;
     const extra = document.createElement('span');
     extra.className = 'rz-sel-mac';
     extra.textContent = ' · ' + (listas === lista.length ? 'todas las MAC listas ✓' : listas + ' de ' + lista.length + ' MAC listas');

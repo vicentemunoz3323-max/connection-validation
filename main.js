@@ -22,8 +22,8 @@ require('./testcase_main.js');
 // Consolas telnet de las Izumi (una ventana por Izumi)
 const consolasIzumi = require('./izumi_main.js');
 
-// Remplazar Izumi: lee las MAC actuales de dhcpd.conf
-require('./remplazo_main.js');
+// Remplazar Izumi: lee las MAC actuales de dhcpd.conf y las remplaza
+const remplazoIzumi = require('./remplazo_main.js');
 
 
 
@@ -909,6 +909,14 @@ ipcMain.handle('cmds-input', (_e, texto, datos = {}) => {
   if (estadoCmds.pide) emitirCmds({ pide: null });
   return { ok: true };
 });
+// Remplazar Izumi usa la misma contraseña de sudo recordada y la misma ruta para "no new privileges"
+remplazoIzumi.configurar({
+  obtenerSudo: () => (guardadas.has('sudo') ? guardadas.get('sudo') : null),
+  guardarSudo: (p) => { guardadas.set('sudo', p); emitirCmds({ guardadas: guardadas.size }); },
+  olvidarSudo: () => { guardadas.delete('sudo'); emitirCmds({ guardadas: guardadas.size }); },
+  systemdRun: async () => ((await probarSystemdRun()) ? SYSTEMD_RUN : null)
+});
+
 ipcMain.handle('cmds-sudo-olvidar', () => { guardadas.clear(); emitirCmds({ guardadas: 0 }); return true; });
 ipcMain.handle('cmds-sudo-hay', () => guardadas.size);
 

@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('sistema', {
 
   // Remplazar Izumi: MAC actuales leídas de /etc/dhcp/dhcpd.conf
   rzLeerMacs: () => ipcRenderer.invoke('rz-leer'),
+  rzAplicar: (datos) => ipcRenderer.invoke('rz-aplicar', datos),
 
   // Consola telnet de cada Izumi (abre su propia ventana)
   abrirConsolaIzumi: (n) => ipcRenderer.invoke('izu:abrir', n),
