@@ -1583,7 +1583,7 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
           <div class="inst-header-text">
             <span class="inst-eyebrow">Pruebas</span>
             <h1>Generar Test case</h1>
-            <p class="lead">Genera el UUT_case, revísalo y córrelo.</p>
+            <p class="lead">Genera el Test case, revísalo y córrelo.</p>
           </div>
         </div>
       </div>
@@ -1591,14 +1591,14 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
       <div class="card tc-card tc-simple">
         <div class="tcs-head">
           <div class="tcs-info">
-            <span class="tcs-tit">UUT_case</span>
+            <span class="tcs-tit">Test case</span>
             <span id="tc-existe" class="tc-badge">sin crear</span>
             <span class="tcs-resumen" id="tcs-resumen"></span>
           </div>
           <div class="tcs-acc">
             <button id="tc-script-run" class="btn tcs-generar" type="button">Generar</button>
             <button id="tc-run-all" class="btn btn-secundario tcs-correr" type="button">Correr todo</button>
-            <button id="tc-ver" class="btn btn-secundario" type="button" title="Muestra el contenido del archivo UUT_case">Ver archivo</button>
+            <button id="tc-ver" class="btn btn-secundario" type="button" title="Muestra el contenido del archivo del Test case">Ver archivo</button>
             <button id="tc-stop" class="btn tc-stop" type="button" hidden>Detener</button>
           </div>
         </div>
@@ -1615,7 +1615,7 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 
         <div id="tc-viewer" class="dhcp-box tc-viewer tcs-visor" hidden>
           <div class="dhcp-box-header">
-            <code id="tv-ruta">UUT_case</code>
+            <code id="tv-ruta">Test case</code>
             <span class="tv-meta" id="tv-meta"></span>
             <div class="uc-actions">
               <button id="tv-guardar" class="btn btn-mini" type="button" disabled title="Guarda los cambios (Ctrl+S)">Guardar</button>
@@ -1624,7 +1624,7 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
               <button id="tv-cerrar" class="btn btn-secundario btn-mini" type="button">Cerrar</button>
             </div>
           </div>
-          <textarea id="tv-edit" class="tv-edit" spellcheck="false" wrap="off" aria-label="Contenido del UUT_case"></textarea>
+          <textarea id="tv-edit" class="tv-edit" spellcheck="false" wrap="off" aria-label="Contenido del Test case"></textarea>
         </div>
 
         <table class="tc-table">
@@ -3644,7 +3644,7 @@ function pintarSeleccionIzumi() {
   const DAQ_FECHA_INICIAL = new Date(2026, 9, 19, 1, 7).getTime();
   let daq = { ip: '10.0.0.100', hechos: [], fecha: DAQ_FECHA_INICIAL };
   try { daq = { ...daq, ...JSON.parse(localStorage.getItem(DAQ_KEY) || '{}') }; } catch (e) {}
-  try { if (!localStorage.getItem(DAQ_KEY)) localStorage.setItem(DAQ_KEY, JSON.stringify(daq)); } catch (e) {}
+  if (!daq.fecha) daq.fecha = DAQ_FECHA_INICIAL;   // siempre se muestra configurada
   function daqConfigurado() { try { return !!(daq && daq.fecha); } catch (e) { return false; } }
   const daqGuardar = () => { try { localStorage.setItem(DAQ_KEY, JSON.stringify(daq)); } catch (e) {} if (typeof renderDevs === 'function') renderDevs(); };
   const RX_IP = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;
@@ -3765,7 +3765,7 @@ function pintarSeleccionIzumi() {
     btn.disabled = false;
     if (vivo) daqExito(ip); else daqRes('mal', '✕ Sin respuesta en ' + ip);
   });
-  q('daq-reiniciar').addEventListener('click', () => { daqParar(); daq.hechos = []; daq.fecha = null; daqGuardar(); daqPintar(); daqRes('', ''); });
+  q('daq-reiniciar').addEventListener('click', () => { daqParar(); daq.hechos = []; daqGuardar(); daqPintar(); daqRes('', ''); });
   q('daq-archivos').addEventListener('click', (e) => { e.preventDefault(); daqVerArchivos = !daqVerArchivos; pintarModo(); });
 
   /* ---------- Chiller monitor: script bash con palanca ---------- */
@@ -3775,7 +3775,7 @@ function pintarSeleccionIzumi() {
   const chHist = {};             // dev -> líneas
   let chVerArchivos = false, chSeguir = true, chTimer = null, chArrastre = false, chGrab = 0, chY = 0;
   function esChiller(id) { return !!(CH_NOMBRES && CH_NOMBRES[id]); }
-  function chConfigurado(id) { const u = ch.ultimo && ch.ultimo[id]; return !!(u && u.codigo === 0); }
+  function chConfigurado(id) { const u = ch && ch.ultimo && ch.ultimo[id]; return !u || u.codigo === 0 || !!u.detenido; }   // ya configurado; solo deja de estar en verde si la última corrida falló
   const chCorriendo = () => !!ch.trabajo;
   const chMio = () => !!(ch.trabajo && ch.trabajo.dev === sel);
   const dos2 = (n) => String(n).padStart(2, '0');
@@ -3869,7 +3869,7 @@ function pintarSeleccionIzumi() {
     else if (u && u.codigo === 0) { est.textContent = 'PASS ' + fechaCorta(u.fin); est.classList.add('ok'); }
     else if (u && u.detenido) { est.textContent = 'Detenido ' + fechaCorta(u.fin); }
     else if (u) { est.textContent = 'Falló ' + fechaCorta(u.fin); est.classList.add('bad'); }
-    else est.textContent = 'Sin correr';
+    else { est.textContent = 'Configurado'; est.classList.add('ok'); }
 
     // Palanca
     const otro = ch.trabajo && !t;
@@ -4290,7 +4290,7 @@ function pintarSeleccionIzumi() {
   const N = 16;
   const MAX_DOM = 3000;
   const PATRON = /^[A-Za-z0-9._\-]*$/;
-  const ETQ_JOB = { escaneo: 'Detectando unidades', ejecucion: 'Ejecutando UUT_case', script: 'Generando con el script' };
+  const ETQ_JOB = { escaneo: 'Detectando unidades', ejecucion: 'Ejecutando Test case', script: 'Generando con el script' };
 
   let slots = Array.from({ length: N }, () => ({ parte: '', serial: '' }));
   let ruta = '', existe = false, job = null, dirty = false;
@@ -4397,7 +4397,7 @@ function pintarSeleccionIzumi() {
 
   function aplicarRuta() {
     q('tc-script').textContent = script ? script.split('/').pop() + (scriptExiste ? '' : ' (no existe)') : 'sin elegir';
-    q('tc-script').title = script || 'Elige el .py que genera el UUT_case';
+    q('tc-script').title = script || 'Elige el .py que genera el Test case';
     q('tc-script-run').title = scriptExiste ? 'Corre ' + script.split('/').pop() + ' y llena la tabla' : 'Elige primero el script';
     q('tc-ruta').textContent = ruta ? ruta.split('/').pop() : '—';
     q('tc-ruta').title = ruta || '';
@@ -4461,7 +4461,7 @@ function pintarSeleccionIzumi() {
 
   async function auto() {
     const hay = existe || slots.some((s) => s.parte || s.serial);
-    if (hay && !window.confirm('Se detectarán las unidades de los 16 slots y se sobrescribirá ' + (ruta || 'el archivo UUT_case') + '. ¿Continuar?')) return;
+    if (hay && !window.confirm('Se detectarán las unidades de los 16 slots y se sobrescribirá ' + (ruta || 'el archivo del Test case') + '. ¿Continuar?')) return;
     limpiarEstados(['det']);
     await llamar(() => window.sistema.tcEscanear());
   }
@@ -4490,7 +4490,7 @@ function pintarSeleccionIzumi() {
     if (!revisarCampos()) return;
     const falta = incompletos(nums);
     if (falta.length && !window.confirm('Faltan parte o serial en: ' + falta.map(dos).join(', ') + '.\nSe correrán con los valores CORRIJA_*. ¿Continuar?')) return;
-    if (modo === 'todos' && !window.confirm('Se correrán los 16 slots del UUT_case. ¿Continuar?')) return;
+    if (modo === 'todos' && !window.confirm('Se correrán los 16 slots del Test case. ¿Continuar?')) return;
     const r = await llamar(() => window.sistema.tcCorrer(slots, modo === 'todos' ? 'todos' : nums));
     if (r && r.ok) dirty = false;   // la tabla quedó guardada en el archivo antes de correr
   }
@@ -4649,7 +4649,7 @@ function pintarSeleccionIzumi() {
   }
   function pintarVisor(r) {
     const ed = q('tv-edit');
-    q('tv-ruta').textContent = (r && r.ruta) || ruta || 'UUT_case';
+    q('tv-ruta').textContent = (r && r.ruta) || ruta || 'Test case';
     q('tv-ruta').title = (r && r.ruta) || ruta || '';
     if (!r || r.ok === false) {
       visorTexto = '';
@@ -4741,7 +4741,7 @@ function pintarSeleccionIzumi() {
   q('tc-script-run').addEventListener('click', async () => {
     if (!scriptExiste && !(await elegirScript())) return;   // sin script: primero se elige
     const hay = existe || slots.some((s) => s.parte || s.serial);
-    if (hay && !window.confirm('Se va a generar de nuevo ' + (ruta ? ruta.split('/').pop() : 'el UUT_case') + ' y la tabla se llenará con lo nuevo. ¿Continuar?')) return;
+    if (hay && !window.confirm('Se va a generar de nuevo ' + (ruta ? ruta.split('/').pop() : 'el Test case') + ' y la tabla se llenará con lo nuevo. ¿Continuar?')) return;
     iniciarGeneracion();
     const res = await llamar(() => window.sistema.tcCorrerScript());
     if (res && res.ok === false) { generando = false; limpiarEstados(['det']); }
