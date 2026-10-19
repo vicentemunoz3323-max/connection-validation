@@ -1015,6 +1015,30 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .rz-dhcp .rz-l { grid-template-columns: 40px minmax(0, 1fr); }
 .rz-dhcp .rz-l code { color: var(--muted); }
 .rz-fila.ok .rz-dhcp .rz-l code { color: var(--green); }
+
+/* ===== Generar Test case (versión sencilla) ===== */
+.tc-simple { padding: 18px 20px; }
+.tcs-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+.tcs-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tcs-tit { font-size: 17px; font-weight: 700; letter-spacing: -.01em; }
+.tcs-resumen { font-size: 12px; color: var(--muted); }
+.tcs-acc { display: flex; gap: 8px; }
+.tcs-acc .btn { padding: 9px 22px; font-size: 13px; }
+.tcs-fuente { display: flex; gap: 22px; flex-wrap: wrap; margin: 8px 0 14px; font-size: 11px; color: var(--muted); }
+.tcs-fuente b { font: 600 11px SFMono-Regular, Consolas, monospace; color: var(--text); }
+.tcs-link { color: var(--blue); text-decoration: none; margin-left: 4px; }
+.tcs-link:hover { text-decoration: underline; }
+.tcs-link.off { pointer-events: none; opacity: .4; }
+.tcs-tip { margin: 10px 0 0; font-size: 11px; color: var(--muted); }
+.tcs-detalles { margin-top: 12px; }
+.tcs-detalles > summary { cursor: pointer; font-size: 12px; color: var(--muted); padding: 6px 2px; user-select: none; list-style: none; display: flex; align-items: center; gap: 8px; }
+.tcs-detalles > summary::-webkit-details-marker { display: none; }
+.tcs-detalles > summary::before { content: "▸"; display: inline-block; transition: transform .15s; }
+.tcs-detalles[open] > summary::before { transform: rotate(90deg); }
+.tcs-detalles > summary:hover { color: var(--text); }
+.tcs-detalles .upd-console { margin-top: 6px; }
+.tcs-detalles .uc-body { height: 220px; }
+.tc-simple .tc-prog { margin-bottom: 12px; }
 </style>
 </head>
 <body>
@@ -1421,38 +1445,28 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           <div class="inst-header-text">
             <span class="inst-eyebrow">Pruebas</span>
             <h1>Generar Test case</h1>
-            <p class="lead">Detecta las unidades por slot, arma el UUT_case, revísalo y córrelo.</p>
+            <p class="lead">Genera el UUT_case, revísalo y córrelo.</p>
           </div>
         </div>
       </div>
 
-      <div class="card tc-card">
-        <div class="tc-path">
-          <span class="tc-path-lbl">Archivo</span>
-          <code id="tc-ruta" class="tc-ruta">—</code>
-          <span id="tc-existe" class="tc-badge">sin crear</span>
-          <button id="tc-cambiar" class="btn btn-secundario btn-mini" type="button">Cambiar…</button>
-          <button id="tc-ver" class="btn btn-secundario btn-mini" type="button" title="Mostrar el contenido del archivo generado">Ver archivo</button>
-        </div>
-        <div class="tc-path">
-          <span class="tc-path-lbl">Script</span>
-          <code id="tc-script" class="tc-ruta">—</code>
-          <span id="tc-script-st" class="tc-badge">sin elegir</span>
-          <button id="tc-script-elegir" class="btn btn-secundario btn-mini" type="button" title="Elige el .py que genera el UUT_case (puede tener cualquier nombre)">Elegir script…</button>
+      <div class="card tc-card tc-simple">
+        <div class="tcs-head">
+          <div class="tcs-info">
+            <span class="tcs-tit">UUT_case</span>
+            <span id="tc-existe" class="tc-badge">sin crear</span>
+            <span class="tcs-resumen" id="tcs-resumen"></span>
+          </div>
+          <div class="tcs-acc">
+            <button id="tc-script-run" class="btn tcs-generar" type="button">Generar</button>
+            <button id="tc-run-all" class="btn btn-secundario tcs-correr" type="button">Correr todo</button>
+            <button id="tc-stop" class="btn tc-stop" type="button" hidden>Detener</button>
+          </div>
         </div>
 
-        <div class="tc-bar">
-          <div class="tc-group">
-            <button id="tc-auto" class="btn" type="button" title="Hace ping y telnet a los 16 slots y rellena la tabla">Generar automático</button>
-            <button id="tc-script-run" class="btn" type="button" title="Corre el script elegido en segundo plano y llena la tabla con lo que genere">Generar con script</button>
-            <button id="tc-guardar" class="btn btn-secundario" type="button">Guardar</button>
-            <button id="tc-recargar" class="btn btn-secundario" type="button">Recargar</button>
-          </div>
-          <div class="tc-group">
-            <button id="tc-run-all" class="btn" type="button">Correr todo</button>
-            <button id="tc-run-sel" class="btn btn-secundario" type="button">Correr selección</button>
-          </div>
-          <button id="tc-stop" class="btn tc-stop" type="button" hidden>Detener</button>
+        <div class="tcs-fuente">
+          <span>Script <b id="tc-script">—</b> <a href="#" id="tc-script-elegir" class="tcs-link">cambiar</a></span>
+          <span>Archivo <b id="tc-ruta">—</b> <a href="#" id="tc-cambiar" class="tcs-link">cambiar</a></span>
         </div>
 
         <div id="tc-prog" class="tc-prog" hidden>
@@ -1463,43 +1477,31 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         <table class="tc-table">
           <thead>
             <tr>
-              <th class="c-chk"><input id="tc-all" type="checkbox" title="Seleccionar todos"></th>
+              <th class="c-chk"><input type="checkbox" id="tc-all" title="Marcar todos"></th>
               <th class="c-n">Slot</th>
               <th>Número de parte</th>
               <th>Serial</th>
-              <th class="c-st">Detección</th>
+              <th class="c-st">Estado</th>
             </tr>
           </thead>
           <tbody id="tc-rows"></tbody>
         </table>
+        <p class="tcs-tip">Marca slots para correr solo esos. Los cambios en la tabla se guardan solos.</p>
       </div>
 
-      <div id="tc-viewer" class="dhcp-box tc-viewer" hidden>
-        <div class="dhcp-box-header">
-          <code id="tv-ruta">UUT_case</code>
-          <span class="tv-meta" id="tv-meta"></span>
-          <div class="uc-actions">
-            <button id="tv-recargar" class="btn btn-secundario btn-mini" type="button">Actualizar</button>
-            <button id="tv-copiar" class="btn btn-secundario btn-mini" type="button">Copiar</button>
-            <button id="tv-abrir" class="btn btn-secundario btn-mini" type="button" title="Abrir con el editor de texto del sistema">Abrir en editor</button>
-            <button id="tv-cerrar" class="btn btn-secundario btn-mini" type="button">Cerrar</button>
+      <details class="tcs-detalles" id="tcs-detalles">
+        <summary>Ver detalles <span class="uc-meta" id="tc-meta">0 líneas</span></summary>
+        <div class="upd-console tc-console">
+          <div class="uc-head">
+            <span>Actividad</span>
+            <div class="uc-actions">
+              <button id="tc-log" class="btn btn-secundario btn-mini" type="button">Abrir logs</button>
+              <button id="tc-clear" class="btn btn-secundario btn-mini" type="button">Limpiar</button>
+            </div>
           </div>
+          <div id="tc-body" class="uc-body" tabindex="0"></div>
         </div>
-        <div id="tv-body" class="dhcp-box-body"></div>
-      </div>
-
-      <div class="upd-console tc-console">
-        <div class="uc-head">
-          <span>Actividad</span>
-          <span class="uc-meta" id="tc-meta">0 líneas</span>
-          <div class="uc-actions">
-            <button id="tc-follow" class="btn btn-secundario btn-mini is-on" type="button">Seguir salida</button>
-            <button id="tc-log" class="btn btn-secundario btn-mini" type="button">Abrir logs</button>
-            <button id="tc-clear" class="btn btn-secundario btn-mini" type="button">Limpiar</button>
-          </div>
-        </div>
-        <div id="tc-body" class="uc-body" tabindex="0"></div>
-      </div>
+      </details>
     </section>
   <!-- TC-FIN -->
 
@@ -3591,6 +3593,7 @@ function pintarSeleccionIzumi() {
         tr.classList.toggle('sel', chk.checked);
         q('tc-all').checked = sel.size === N;
         q('tc-all').indeterminate = sel.size > 0 && sel.size < N;
+        pintarCorrer();
       });
       celda(chk, 'c-chk');
       const n = document.createElement('span');
@@ -3646,9 +3649,10 @@ function pintarSeleccionIzumi() {
 
   function aplicarJob() {
     const b = ocupado();
-    const disab = ['tc-auto', 'tc-guardar', 'tc-recargar', 'tc-run-all', 'tc-run-sel', 'tc-cambiar', 'tc-script-elegir'];
-    for (const id of disab) q(id).disabled = b;
-    q('tc-script-run').disabled = b || !scriptExiste;
+    // Mientras trabaja solo se ve "Detener"
+    q('tc-script-run').hidden = b;
+    q('tc-run-all').hidden = b;
+    for (const id of ['tc-cambiar', 'tc-script-elegir']) q(id).classList.toggle('off', b);
     q('tc-all').disabled = b;
     for (const f of filas) { f.parte.disabled = b; f.serial.disabled = b; f.chk.disabled = b; }
     q('tc-stop').hidden = !b;
@@ -3664,17 +3668,23 @@ function pintarSeleccionIzumi() {
   }
 
   function aplicarRuta() {
-    q('tc-script').textContent = script ? script.split('/').pop() : '—';
-    q('tc-script').title = script || 'No se ha elegido ni encontrado un script (uut_case.py)';
-    const st = q('tc-script-st');
-    st.textContent = !script ? 'sin elegir' : scriptExiste ? 'listo' : 'no existe';
-    st.classList.toggle('ok', !!(script && scriptExiste));
-    q('tc-script-run').title = scriptExiste ? 'Corre ' + script + ' en segundo plano y llena la tabla' : 'Primero elige el script con "Elegir script…"';
-    q('tc-ruta').textContent = ruta || '—';
+    q('tc-script').textContent = script ? script.split('/').pop() + (scriptExiste ? '' : ' (no existe)') : 'sin elegir';
+    q('tc-script').title = script || 'Elige el .py que genera el UUT_case';
+    q('tc-script-run').title = scriptExiste ? 'Corre ' + script.split('/').pop() + ' y llena la tabla' : 'Elige primero el script';
+    q('tc-ruta').textContent = ruta ? ruta.split('/').pop() : '—';
     q('tc-ruta').title = ruta || '';
     const e = q('tc-existe');
-    e.textContent = existe ? 'existe' : 'sin crear';
+    e.textContent = existe ? 'listo' : 'sin crear';
     e.classList.toggle('ok', existe);
+    pintarResumen();
+  }
+  function pintarResumen() {
+    const completos = slots.filter((s) => s.parte.trim() && s.serial.trim()).length;
+    q('tcs-resumen').textContent = completos ? completos + ' de ' + N + ' slots con datos' : '';
+  }
+  function pintarCorrer() {
+    const n = sel.size;
+    q('tc-run-all').textContent = n ? 'Correr ' + n + (n === 1 ? ' slot' : ' slots') : 'Correr todo';
   }
 
   function aplicarEstado(s) {
@@ -3751,7 +3761,7 @@ function pintarSeleccionIzumi() {
     if (!revisarCampos()) return;
     const falta = incompletos(nums);
     if (falta.length && !window.confirm('Faltan parte o serial en: ' + falta.map(dos).join(', ') + '.\nSe correrán con los valores CORRIJA_*. ¿Continuar?')) return;
-    if (modo === 'todos' && !window.confirm('Se correrá todo el UUT_case (16 slots). ¿Continuar?')) return;
+    if (modo === 'todos' && !window.confirm('Se correrán los 16 slots del UUT_case. ¿Continuar?')) return;
     const r = await llamar(() => window.sistema.tcCorrer(slots, modo === 'todos' ? 'todos' : nums));
     if (r && r.ok) dirty = false;   // la tabla quedó guardada en el archivo antes de correr
   }
@@ -3889,7 +3899,7 @@ function pintarSeleccionIzumi() {
     body.appendChild(frag);
   }
   async function refrescarVisor() {
-    if (q('tc-viewer').hidden || !hayApi() || typeof window.sistema.tcLeerArchivo !== 'function') return;
+    if (!q('tc-viewer') || q('tc-viewer').hidden || !hayApi() || typeof window.sistema.tcLeerArchivo !== 'function') return;
     try { pintarVisor(await window.sistema.tcLeerArchivo()); } catch (e) { pintarVisor({ ok: false, error: e.message }); }
   }
   function mostrarVisor(on) {
@@ -3905,20 +3915,7 @@ function pintarSeleccionIzumi() {
       q('tc-viewer').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     }
   }
-  q('tc-ver').addEventListener('click', () => mostrarVisor(q('tc-viewer').hidden));
-  q('tv-cerrar').addEventListener('click', () => mostrarVisor(false));
-  q('tv-recargar').addEventListener('click', refrescarVisor);
-  q('tv-copiar').addEventListener('click', async () => {
-    if (!visorTexto) return;
-    await copiarTexto(visorTexto);
-    const b = q('tv-copiar'); b.textContent = 'Copiado';
-    setTimeout(() => { b.textContent = 'Copiar'; }, 900);
-  });
-  q('tv-abrir').addEventListener('click', async () => {
-    if (!hayApi() || typeof window.sistema.tcAbrirArchivo !== 'function') return;
-    const r = await llamar(() => window.sistema.tcAbrirArchivo());
-    if (r && r.ok) local('sys', 'Abierto en el editor: ' + r.ruta);
-  });
+  // (el visor del archivo se quitó: la tabla ya muestra lo que tiene el UUT_case)
 
   /* ---------- Arranque ---------- */
   construirTabla();
@@ -3927,41 +3924,48 @@ function pintarSeleccionIzumi() {
   aplicarJob();
   actualizarMeta();
 
-  q('tc-auto').addEventListener('click', auto);
+  async function elegirScript() {
+    const r = await llamar(() => window.sistema.tcElegirScript());
+    if (r && r.ok && r.cambio) { const e = await window.sistema.tcObtener(); aplicarEstado(e); return true; }
+    return false;
+  }
   q('tc-script-run').addEventListener('click', async () => {
+    if (!scriptExiste && !(await elegirScript())) return;   // sin script: primero se elige
     const hay = existe || slots.some((s) => s.parte || s.serial);
-    if (hay && !window.confirm('El script va a sobrescribir ' + (ruta || 'el archivo UUT_case') + ' y la tabla se llenará con lo que genere. ¿Continuar?')) return;
+    if (hay && !window.confirm('Se va a generar de nuevo ' + (ruta ? ruta.split('/').pop() : 'el UUT_case') + ' y la tabla se llenará con lo nuevo. ¿Continuar?')) return;
     limpiarEstados(['det']);
     await llamar(() => window.sistema.tcCorrerScript());
   });
-  q('tc-script-elegir').addEventListener('click', async () => {
-    const r = await llamar(() => window.sistema.tcElegirScript());
-    if (r && r.ok && r.cambio) { const e = await window.sistema.tcObtener(); aplicarEstado(e); }
-  });
-  q('tc-guardar').addEventListener('click', guardar);
-  q('tc-recargar').addEventListener('click', recargar);
-  q('tc-run-all').addEventListener('click', () => correr('todos'));
-  q('tc-run-sel').addEventListener('click', () => correr('sel'));
+  q('tc-script-elegir').addEventListener('click', (e) => { e.preventDefault(); elegirScript(); });
+  q('tc-run-all').addEventListener('click', () => correr(sel.size ? 'sel' : 'todos'));
   q('tc-stop').addEventListener('click', () => llamar(() => window.sistema.tcDetener()));
-  q('tc-cambiar').addEventListener('click', async () => {
+  q('tc-cambiar').addEventListener('click', async (e) => {
+    e.preventDefault();
     const r = await llamar(() => window.sistema.tcElegirRuta());
     if (r && r.ok && r.cambio) recargarSinPreguntar();
   });
+  // Lo que escribes en la tabla se guarda solo (sin botón "Guardar")
+  let timerGuardar = null;
+  function guardarSolo() {
+    clearTimeout(timerGuardar);
+    timerGuardar = setTimeout(async () => {
+      if (ocupado() || !dirty || !hayApi()) return;
+      for (let i = 0; i < N; i++) for (const c of ['parte', 'serial']) { const v = slots[i][c].trim(); if (v && !PATRON.test(v)) return; }
+      const r = await window.sistema.tcGuardar(slots).catch(() => null);
+      if (r && r.ok) { dirty = false; existe = true; aplicarRuta(); }
+    }, 900);
+  }
+  q('tc-rows').addEventListener('input', () => { pintarResumen(); guardarSolo(); });
   q('tc-all').addEventListener('change', () => {
     const on = q('tc-all').checked;
     for (const f of filas) { f.chk.checked = on; f.chk.dispatchEvent(new Event('change')); }
-  });
-  q('tc-follow').addEventListener('click', () => {
-    seguir = !seguir;
-    q('tc-follow').classList.toggle('is-on', seguir);
-    if (seguir) q('tc-body').scrollTop = q('tc-body').scrollHeight;
   });
   q('tc-log').addEventListener('click', () => { if (hayApi()) window.sistema.tcAbrirLog(); });
   q('tc-clear').addEventListener('click', () => { cola = []; totales = 0; omitidas = 0; q('tc-body').textContent = ''; actualizarMeta(); });
   q('tc-body').addEventListener('scroll', () => {
     const b = q('tc-body');
     const alFinal = b.scrollTop + b.clientHeight >= b.scrollHeight - 30;
-    if (alFinal !== seguir) { seguir = alFinal; q('tc-follow').classList.toggle('is-on', seguir); }
+    if (alFinal !== seguir) seguir = alFinal;
   });
 
   async function recargarSinPreguntar() {
