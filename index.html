@@ -401,6 +401,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 
 .firma { text-align: center; padding: 4px 24px clamp(6px, 1vh, 12px); font-size: 12px; color: var(--muted); }
 .firma .version { display: block; margin-top: 1px; font-size: 10px; letter-spacing: .04em; opacity: .7; }
+.firma .familia { display: block; margin-top: 1px; font-size: 9px; letter-spacing: .08em; text-transform: uppercase; opacity: .55; }
 
 @media (max-width: 900px) {
   .validation-layout { flex-direction: column; align-items: center; }
@@ -1737,7 +1738,7 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 <!-- CFG-FIN -->
   </main>
 
-  <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión 1.0 beta</span></footer>
+  <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión 1.0 beta</span><span class="familia">An app from the Ort Engine software family</span></footer>
 
   <!-- Aviso de actualización -->
   <div id="upd-toast" class="upd-toast" role="status" aria-live="polite">
@@ -3359,7 +3360,8 @@ function pintarSeleccionIzumi() {
   const MAX_DOM = 3000;
   const POR_DEFECTO = [
     { id: 'server', nombre: 'SERVER' }, { id: 'juniper', nombre: 'JUNIPER' }, { id: 'tros', nombre: 'TROSS' },
-    { id: 'zpe', nombre: 'ZPE' }, { id: 'daq', nombre: 'DAQ' }, { id: 'omron', nombre: 'SENSOR OMRON' }
+    { id: 'zpe', nombre: 'ZPE' }, { id: 'daq', nombre: 'DAQ' }, { id: 'omron', nombre: 'SENSOR OMRON' },
+    { id: 'chiller_omron', nombre: 'CHILLER MONITOR CON OMRON' }, { id: 'chiller_termopar', nombre: 'CHILLER MONITOR CON TERMOPAR' }
   ];
 
   let dispositivos = POR_DEFECTO;
@@ -3535,8 +3537,11 @@ function pintarSeleccionIzumi() {
 
   /* ---------- Guía DAQ970A: IP fija ---------- */
   const DAQ_KEY = 'daq970a_ip_v2';
-  let daq = { ip: '10.0.0.100', hechos: [], fecha: null };
+  // Ya configurada (19/10/2026). "Empezar de nuevo" la deja sin configurar hasta que vuelva a responder el ping.
+  const DAQ_FECHA_INICIAL = new Date(2026, 9, 19, 1, 7).getTime();
+  let daq = { ip: '10.0.0.100', hechos: [], fecha: DAQ_FECHA_INICIAL };
   try { daq = { ...daq, ...JSON.parse(localStorage.getItem(DAQ_KEY) || '{}') }; } catch (e) {}
+  try { if (!localStorage.getItem(DAQ_KEY)) localStorage.setItem(DAQ_KEY, JSON.stringify(daq)); } catch (e) {}
   function daqConfigurado() { try { return !!(daq && daq.fecha); } catch (e) { return false; } }
   const daqGuardar = () => { try { localStorage.setItem(DAQ_KEY, JSON.stringify(daq)); } catch (e) {} if (typeof renderDevs === 'function') renderDevs(); };
   const RX_IP = /^(25[0-5]|2[0-4]\d|1?\d?\d)(\.(25[0-5]|2[0-4]\d|1?\d?\d)){3}$/;

@@ -19,7 +19,9 @@ const DISPOSITIVOS = [
   { id: 'tros', nombre: 'TROSS' },
   { id: 'zpe', nombre: 'ZPE' },
   { id: 'daq', nombre: 'DAQ' },
-  { id: 'omron', nombre: 'SENSOR OMRON' }
+  { id: 'omron', nombre: 'SENSOR OMRON' },
+  { id: 'chiller_omron', nombre: 'CHILLER MONITOR CON OMRON' },
+  { id: 'chiller_termopar', nombre: 'CHILLER MONITOR CON TERMOPAR' }
 ];
 const IDS = new Set(DISPOSITIVOS.map((d) => d.id));
 
