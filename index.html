@@ -999,6 +999,12 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 }
 
 .dhcp-bar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-top: 12px; font-size: 11px; color: var(--muted); }
+
+.rz-conf { margin-top: 14px; padding: 12px 14px; border: 1px solid rgba(0,113,227,.45); border-left: 3px solid var(--blue); background: rgba(0,113,227,.05); }
+.rz-conf[hidden] { display: none; }
+.rz-conf-tit { font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+.rz-conf-lista code { font: 12px SFMono-Regular, Consolas, monospace; }
+.rz-conf-btns { display: flex; gap: 8px; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -1332,6 +1338,15 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
             <div class="rz-tabla" id="rz-tabla"></div>
           </div>
 
+          <div class="rz-conf" id="rz-conf" hidden>
+            <div class="rz-conf-tit" id="rz-conf-tit"></div>
+            <div class="rz-conf-lista" id="rz-conf-lista"></div>
+            <div class="rz-conf-btns">
+              <button type="button" class="btn" id="rz-conf-si">Sí, remplazar</button>
+              <button type="button" class="btn btn-secundario" id="rz-conf-no">Cancelar</button>
+            </div>
+          </div>
+
           <div class="rz-pass" id="rz-pass" hidden>
             <div class="rz-pass-tit">🔑 Contraseña de sudo para modificar /etc/dhcp/dhcpd.conf <span id="rz-pass-err"></span></div>
             <form class="rz-pass-row" id="rz-pass-form" autocomplete="off">
@@ -1544,6 +1559,17 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 
   <script>
 const $ = (id) => document.getElementById(id);
+
+// Bug de Electron en Linux: después de alert()/confirm() los campos de texto dejan de recibir el teclado.
+// Cada que se usa uno, se le pide a la ventana que recupere el foco.
+for (const k of ['alert', 'confirm']) {
+  const orig = window[k].bind(window);
+  window[k] = (msg) => {
+    const r = orig(msg);
+    try { if (window.sistema && typeof window.sistema.reenfocar === 'function') window.sistema.reenfocar(); } catch (e) {}
+    return r;
+  };
+}
 
 let dhcpCargado = false;
 
@@ -2948,11 +2974,7 @@ function rzCambios() {
 async function rzAplicar(password, recordar) {
   if (!window.sistema || typeof window.sistema.rzAplicar !== 'function') { alert('Reinicia la app: falta actualizar main.js y preload.js.'); return; }
   const cambios = rzCambios();
-  if (password === undefined) {
-    const lista = cambios.map((c) => 'Izumi ' + c.n + ':  ' + c.vieja + '  →  ' + c.nueva).join('\n');
-    if (!window.confirm('Se van a remplazar ' + cambios.length + (cambios.length === 1 ? ' MAC' : ' MAC') + ' en /etc/dhcp/dhcpd.conf:\n\n' + lista +
-      ($('rz-reiniciar').checked ? '\n\nDespués se reinicia el DHCP.' : '') + '\n\n¿Continuar?')) return;
-  }
+  if (password === undefined && !(await rzConfirmar(cambios))) return;
   rzAplicando = true;
   rzRevisarTodas();
   const b = $('rz-continuar');
@@ -3027,6 +3049,37 @@ function rzMostrarResultado(r, cambios) {
     pre.textContent = r.detalle.join('\n');
     caja.appendChild(pre);
   }
+}
+
+// Confirmación dentro de la app (no ventana aparte: en Linux eso bloquea el teclado después)
+function rzConfirmar(cambios) {
+  return new Promise((resolve) => {
+    const caja = $('rz-conf');
+    $('rz-conf-tit').textContent = 'Se van a remplazar ' + cambios.length + ' MAC en /etc/dhcp/dhcpd.conf' + ($('rz-reiniciar').checked ? ' y después se reinicia el DHCP.' : '.');
+    const lista = $('rz-conf-lista');
+    lista.textContent = '';
+    for (const c of cambios) {
+      const d = document.createElement('div');
+      const code = document.createElement('code');
+      code.textContent = 'Izumi ' + c.n + ':  ' + c.vieja + '  →  ' + c.nueva;
+      d.appendChild(code);
+      lista.appendChild(d);
+    }
+    $('rz-res').hidden = true;
+    $('rz-pass').hidden = true;
+    caja.hidden = false;
+    $('rz-continuar').disabled = true;
+    $('rz-conf-si').focus();
+    caja.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const fin = (si) => {
+      caja.hidden = true;
+      $('rz-conf-si').onclick = null; $('rz-conf-no').onclick = null;
+      rzRevisarTodas();
+      resolve(si);
+    };
+    $('rz-conf-si').onclick = () => fin(true);
+    $('rz-conf-no').onclick = () => fin(false);
+  });
 }
 
 $('rz-continuar').addEventListener('click', () => rzAplicar());

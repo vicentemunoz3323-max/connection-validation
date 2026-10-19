@@ -1048,6 +1048,14 @@ async function buscarActualizaciones() {
 }
 
 ipcMain.handle('app:version', () => app.getVersion());
+
+// Bug de Electron en Linux: después de un alert()/confirm() los campos de texto ya no reciben el teclado.
+// Quitar y regresar el foco a la ventana lo arregla.
+ipcMain.handle('app:reenfocar', (e) => {
+  const w = BrowserWindow.fromWebContents(e.sender);
+  if (w && !w.isDestroyed()) { w.blur(); w.focus(); w.webContents.focus(); }
+  return true;
+});
 ipcMain.handle('update:buscar', () => buscarActualizaciones());
 ipcMain.handle('update:descargar', async () => {
   if (!autoUpdater || descargando) return;   // evita dos descargas a la vez

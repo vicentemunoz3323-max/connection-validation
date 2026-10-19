@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('izumi', {
   enviar: (texto, fin) => ipcRenderer.invoke('izu:enviar', texto, fin),
   guardarComo: () => ipcRenderer.invoke('izu:guardar-como'),
   carpetaLogs: () => ipcRenderer.invoke('izu:carpeta-logs'),
+  reenfocar: () => ipcRenderer.invoke('app:reenfocar'),
   onDatos: (cb) => ipcRenderer.on('izu:datos', (_e, texto) => cb(texto)),
   onEstado: (cb) => ipcRenderer.on('izu:estado', (_e, s) => cb(s))
 });

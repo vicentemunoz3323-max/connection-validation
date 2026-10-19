@@ -151,6 +151,11 @@ select { padding: 6px 8px; border: 1px solid var(--line); background: var(--pane
 'use strict';
 const $ = (id) => document.getElementById(id);
 const api = window.izumi;
+// Bug de Electron en Linux: después de alert() los campos de texto dejan de recibir el teclado
+{
+  const orig = window.alert.bind(window);
+  window.alert = (m) => { orig(m); try { if (api && api.reenfocar) api.reenfocar(); } catch (e) {} };
+}
 const N = Number(new URLSearchParams(location.search).get('n')) || 0;
 
 /* ===== Ajustes ===== */

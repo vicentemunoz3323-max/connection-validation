@@ -59,6 +59,8 @@ contextBridge.exposeInMainWorld('sistema', {
   onTcSlots: (cb) => ipcRenderer.on('tc-slots', (_e, d) => cb(d)),
   // TC-FIN
 
+  reenfocar: () => ipcRenderer.invoke('app:reenfocar'),
+
   // Remplazar Izumi: MAC actuales leídas de /etc/dhcp/dhcpd.conf
   rzLeerMacs: () => ipcRenderer.invoke('rz-leer'),
   rzAplicar: (datos) => ipcRenderer.invoke('rz-aplicar', datos),

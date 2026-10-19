@@ -229,7 +229,13 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
   if (password == null && pidePassword(r)) return { ok: false, necesitaPassword: true };
   if (password != null && (passwordMala(r) || (r.codigo !== 0 && pidePassword(r)))) {
     if (datos.password == null) compartido.olvidarSudo();   // la recordada ya no sirve
-    return { ok: false, necesitaPassword: true, error: 'Contraseña incorrecta' };
+    const msg = r.err.split('\n').map((l) => l.trim()).filter((l) => l && !/^sorry, try again/i.test(l)).pop() || '';
+    return { ok: false, necesitaPassword: true, error: passwordMala(r) ? 'Contraseña incorrecta' : 'sudo dijo: ' + msg };
+  }
+  // sudo falló antes de correr nada (sin pasos): se muestra su mensaje tal cual
+  if (r.codigo !== 0 && !/PASO:/.test(r.salida)) {
+    const msg = (r.err || r.salida).trim().split('\n').slice(-3).join(' · ');
+    return { ok: false, error: 'No se pudo ejecutar como administrador' + (msg ? ': ' + msg : ' (código ' + r.codigo + ')'), detalle: (r.err || '').trim().split('\n').slice(-10) };
   }
   if (password != null && datos.recordar) compartido.guardarSudo(password);
 
