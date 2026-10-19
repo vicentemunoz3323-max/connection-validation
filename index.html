@@ -1104,6 +1104,10 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
   .om-paso { grid-template-columns: 26px 96px minmax(0, 1fr) 26px; }
   .om-valor { grid-column: 3; }
 }
+
+.cfg-dev.ok { border-left-color: var(--green); }
+.cfg-dev.ok .n { color: var(--green); font-weight: 700; }
+.cfg-dev.ok .dot { background: var(--green); box-shadow: 0 0 5px rgba(40,167,69,.5); }
 </style>
 </head>
 <body>
@@ -3325,14 +3329,17 @@ function pintarSeleccionIzumi() {
       const enCurso = lista.filter((a) => a.corriendo).length;
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'cfg-dev' + (d.id === sel ? ' sel' : '');
+      // El sensor OMRON se marca en verde con "1" cuando ya está configurado
+      const omOk = d.id === 'omron' && omConfigurado();
+      b.className = 'cfg-dev' + (d.id === sel ? ' sel' : '') + (omOk ? ' ok' : '');
       const dot = document.createElement('span');
-      dot.className = 'dot' + (enCurso ? ' busy' : '');
+      dot.className = 'dot' + (enCurso ? ' busy' : omOk ? ' online' : '');
       const nom = document.createElement('span');
       nom.textContent = d.nombre;
       const n = document.createElement('span');
       n.className = 'n';
-      n.textContent = enCurso ? enCurso + ' en curso' : String(lista.length);
+      n.textContent = enCurso ? enCurso + ' en curso' : omOk ? '1' : String(lista.length);
+      if (omOk) b.title = 'Sensor configurado';
       b.append(dot, nom, n);
       b.addEventListener('click', () => seleccionar(d.id));
       cont.appendChild(b);
@@ -3375,6 +3382,7 @@ function pintarSeleccionIzumi() {
   }
 
   /* ---------- Guía OMRON E8FC ---------- */
+  function omConfigurado() { try { return !!(om && om.fecha); } catch (e) { return false; } }
   const OM_KEY = 'omron_e8fc_v1';
   const OM_PASOS = [
     { id: 'pipe', codigo: 'pipe', que: 'Diámetro del tubo', opciones: ['10a', '15a', '20a', '25a'], def: '20a' },
@@ -3384,9 +3392,11 @@ function pintarSeleccionIzumi() {
     { id: 'out2', codigo: 'out2', que: 'Salida 2 (pin 2)', opciones: ['ao.t', 'ao', '1p', '2p', '1p.t', '2p.t', 'pls'], def: 'ao.t', nota: 'ao.t = analógica de temperatura' },
     { id: 'set', codigo: 'set', que: 'Guardar', opciones: ['yes'], def: 'yes', nota: 'luego confirma OK? con MODE' }
   ];
-  let om = { valores: {}, hechos: [], fecha: null };
+  // Ya configurado: el equipo lo confirmó (18/10/2026). "Empezar de nuevo" + "Listo" actualiza la fecha.
+  let om = { valores: {}, hechos: [], fecha: new Date(2026, 9, 18, 21, 28).getTime() };
   try { om = { ...om, ...JSON.parse(localStorage.getItem(OM_KEY) || '{}') }; } catch (e) {}
-  const omGuardar = () => { try { localStorage.setItem(OM_KEY, JSON.stringify(om)); } catch (e) {} };
+  if (!om.fecha) om.fecha = new Date(2026, 9, 18, 21, 28).getTime();
+  const omGuardar = () => { try { localStorage.setItem(OM_KEY, JSON.stringify(om)); } catch (e) {} if (typeof renderDevs === 'function') renderDevs(); };
   const omValor = (p) => om.valores[p.id] || p.def;
   let omVerArchivos = false;
 
