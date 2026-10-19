@@ -503,6 +503,7 @@ function flushSalida() {
 }
 
 function emitirLinea(tipo, texto) {
+  if (estadoCmds.pide && tipo !== 'sys') emitirCmds({ pide: null });   // llegó salida nueva: ya no está esperando
   colaSalida.push({ t: tipo, s: texto });
   if (logStream) {
     logStream.write((tipo === 'err' ? '[ERR] ' : tipo === 'sys' ? '>>> ' : '') + texto + '\n');
@@ -510,17 +511,22 @@ function emitirLinea(tipo, texto) {
   if (!timerSalida) timerSalida = setTimeout(flushSalida, FLUSH_SALIDA_MS);
 }
 
-// Convierte los trozos (chunks) del proceso en líneas completas
-function crearLector(tipo) {
+// Convierte los trozos (chunks) del proceso en líneas completas.
+// alPausar(texto): se llama cuando una línea se queda sin terminar (así se ven las preguntas
+// tipo "[sudo] password for …:" o "¿Continuar? [S/n]").
+function crearLector(tipo, alPausar) {
   const decoder = new StringDecoder('utf8');
   let resto = '';
   let idle = null;
 
   const limpiar = (t) => t.replace(REGEX_ANSI, '');
-  const vaciarResto = () => {
+  const vaciarResto = (porPausa) => {
     const t = resto.replace(/\r$/, '');
     resto = '';
-    if (t.length) emitirLinea(tipo, limpiar(t));
+    if (!t.length) return;
+    const linea = limpiar(t);
+    emitirLinea(tipo, linea);
+    if (porPausa && alPausar) alPausar(linea);
   };
 
   return {
@@ -532,13 +538,13 @@ function crearLector(tipo) {
       const partes = texto.split(/\r\n|\n|\r/);
       resto = partes.pop() + retenido;
       for (const linea of partes) emitirLinea(tipo, limpiar(linea));
-      if (resto.length) idle = setTimeout(vaciarResto, IDLE_PARCIAL_MS);
+      if (resto.length) idle = setTimeout(() => vaciarResto(true), IDLE_PARCIAL_MS);
     },
     flush() {
       if (idle) { clearTimeout(idle); idle = null; }
       const fin = decoder.end();
       if (fin) resto += fin;
-      vaciarResto();
+      vaciarResto(false);
     }
   };
 }
@@ -557,32 +563,97 @@ function matarArbol(proc) {
   }
 }
 
-function correrComando(cmd) {
+/* ---------- Terminal real para cada comando ----------
+   Se usa "script" (viene en Ubuntu) para darle a cada comando una terminal (pty).
+   Así sudo, ssh y cualquier programa que pida contraseña o confirmación funcionan:
+   la app detecta la pregunta y te deja contestarla. */
+const SCRIPT_PTY = process.platform === 'linux' && fs.existsSync('/usr/bin/script') ? '/usr/bin/script' : null;
+const RX_PIDE_PASS = /(password|contraseña|passphrase|clave|pin)\b[^\n]*[:：]\s*$/i;
+const RX_PIDE_SUDO = /\[sudo\]|sudo\b.*(password|contraseña)|password for \S+:\s*$|contraseña para \S+:\s*$/i;
+const RX_PIDE_SINO = /(\[[ysSnN]\/[ysSnN]\]|\((yes|no|si|sí)\/(no|yes)[^)]*\)|\[(Y|S)\/n\]|\[y\/N\]|continue\?|continuar\?|\?\s*$|:\s*$)/i;
+let sudoGuardada = null;   // solo en memoria, se borra al cerrar la app
+
+function analizarPregunta(linea) {
+  const t = linea.trimEnd();
+  if (RX_PIDE_PASS.test(t)) return { tipo: 'password', sudo: RX_PIDE_SUDO.test(t), texto: t };
+  if (RX_PIDE_SINO.test(t)) return { tipo: 'texto', sudo: false, texto: t };
+  return null;
+}
+
+function escribirAlComando(texto) {
+  const p = ejecCmds && ejecCmds.proc;
+  if (!p || !p.stdin || p.stdin.destroyed || !p.stdin.writable) return false;
+  try { p.stdin.write(texto); return true; } catch (e) { return false; }
+}
+
+function correrComando(cmd, opciones = {}) {
   return new Promise((resolve) => {
     const esWin = process.platform === 'win32';
     let terminado = false;
-    const fin = (codigo) => { if (!terminado) { terminado = true; resolve(codigo); } };
+    let timerLimite = null;
+    let tiempoAgotado = false;
+    const fin = (codigo) => {
+      if (terminado) return;
+      terminado = true;
+      if (timerLimite) clearTimeout(timerLimite);
+      resolve({ codigo, tiempoAgotado });
+    };
 
+    const env = {
+      ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8', TERM: 'dumb', NO_COLOR: '1',
+      PAGER: 'cat', GIT_PAGER: 'cat', SYSTEMD_PAGER: 'cat', COLUMNS: '200', SHELL: '/bin/bash'
+    };
     let proc;
     try {
-      proc = spawn(cmd, {
-        shell: true,
+      const opts = {
         detached: !esWin,                       // grupo propio para poder detener todo el árbol
         windowsHide: true,
-        stdio: ['ignore', 'pipe', 'pipe'],      // sin teclado: los comandos no deben pedir datos
+        stdio: ['pipe', 'pipe', 'pipe'],        // stdin abierto: así se pueden contestar preguntas
         cwd: os.homedir(),
-        env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8', TERM: 'dumb', NO_COLOR: '1' }
-      });
+        env
+      };
+      proc = SCRIPT_PTY
+        ? spawn(SCRIPT_PTY, ['-qefc', cmd, '/dev/null'], opts)
+        : spawn(cmd, { ...opts, shell: true });
     } catch (e) {
       emitirLinea('err', 'No se pudo iniciar: ' + e.message);
       return fin(-1);
     }
 
-    if (ejecCmds) ejecCmds.proc = proc;
-    const lectorOut = crearLector('out');
-    const lectorErr = crearLector('err');
+    if (ejecCmds) { ejecCmds.proc = proc; ejecCmds.autoSudo = 0; }
+    proc.stdin.on('error', () => {});
+
+    const alPausar = (linea) => {
+      const p = analizarPregunta(linea);
+      if (!p) return;
+      // Contraseña de sudo recordada: se contesta sola (una vez por comando; si falla, se pregunta)
+      if (p.sudo && sudoGuardada && ejecCmds && ejecCmds.autoSudo < 1) {
+        ejecCmds.autoSudo++;
+        if (escribirAlComando(sudoGuardada + '\n')) {
+          emitirLinea('sys', '🔑 Contraseña de sudo enviada automáticamente');
+          return;
+        }
+      } else if (p.sudo && sudoGuardada && ejecCmds && ejecCmds.autoSudo >= 1) {
+        sudoGuardada = null;
+        emitirLinea('sys', '✕ La contraseña de sudo guardada no funcionó; escríbela de nuevo');
+      }
+      emitirCmds({ pide: { tipo: p.tipo, sudo: p.sudo, texto: p.texto.slice(-200), hora: Date.now() } });
+    };
+
+    const lectorOut = crearLector('out', alPausar);
+    const lectorErr = crearLector('err', alPausar);
     proc.stdout.on('data', (d) => lectorOut.push(d));
     proc.stderr.on('data', (d) => lectorErr.push(d));
+
+    if (opciones.limiteMs > 0) {
+      timerLimite = setTimeout(() => {
+        tiempoAgotado = true;
+        const lim = opciones.limiteMs >= 60000 ? Math.round(opciones.limiteMs / 60000) + ' min' : Math.round(opciones.limiteMs / 1000) + ' s';
+        emitirLinea('err', '⏱ Tiempo límite agotado (' + lim + '): se detiene este comando');
+        matarArbol(proc);
+      }, opciones.limiteMs);
+    }
+
     proc.on('error', (e) => {
       emitirLinea('err', 'Error: ' + e.message);
       lectorOut.flush(); lectorErr.flush();
@@ -595,7 +666,7 @@ function correrComando(cmd) {
   });
 }
 
-async function ejecutarComandos(lista, detenerSiFalla) {
+async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
   const total = lista.length;
   const resultados = lista.map(() => 'pendiente');
   let logPath = null;
@@ -613,20 +684,22 @@ async function ejecutarComandos(lista, detenerSiFalla) {
 
   ejecCmds = { abortado: false, proc: null };
   emitirCmds({
-    fase: 'ejecutando', total, completados: 0, actual: 0,
-    resultados: [...resultados], inicio: Date.now(), fin: null, error: null, logPath
+    fase: 'ejecutando', total, completados: 0, actual: 0, pide: null,
+    resultados: [...resultados], inicio: Date.now(), fin: null, error: null, logPath,
+    terminal: !!SCRIPT_PTY, limiteMs: limiteMs || 0
   });
 
   let hayFallos = false;
   for (let i = 0; i < total; i++) {
     if (ejecCmds.abortado) break;
     resultados[i] = 'ejecutando';
-    emitirCmds({ actual: i, resultados: [...resultados] });
+    emitirCmds({ actual: i, resultados: [...resultados], pide: null });
     emitirLinea('sys', `[${i + 1}/${total}] $ ${lista[i]}`);
 
     const t0 = Date.now();
-    const codigo = await correrComando(lista[i]);
+    const { codigo, tiempoAgotado } = await correrComando(lista[i], { limiteMs });
     const seg = ((Date.now() - t0) / 1000).toFixed(1);
+    if (estadoCmds.pide) emitirCmds({ pide: null });
 
     if (ejecCmds.abortado) {
       resultados[i] = 'detenido';
@@ -634,10 +707,10 @@ async function ejecutarComandos(lista, detenerSiFalla) {
       break;
     }
 
-    const ok = codigo === 0;
+    const ok = codigo === 0 && !tiempoAgotado;
     resultados[i] = ok ? 'ok' : 'fallo';
     if (!ok) hayFallos = true;
-    emitirLinea('sys', `[${i + 1}/${total}] ${ok ? 'OK' : 'FALLÓ (código ' + codigo + ')'} · ${seg} s`);
+    emitirLinea('sys', `[${i + 1}/${total}] ${ok ? 'OK' : tiempoAgotado ? 'FALLÓ (tiempo límite agotado)' : 'FALLÓ (código ' + codigo + ')'} · ${seg} s`);
     emitirCmds({ completados: i + 1, resultados: [...resultados] });
     if (!ok && detenerSiFalla) break;
   }
@@ -651,9 +724,23 @@ async function ejecutarComandos(lista, detenerSiFalla) {
   if (logStream) { logStream.end(); logStream = null; }
   ejecCmds = null;
   emitirCmds({
-    fase, resultados: [...resultados], fin: Date.now(),
+    fase, resultados: [...resultados], fin: Date.now(), pide: null,
     error: hayFallos ? 'Uno o más comandos fallaron' : null
   });
+  avisarFinActualizacion(fase, resultados);
+}
+
+// Notificación de Ubuntu al terminar (por si no estás viendo la pantalla)
+function avisarFinActualizacion(fase, resultados) {
+  try {
+    if (!Notification.isSupported()) return;
+    const ok = resultados.filter((r) => r === 'ok').length;
+    const fallos = resultados.filter((r) => r === 'fallo').length;
+    const cuerpo = fase === 'listo' ? `Completada: ${ok} de ${resultados.length} comandos correctos.`
+      : fase === 'detenido' ? `Detenida por el usuario (${ok} de ${resultados.length} completados).`
+      : `Terminó con errores: ${fallos} comando${fallos === 1 ? '' : 's'} falló.`;
+    new Notification({ title: 'Actualización de rectificadores', body: cuerpo }).show();
+  } catch (e) {}
 }
 
 ipcMain.handle('cmds-run', (_e, datos) => {
@@ -663,7 +750,9 @@ ipcMain.handle('cmds-run', (_e, datos) => {
     .filter(Boolean);
   if (!lista.length) return { ok: false, error: 'No hay comandos para ejecutar.' };
 
-  ejecutarComandos(lista, !datos || datos.detenerSiFalla !== false).catch((err) => {
+  const limiteMin = Number(datos && datos.limiteMin);
+  const limiteMs = Number.isFinite(limiteMin) && limiteMin > 0 ? Math.min(limiteMin, 24 * 60) * 60000 : 0;
+  ejecutarComandos(lista, !datos || datos.detenerSiFalla !== false, limiteMs).catch((err) => {
     emitirLinea('err', 'Error interno: ' + err.message);
     flushSalida();
     if (logStream) { logStream.end(); logStream = null; }
@@ -681,6 +770,31 @@ ipcMain.handle('cmds-stop', () => {
 });
 
 ipcMain.handle('cmds-state-get', () => estadoCmds);
+
+// Contestar lo que pide el comando (contraseña, s/n, etc.)
+ipcMain.handle('cmds-input', (_e, texto, datos = {}) => {
+  if (!ejecCmds || !ejecCmds.proc) return { ok: false, error: 'No hay un comando corriendo.' };
+  const t = String(texto == null ? '' : texto);
+  if (datos.ctrlC) {
+    escribirAlComando('\x03');
+    emitirLinea('sys', '^C enviado');
+    return { ok: true };
+  }
+  if (!escribirAlComando(t + '\n')) return { ok: false, error: 'El comando ya no acepta respuestas.' };
+  if (datos.secreto) {
+    emitirLinea('sys', '🔑 Contraseña enviada');
+    if (datos.recordarSudo && estadoCmds.pide && estadoCmds.pide.sudo) {
+      sudoGuardada = t;
+      ejecCmds.autoSudo = 1;   // si sudo vuelve a preguntar en este comando, es que estaba mal: se avisa y se olvida
+    }
+  } else if (!SCRIPT_PTY) {
+    emitirLinea('sys', '> ' + t);   // sin terminal no hay eco: se muestra lo que mandaste
+  }
+  if (estadoCmds.pide) emitirCmds({ pide: null });
+  return { ok: true };
+});
+ipcMain.handle('cmds-sudo-olvidar', () => { sudoGuardada = null; return true; });
+ipcMain.handle('cmds-sudo-hay', () => !!sudoGuardada);
 
 ipcMain.handle('cmds-open-log', () => {
   const dir = path.join(app.getPath('userData'), 'logs');

@@ -864,6 +864,36 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 }
 .izumi.con-consola .izu-term { display: inline-block; }
 .izumi.consola-viva .izu-term { background: var(--blue); }
+
+/* ===== Actualización de rectificadores: listas, tiempo límite y respuestas ===== */
+.cmd-sets { display: flex; gap: 6px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+.cmd-sets select, .cmd-sets input { font: inherit; font-size: 12px; padding: 5px 8px; border: 1px solid var(--line); background: #fff; min-width: 0; }
+.cmd-sets select { flex: 1 1 160px; }
+.cmd-sets input { flex: 1 1 160px; }
+.cmd-sets select:focus, .cmd-sets input:focus { outline: 2px solid var(--blue); outline-offset: -1px; }
+.cmd-opts { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.chk.lim { gap: 6px; }
+.chk.lim input { width: 56px; font: inherit; font-size: 12px; padding: 3px 6px; border: 1px solid var(--line); text-align: right; }
+.chk.lim span:last-child { color: var(--muted); }
+
+.uc-sudo[hidden] { display: none; }
+.uc-sudo { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #e5c07b; font-weight: 600; }
+.uc-sudo button { font: inherit; font-size: 10px; padding: 1px 6px; background: none; color: #9cdcfe; border: 1px solid #3c3c3c; cursor: pointer; }
+.uc-sudo button:hover { border-color: #9cdcfe; }
+.uc-resp { border-top: 1px solid #3c3c3c; background: #252526; padding: 8px 12px 10px; display: flex; flex-direction: column; gap: 6px; }
+.uc-pide { font-size: 11px; color: #8f8f8f; font-family: SFMono-Regular, Consolas, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.uc-row { display: flex; align-items: center; gap: 8px; }
+.uc-prompt { color: #4ec9b0; font: 700 13px SFMono-Regular, Consolas, monospace; }
+#uc-in { flex: 1; min-width: 0; padding: 6px 10px; background: #1e1e1e; color: #e6e6e6; border: 1px solid #3c3c3c; font: 12px SFMono-Regular, Consolas, monospace; }
+#uc-in:focus { outline: none; border-color: var(--blue); }
+#uc-in:disabled { opacity: .5; }
+.uc-rec { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: #bdbdbd; cursor: pointer; }
+.uc-rec[hidden] { display: none; }
+/* Cuando el comando está esperando una respuesta */
+.uc-resp.pide { background: #3a3220; border-top-color: #e5c07b; animation: pideLuz 1.6s ease-in-out infinite; }
+.uc-resp.pide .uc-pide { color: #e5c07b; font-weight: 700; }
+.uc-resp.pide #uc-in { border-color: #e5c07b; }
+@keyframes pideLuz { 50% { background: #2f2a1d; } }
 </style>
 </head>
 <body>
@@ -1070,6 +1100,12 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
             <span class="card-title">Comandos</span>
             <span class="card-count" id="cmd-count">0 comandos</span>
           </div>
+          <div class="cmd-sets">
+            <select id="set-sel" title="Carga una lista guardada"><option value="">Listas guardadas…</option></select>
+            <input id="set-nombre" type="text" maxlength="40" placeholder="Nombre para guardar esta lista" spellcheck="false" autocomplete="off">
+            <button id="set-guardar" class="btn btn-secundario btn-mini" type="button">Guardar lista</button>
+            <button id="set-borrar" class="btn btn-secundario btn-mini" type="button" disabled title="Borra la lista seleccionada">Borrar</button>
+          </div>
           <div class="cmd-add">
             <textarea id="cmd-input" class="cmd-input" rows="2" spellcheck="false" autocomplete="off"
               placeholder="Escribe un comando y presiona Enter&#10;(Shift+Enter = nueva línea; cada línea es un comando)"></textarea>
@@ -1077,7 +1113,12 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           </div>
           <ol id="cmd-list" class="cmd-list"></ol>
           <div class="cmd-foot">
-            <label class="chk"><input type="checkbox" id="stop-on-fail" checked><span>Detener si un comando falla</span></label>
+            <div class="cmd-opts">
+              <label class="chk"><input type="checkbox" id="stop-on-fail" checked><span>Detener si un comando falla</span></label>
+              <label class="chk lim" title="Si un comando tarda más, se detiene y se marca como fallido · 0 = sin límite">
+                <span>Tiempo límite</span><input type="number" id="lim-min" min="0" max="1440" step="1" value="10"><span>min por comando</span>
+              </label>
+            </div>
             <button id="cmd-clear-btn" class="btn btn-secundario">Vaciar lista</button>
           </div>
         </div>
@@ -1121,6 +1162,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
         <div class="uc-head">
           <span>Consola · segundo plano</span>
           <span class="uc-meta" id="uc-meta">0 líneas</span>
+          <span class="uc-sudo" id="uc-sudo" hidden>🔑 sudo recordado <button type="button" id="uc-olvidar" title="Borra la contraseña guardada">Olvidar</button></span>
           <div class="uc-actions">
             <button id="uc-follow" class="btn btn-secundario btn-mini is-on">Seguir salida</button>
             <button id="uc-log" class="btn btn-secundario btn-mini">Abrir log</button>
@@ -1128,6 +1170,16 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
           </div>
         </div>
         <div id="uc-body" class="uc-body" tabindex="0"><div class="cl sys placeholder">Esperando ejecución…</div></div>
+        <form class="uc-resp" id="uc-resp" autocomplete="off">
+          <div class="uc-pide" id="uc-pide">Si un comando pregunta algo (contraseña, s/n…), contéstale aquí.</div>
+          <div class="uc-row">
+            <span class="uc-prompt" id="uc-prompt">›</span>
+            <input id="uc-in" type="text" spellcheck="false" autocomplete="off" disabled placeholder="Respuesta para el comando que está corriendo">
+            <button type="submit" id="uc-enviar" class="btn btn-mini" disabled>Enviar</button>
+            <button type="button" id="uc-ctrlc" class="btn btn-secundario btn-mini" disabled title="Interrumpe el comando actual">Ctrl+C</button>
+          </div>
+          <label class="uc-rec" id="uc-rec" hidden><input type="checkbox" id="uc-recordar" checked> Recordar la contraseña de sudo mientras la app esté abierta (no se guarda en disco)</label>
+        </form>
       </div>
     </section>
 
@@ -1807,6 +1859,7 @@ const MAX_LARGO_LINEA = 4000;
 const LEVER_TRAVEL = 144;         // recorrido de la palanca en px (pista 200 - perilla 56)
 
 let comandos = [];
+let listaCambiada = false;   // si editas la lista después de correrla, ya no se pintan los ✓/✕ viejos
 let cmdEstado = { fase: 'reposo', total: 0, completados: 0, actual: -1, resultados: [] };
 let lineasTotales = 0;
 let lineasOmitidas = 0;
@@ -1841,7 +1894,7 @@ function renderComandos() {
   const ul = $('cmd-list');
   ul.textContent = '';
   const bloqueado = estaEjecutando();
-  const usarEstado = cmdEstado.fase !== 'reposo' && (cmdEstado.resultados || []).length === comandos.length;
+  const usarEstado = cmdEstado.fase !== 'reposo' && (cmdEstado.resultados || []).length === comandos.length && !listaCambiada;
 
   if (!comandos.length) {
     const li = document.createElement('li');
@@ -1882,6 +1935,7 @@ function renderComandos() {
     del.disabled = bloqueado;
     del.addEventListener('click', () => {
       comandos.splice(i, 1);
+      listaCambiada = true;
       guardarComandos();
       renderComandos();
     });
@@ -1895,6 +1949,10 @@ function renderComandos() {
   $('cmd-input').disabled = bloqueado;
   $('cmd-clear-btn').disabled = bloqueado || !comandos.length;
   $('stop-on-fail').disabled = bloqueado;
+  $('lim-min').disabled = bloqueado;
+  $('set-sel').disabled = bloqueado;
+  $('set-guardar').disabled = bloqueado || !comandos.length;
+  $('set-borrar').disabled = bloqueado || !$('set-sel').value;
 }
 
 function agregarDesdeInput() {
@@ -1902,6 +1960,7 @@ function agregarDesdeInput() {
   const nuevos = inp.value.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
   if (!nuevos.length) return;
   for (const c of nuevos) comandos.push(c);
+  listaCambiada = true;
   inp.value = '';
   guardarComandos();
   renderComandos();
@@ -1919,7 +1978,9 @@ $('cmd-input').addEventListener('keydown', (e) => {
 });
 $('cmd-clear-btn').addEventListener('click', () => {
   if (estaEjecutando()) return;
+  if (comandos.length && !window.confirm('¿Vaciar la lista de comandos?')) return;
   comandos = [];
+  listaCambiada = true;
   guardarComandos();
   renderComandos();
 });
@@ -2083,8 +2144,123 @@ function aplicarEstadoCmds(s) {
         : 'Baja la palanca para ejecutar');
     }
   }
+  aplicarPregunta(cmdEstado);
   renderComandos();
 }
+
+/* ---------- Respuestas al comando (contraseña, s/n, etc.) ---------- */
+let preguntaActual = null;
+function aplicarPregunta(s) {
+  const corriendo = s.fase === 'ejecutando';
+  const p = corriendo ? s.pide : null;
+  const nueva = p && (!preguntaActual || preguntaActual.hora !== p.hora);
+  preguntaActual = p || null;
+  const form = $('uc-resp'), inp = $('uc-in');
+  form.classList.toggle('pide', !!p);
+  inp.disabled = !corriendo;
+  $('uc-enviar').disabled = !corriendo;
+  $('uc-ctrlc').disabled = !corriendo;
+  const esPass = !!(p && p.tipo === 'password');
+  inp.type = esPass ? 'password' : 'text';
+  $('uc-prompt').textContent = esPass ? '🔑' : '›';
+  $('uc-rec').hidden = !(p && p.sudo);
+  if (p) {
+    $('uc-pide').textContent = (esPass ? 'El comando pide contraseña: ' : 'El comando espera respuesta: ') + p.texto;
+    inp.placeholder = esPass ? 'Escribe la contraseña y presiona Enter' : 'Escribe la respuesta y presiona Enter';
+  } else {
+    $('uc-pide').textContent = corriendo
+      ? 'Si un comando pregunta algo (contraseña, s/n…), contéstale aquí.' + (s.terminal === false ? ' (sin terminal: sudo puede no funcionar)' : '')
+      : 'Se activa mientras corren los comandos.';
+    inp.placeholder = 'Respuesta para el comando que está corriendo';
+  }
+  if (nueva) {
+    const sec = $('rectificadores');
+    if (sec && sec.classList.contains('active')) { inp.focus(); inp.scrollIntoView({ block: 'nearest' }); }
+  }
+  revisarSudo();
+}
+async function revisarSudo() {
+  if (!window.sistema || typeof window.sistema.cmdsSudoHay !== 'function') return;
+  try { $('uc-sudo').hidden = !(await window.sistema.cmdsSudoHay()); } catch (e) {}
+}
+$('uc-resp').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!window.sistema || typeof window.sistema.cmdsResponder !== 'function') return;
+  const inp = $('uc-in');
+  const secreto = inp.type === 'password';
+  const r = await window.sistema.cmdsResponder(inp.value, { secreto, recordarSudo: secreto && !$('uc-rec').hidden && $('uc-recordar').checked });
+  if (r && r.ok) { inp.value = ''; revisarSudo(); }
+  else if (r && r.error) setHint(r.error);
+});
+$('uc-ctrlc').addEventListener('click', () => { if (window.sistema && window.sistema.cmdsResponder) window.sistema.cmdsResponder('', { ctrlC: true }); });
+$('uc-olvidar').addEventListener('click', async () => { if (window.sistema && window.sistema.cmdsSudoOlvidar) await window.sistema.cmdsSudoOlvidar(); revisarSudo(); });
+
+/* ---------- Tiempo límite por comando ---------- */
+const LIM_KEY = 'rectificadores_limite_min';
+function leerLimite() {
+  const v = Math.max(0, Math.min(1440, Math.round(Number($('lim-min').value) || 0)));
+  $('lim-min').value = v;
+  return v;
+}
+try { const v = localStorage.getItem(LIM_KEY); if (v !== null) $('lim-min').value = v; } catch (e) {}
+$('lim-min').addEventListener('change', () => { try { localStorage.setItem(LIM_KEY, String(leerLimite())); } catch (e) {} });
+
+/* ---------- Listas guardadas ---------- */
+const SETS_KEY = 'rectificadores_listas_v1';
+function leerSets() {
+  try { const o = JSON.parse(localStorage.getItem(SETS_KEY) || '{}'); return o && typeof o === 'object' ? o : {}; } catch (e) { return {}; }
+}
+function guardarSets(o) { try { localStorage.setItem(SETS_KEY, JSON.stringify(o)); } catch (e) {} }
+function pintarSets(elegir) {
+  const sel = $('set-sel');
+  const sets = leerSets();
+  const nombres = Object.keys(sets).sort((a, b) => a.localeCompare(b, 'es'));
+  sel.textContent = '';
+  const ph = document.createElement('option');
+  ph.value = ''; ph.textContent = nombres.length ? 'Listas guardadas (' + nombres.length + ')…' : 'Sin listas guardadas';
+  sel.appendChild(ph);
+  for (const n of nombres) {
+    const o = document.createElement('option');
+    o.value = n; o.textContent = n + ' · ' + sets[n].length + (sets[n].length === 1 ? ' comando' : ' comandos');
+    sel.appendChild(o);
+  }
+  sel.value = elegir && sets[elegir] ? elegir : '';
+  $('set-borrar').disabled = estaEjecutando() || !sel.value;
+}
+$('set-sel').addEventListener('change', () => {
+  const n = $('set-sel').value;
+  $('set-borrar').disabled = !n;
+  if (!n) return;
+  const lista = leerSets()[n];
+  if (!Array.isArray(lista)) return;
+  const igual = lista.length === comandos.length && lista.every((c, i) => c === comandos[i]);
+  if (!igual && comandos.length && !window.confirm('Se reemplazará la lista actual por «' + n + '». ¿Continuar?')) { $('set-sel').value = ''; return; }
+  comandos = lista.filter((x) => typeof x === 'string');
+  listaCambiada = true;
+  $('set-nombre').value = n;
+  guardarComandos();
+  renderComandos();
+  aplicarEstadoCmds(cmdEstado);
+});
+$('set-guardar').addEventListener('click', () => {
+  const n = $('set-nombre').value.trim();
+  if (!n) { $('set-nombre').focus(); $('set-nombre').placeholder = 'Escribe un nombre para la lista'; return; }
+  if (!comandos.length) return;
+  const sets = leerSets();
+  if (sets[n] && !window.confirm('Ya existe «' + n + '». ¿Reemplazarla?')) return;
+  sets[n] = comandos.slice();
+  guardarSets(sets);
+  pintarSets(n);
+  const b = $('set-guardar'); b.textContent = 'Guardada ✓'; setTimeout(() => { b.textContent = 'Guardar lista'; }, 1200);
+});
+$('set-nombre').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); $('set-guardar').click(); } });
+$('set-borrar').addEventListener('click', () => {
+  const n = $('set-sel').value;
+  if (!n || !window.confirm('¿Borrar la lista «' + n + '»? (no afecta los comandos de arriba)')) return;
+  const sets = leerSets(); delete sets[n]; guardarSets(sets);
+  pintarSets();
+});
+pintarSets();
 
 /* ---------- Palanca ---------- */
 const leverHandle = $('lever-handle');
@@ -2118,7 +2294,8 @@ async function iniciarEjecucion() {
   posicion(1);
   setHint('Iniciando…');
   try {
-    const r = await window.sistema.cmdsEjecutar(comandos.slice(), $('stop-on-fail').checked);
+    listaCambiada = false;
+    const r = await window.sistema.cmdsEjecutar(comandos.slice(), $('stop-on-fail').checked, leerLimite());
     if (r && r.ok === false) {
       setHint(r.error || 'No se pudo iniciar');
       posicion(0); sacudir();
