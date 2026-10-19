@@ -1147,6 +1147,36 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 .daq-res.ok { color: var(--green); animation: tcPop .4s ease; }
 .daq-res.mal { color: var(--red); animation: tcSacude .4s ease; }
 @media (max-width: 760px) { .daq-paso { grid-template-columns: 26px minmax(0,1fr) 26px !important; } .daq-teclas { grid-column: 2; } }
+
+/* Chiller monitor */
+.ch-top { grid-template-columns: minmax(0, 1fr) 220px; margin-top: 0; }
+.ch-card { padding: 20px 22px; }
+.ch-script { display: flex; align-items: center; gap: 12px; margin: 16px 0 12px; padding: 12px 14px; border: 1px solid var(--line); border-left: 3px solid var(--blue); background: var(--bg-soft); }
+.ch-ico { width: 38px; height: 38px; display: grid; place-items: center; background: #1e1e1e; color: #4ec9b0; font: 800 12px SFMono-Regular, Consolas, monospace; border-radius: 6px; flex: none; }
+.ch-script-info { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.ch-script-info b { font: 700 13px SFMono-Regular, Consolas, monospace; }
+.ch-script-info small { font-size: 11px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ch-pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ch-pasos[hidden] { display: none; }
+.ch-paso { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border: 1px solid var(--line); border-left: 3px solid var(--line); font-size: 12px; transition: background .2s, border-color .2s; }
+.ch-pn { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; background: var(--bg-soft); color: var(--muted); font-size: 11px; font-weight: 700; flex: none; }
+.ch-paso.ok { border-left-color: var(--green); background: rgba(40,167,69,.05); }
+.ch-paso.ok .ch-pn { background: var(--green); color: #fff; font-size: 0; }
+.ch-paso.ok .ch-pn::after { content: "✓"; font-size: 12px; }
+.ch-paso.run { border-left-color: var(--blue); background: rgba(0,113,227,.06); font-weight: 600; }
+.ch-paso.run .ch-pn { background: var(--blue); color: #fff; animation: pulso-suave 1.1s ease-in-out infinite; }
+.ch-paso.bad { border-left-color: var(--red); background: rgba(217,48,37,.06); font-weight: 600; }
+.ch-paso.bad .ch-pn { background: var(--red); color: #fff; font-size: 0; }
+.ch-paso.bad .ch-pn::after { content: "✕"; font-size: 12px; }
+.ch-paso.stop { border-left-color: #f5a623; }
+.om-estado.run { color: var(--blue); background: rgba(0,113,227,.08); border-color: rgba(0,113,227,.35); }
+.om-estado.bad { color: var(--red); background: rgba(217,48,37,.07); border-color: rgba(217,48,37,.35); }
+.ch-lever:not(.on) .lv-top { color: #e6e6ea; }
+.ch-lever.on .lv-bot { color: #2ecc71; }
+.ch-guia .prog-card, .ch-guia .upd-console { margin-top: 16px; }
+.cl.ok { color: #89d185; }
+.cl.warn { color: #e5c07b; }
+@media (max-width: 900px) { .ch-top { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -1704,6 +1734,78 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
               </div>
             </div>
             <a href="#" class="tcs-link om-archivos" id="daq-archivos">Ver archivos de este equipo</a>
+          </div>
+
+          <!-- Chiller monitor: script bash con palanca, avance y consola (solo en los chillers) -->
+          <div class="ch-guia" id="ch-guia" hidden>
+            <div class="upd-top ch-top">
+              <div class="card ch-card">
+                <div class="om-head">
+                  <div>
+                    <div class="om-tit" id="ch-tit">Chiller monitor</div>
+                    <div class="om-sub">Selecciona el script de despliegue y córrelo con la palanca. Corre en segundo plano.</div>
+                  </div>
+                  <span class="om-estado" id="ch-estado">Sin correr</span>
+                </div>
+                <div class="ch-script">
+                  <span class="ch-ico">SH</span>
+                  <div class="ch-script-info">
+                    <b id="ch-nombre">Sin script</b>
+                    <small id="ch-ruta">Elige el archivo .sh que corres para este chiller</small>
+                  </div>
+                  <button type="button" class="btn btn-secundario" id="ch-elegir">Seleccionar script</button>
+                </div>
+                <ol class="ch-pasos" id="ch-pasos"></ol>
+                <a href="#" class="tcs-link om-archivos" id="ch-archivos">Ver archivos de este equipo</a>
+              </div>
+
+              <div class="card lever-card ch-lever" id="ch-lever-card">
+                <div class="card-head">
+                  <span class="card-title">Correr</span>
+                  <span class="lever-status"><span class="lever-led"></span><span id="ch-lever-state">LISTO</span></span>
+                </div>
+                <div class="lever-wrap">
+                  <div class="lever-labels"><span class="lv-top">REPOSO</span><span class="lv-bot">EJECUTAR</span></div>
+                  <div class="lever-track" id="ch-lever-track">
+                    <div class="lever-ticks"></div>
+                    <div class="lever-slot"></div>
+                    <div class="lever-handle" id="ch-lever-handle" role="slider" tabindex="0"
+                         aria-label="Palanca para correr el script" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0">
+                      <div class="lever-knob"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="lever-hint" id="ch-hint">Baja la palanca para correr el script</div>
+              </div>
+            </div>
+
+            <div class="card prog-card" id="ch-prog">
+              <div class="prog-top">
+                <div>
+                  <span class="prog-state" id="ch-prog-state">En reposo</span>
+                  <span class="prog-sub" id="ch-prog-sub">—</span>
+                </div>
+                <span class="prog-pct" id="ch-prog-pct">0%</span>
+              </div>
+              <div class="prog-bar">
+                <div class="prog-active"></div>
+                <div class="prog-done" id="ch-prog-done"></div>
+              </div>
+              <div class="prog-meta"><span id="ch-prog-time">Tiempo: 00:00</span><span id="ch-prog-log"></span></div>
+            </div>
+
+            <div class="upd-console ch-console">
+              <div class="uc-head">
+                <span>Consola · segundo plano</span>
+                <span class="uc-meta" id="ch-meta">0 líneas</span>
+                <div class="uc-actions">
+                  <button id="ch-seguir" class="btn btn-secundario btn-mini is-on" type="button">Seguir salida</button>
+                  <button id="ch-log" class="btn btn-secundario btn-mini" type="button">Abrir log</button>
+                  <button id="ch-limpiar" class="btn btn-secundario btn-mini" type="button">Limpiar</button>
+                </div>
+              </div>
+              <div class="uc-body" id="ch-body" tabindex="0"></div>
+            </div>
           </div>
 
           <div id="cfg-archivos">
@@ -3402,7 +3504,7 @@ function pintarSeleccionIzumi() {
       const b = document.createElement('button');
       b.type = 'button';
       // El sensor OMRON se marca en verde con "1" cuando ya está configurado
-      const omOk = (d.id === 'omron' && omConfigurado()) || (d.id === 'daq' && daqConfigurado());
+      const omOk = (d.id === 'omron' && omConfigurado()) || (d.id === 'daq' && daqConfigurado()) || (esChiller(d.id) && chConfigurado(d.id));
       b.className = 'cfg-dev' + (d.id === sel ? ' sel' : '') + (omOk ? ' ok' : '');
       const dot = document.createElement('span');
       dot.className = 'dot' + (enCurso ? ' busy' : omOk ? ' online' : '');
@@ -3411,7 +3513,7 @@ function pintarSeleccionIzumi() {
       const n = document.createElement('span');
       n.className = 'n';
       n.textContent = enCurso ? enCurso + ' en curso' : omOk ? '1' : String(lista.length);
-      if (omOk) b.title = d.id === 'daq' ? 'IP configurada' : 'Sensor configurado';
+      if (omOk) b.title = d.id === 'daq' ? 'IP configurada' : esChiller(d.id) ? 'Último script: PASS' : 'Sensor configurado';
       b.append(dot, nom, n);
       b.addEventListener('click', () => seleccionar(d.id));
       cont.appendChild(b);
@@ -3458,7 +3560,7 @@ function pintarSeleccionIzumi() {
   const OM_KEY = 'omron_e8fc_v1';
   const OM_PASOS = [
     { id: 'pipe', codigo: 'pipe', que: 'Diámetro del tubo', opciones: ['10a', '15a', '20a', '25a'], def: '20a' },
-    { id: 'fset', codigo: 'f.set', que: 'Líquido', opciones: ['agua', 'oil'], def: 'agua', nota: 'agua = agua o refrigerante soluble · oil = aceite' },
+    { id: 'fset', codigo: 'f.set', que: 'Líquido', opciones: ['aqua', 'oil'], def: 'aqua', nota: 'aqua = agua o refrigerante soluble · oil = aceite' },
     { id: 'pol', codigo: 'type', que: 'Tipo de salida', opciones: ['pnp', 'npn'], def: 'pnp' },
     { id: 'out1', codigo: 'out1', que: 'Salida 1 (pin 4)', opciones: ['ao', 'ao.t', '1p', '2p', '1p.t', '2p.t', 'pls'], def: 'ao', nota: 'ao = analógica de flujo' },
     { id: 'out2', codigo: 'out2', que: 'Salida 2 (pin 2)', opciones: ['ao.t', 'ao', '1p', '2p', '1p.t', '2p.t', 'pls'], def: 'ao.t', nota: 'ao.t = analógica de temperatura' },
@@ -3468,6 +3570,7 @@ function pintarSeleccionIzumi() {
   let om = { valores: {}, hechos: [], fecha: new Date(2026, 9, 18, 21, 28).getTime() };
   try { om = { ...om, ...JSON.parse(localStorage.getItem(OM_KEY) || '{}') }; } catch (e) {}
   if (!om.fecha) om.fecha = new Date(2026, 9, 18, 21, 28).getTime();
+  if (om.valores && om.valores.fset === 'agua') om.valores.fset = 'aqua';   // antes se llamaba "agua"
   const omGuardar = () => { try { localStorage.setItem(OM_KEY, JSON.stringify(om)); } catch (e) {} if (typeof renderDevs === 'function') renderDevs(); };
   const omValor = (p) => om.valores[p.id] || p.def;
   let omVerArchivos = false;
@@ -3492,7 +3595,7 @@ function pintarSeleccionIzumi() {
       const codigo = p.codigo;
       li.querySelector('.om-lcd span').textContent = codigo;
       li.querySelector('.om-lcd span').dataset.a = codigo;
-      li.querySelector('.om-lcd span').dataset.b = enPantalla === 'agua' ? '— —' : enPantalla;
+      li.querySelector('.om-lcd span').dataset.b = enPantalla;
       li.querySelector('.om-que b').textContent = p.que;
       const instr = p.id === 'set'
         ? 'Con ▲ elige «yes» y presiona MODE · ' + p.nota
@@ -3665,11 +3768,229 @@ function pintarSeleccionIzumi() {
   q('daq-reiniciar').addEventListener('click', () => { daqParar(); daq.hechos = []; daq.fecha = null; daqGuardar(); daqPintar(); daqRes('', ''); });
   q('daq-archivos').addEventListener('click', (e) => { e.preventDefault(); daqVerArchivos = !daqVerArchivos; pintarModo(); });
 
+  /* ---------- Chiller monitor: script bash con palanca ---------- */
+  var CH_NOMBRES = { chiller_omron: 'Chiller monitor · con OMRON', chiller_termopar: 'Chiller monitor · con termopar' };
+  const CH_TRAVEL = 144;
+  var ch = { scripts: {}, ultimo: {}, trabajo: null };
+  const chHist = {};             // dev -> líneas
+  let chVerArchivos = false, chSeguir = true, chTimer = null, chArrastre = false, chGrab = 0, chY = 0;
+  function esChiller(id) { return !!(CH_NOMBRES && CH_NOMBRES[id]); }
+  function chConfigurado(id) { const u = ch.ultimo && ch.ultimo[id]; return !!(u && u.codigo === 0); }
+  const chCorriendo = () => !!ch.trabajo;
+  const chMio = () => !!(ch.trabajo && ch.trabajo.dev === sel);
+  const dos2 = (n) => String(n).padStart(2, '0');
+  const mmss = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return dos2(Math.floor(s / 60)) + ':' + dos2(s % 60); };
+  const fechaCorta = (ms) => new Date(ms).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+
+  function chPosicion(v) {
+    chY = v ? CH_TRAVEL : 0;
+    q('ch-lever-handle').style.setProperty('--y', chY + 'px');
+    q('ch-lever-card').classList.toggle('on', !!v);
+    q('ch-lever-handle').setAttribute('aria-valuenow', v ? '1' : '0');
+  }
+  function chSacudir() { const h = q('ch-lever-handle'); h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); }
+  async function chIniciar() {
+    if (!window.sistema || !window.sistema.chCorrer) { q('ch-hint').textContent = 'Abre la app con Electron para correr scripts'; chPosicion(0); chSacudir(); return; }
+    if (chCorriendo()) { if (chMio()) chPosicion(1); else { chPosicion(0); chSacudir(); } return; }
+    const sc = ch.scripts[sel];
+    if (!sc || !sc.existe) { q('ch-hint').textContent = 'Primero selecciona el script'; chPosicion(0); chSacudir(); return; }
+    chPosicion(1);
+    q('ch-hint').textContent = 'Iniciando…';
+    const r = await window.sistema.chCorrer(sel).catch((e) => ({ ok: false, error: e.message }));
+    if (r && r.ok === false) { q('ch-hint').textContent = r.error || 'No se pudo iniciar'; chPosicion(0); chSacudir(); }
+  }
+  function chDetener() {
+    if (chMio()) { q('ch-hint').textContent = 'Deteniendo…'; window.sistema.chDetener(); }
+    else chPosicion(0);
+  }
+  function chDecidir(frac) {
+    if (chMio()) { if (frac < 0.5) chDetener(); else chPosicion(1); }
+    else { if (frac >= 0.75) chIniciar(); else chPosicion(0); }
+  }
+  (function palancaChiller() {
+    const h = q('ch-lever-handle'), tr = q('ch-lever-track');
+    h.addEventListener('pointerdown', (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      chArrastre = true; tr.classList.add('dragging');
+      chGrab = e.clientY - h.getBoundingClientRect().top;
+      h.setPointerCapture(e.pointerId); e.preventDefault();
+    });
+    h.addEventListener('pointermove', (e) => {
+      if (!chArrastre) return;
+      const rr = tr.getBoundingClientRect();
+      chY = Math.max(0, Math.min(CH_TRAVEL, e.clientY - rr.top - chGrab));
+      h.style.setProperty('--y', chY + 'px');
+    });
+    const soltar = () => { if (!chArrastre) return; chArrastre = false; tr.classList.remove('dragging'); chDecidir(chY / CH_TRAVEL); };
+    h.addEventListener('pointerup', soltar);
+    h.addEventListener('pointercancel', soltar);
+    h.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowDown') { e.preventDefault(); chIniciar(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); chDetener(); }
+      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (chMio()) chDetener(); else chIniciar(); }
+    });
+  })();
+
+  function chPintar() {
+    if (!esChiller(sel)) return;
+    const sc = ch.scripts[sel] || { ruta: null, existe: false, pasos: [] };
+    const u = ch.ultimo[sel];
+    const t = chMio() ? ch.trabajo : null;
+    q('ch-tit').textContent = CH_NOMBRES[sel];
+    q('ch-nombre').textContent = sc.ruta ? sc.ruta.split('/').pop() + (sc.existe ? '' : ' (no existe)') : 'Sin script';
+    q('ch-ruta').textContent = sc.ruta || 'Elige el archivo .sh que corres para este chiller';
+    q('ch-ruta').title = sc.ruta || '';
+    q('ch-elegir').textContent = sc.ruta ? 'Cambiar' : 'Seleccionar script';
+    q('ch-elegir').disabled = !!t;
+
+    // Pasos del script ("[1/5] ...")
+    const pasos = sc.pasos || [];
+    const ol = q('ch-pasos');
+    ol.textContent = '';
+    ol.hidden = !pasos.length;
+    const pasoAct = t ? t.paso : (u ? u.paso : 0);
+    for (const p of pasos) {
+      const li = document.createElement('li');
+      let cls = '';
+      if (t) cls = p.n < pasoAct ? 'ok' : p.n === pasoAct ? 'run' : '';
+      else if (u && u.codigo === 0) cls = 'ok';
+      else if (u && (u.codigo != null || u.detenido)) cls = p.n < pasoAct ? 'ok' : p.n === pasoAct ? (u.detenido ? 'stop' : 'bad') : '';
+      li.className = 'ch-paso ' + cls;
+      const n = document.createElement('span'); n.className = 'ch-pn'; n.textContent = p.n;
+      const tx = document.createElement('span'); tx.textContent = p.titulo;
+      li.append(n, tx);
+      ol.appendChild(li);
+    }
+
+    // Estado (arriba a la derecha)
+    const est = q('ch-estado');
+    est.className = 'om-estado';
+    if (t) { est.textContent = 'Corriendo…'; est.classList.add('run'); }
+    else if (u && u.codigo === 0) { est.textContent = 'PASS ' + fechaCorta(u.fin); est.classList.add('ok'); }
+    else if (u && u.detenido) { est.textContent = 'Detenido ' + fechaCorta(u.fin); }
+    else if (u) { est.textContent = 'Falló ' + fechaCorta(u.fin); est.classList.add('bad'); }
+    else est.textContent = 'Sin correr';
+
+    // Palanca
+    const otro = ch.trabajo && !t;
+    q('ch-lever-state').textContent = t ? 'EN MARCHA' : 'LISTO';
+    if (!chArrastre) chPosicion(!!t);
+    q('ch-hint').textContent = t ? 'Sube la palanca para detener'
+      : otro ? 'Ya corre el script de ' + CH_NOMBRES[ch.trabajo.dev].replace('Chiller monitor · ', 'chiller ')
+      : !sc.existe ? 'Primero selecciona el script' : 'Baja la palanca para correr el script';
+
+    // Avance
+    const card = q('ch-prog');
+    card.classList.remove('running', 'ok', 'err', 'stop');
+    const total = (t ? t.total : u && u.total) || pasos.length || 0;
+    let pct = 0, estado = 'En reposo', sub = sc.existe ? (pasos.length ? pasos.length + ' pasos en el script' : 'Script listo') : 'Sin script';
+    if (t) {
+      card.classList.add('running');
+      pct = total ? Math.max(0, Math.min(99, Math.round(((Math.max(t.paso, 1) - 1) / total) * 100))) : 0;
+      estado = t.paso && total ? 'Paso ' + t.paso + ' de ' + total : 'Corriendo';
+      const p = pasos.find((x) => x.n === t.paso);
+      sub = p ? p.titulo : 'Iniciando…';
+    } else if (u) {
+      if (u.codigo === 0) { card.classList.add('ok'); pct = 100; estado = 'PASS · terminó sin errores'; sub = 'Última vez: ' + fechaCorta(u.fin); }
+      else if (u.detenido) { card.classList.add('stop'); pct = total && u.paso ? Math.round(((u.paso - 1) / total) * 100) : 0; estado = 'Detenido'; sub = u.tituloPaso ? 'En: ' + u.tituloPaso : ''; }
+      else { card.classList.add('err'); pct = total && u.paso ? Math.round(((u.paso - 1) / total) * 100) : 0; estado = 'Falló (código ' + u.codigo + ')'; sub = u.tituloPaso ? 'En el paso ' + u.paso + ': ' + u.tituloPaso : 'Revisa la consola'; }
+    }
+    q('ch-prog-state').textContent = estado;
+    q('ch-prog-sub').textContent = sub;
+    q('ch-prog-pct').textContent = pct + '%';
+    q('ch-prog-done').style.width = pct + '%';
+    const log = (t && t.log) || (u && u.log) || '';
+    q('ch-prog-log').textContent = log ? 'Log: ' + log.split('/').pop() : '';
+    chTiempo();
+    clearInterval(chTimer);
+    if (t) chTimer = setInterval(chTiempo, 1000);
+  }
+  function chTiempo() {
+    const t = chMio() ? ch.trabajo : null;
+    const u = ch.ultimo[sel];
+    q('ch-prog-time').textContent = 'Tiempo: ' + (t ? mmss(Date.now() - t.inicio) : '00:00');
+    if (!t && u && u.fin) q('ch-prog-time').textContent = 'Terminó: ' + fechaCorta(u.fin);
+  }
+
+  // Consola
+  function chLineaEl(r) {
+    const d = document.createElement('div');
+    d.className = 'cl ' + (r.t || 'out');
+    const h = document.createElement('span'); h.className = 'tc-cl-t';
+    const f = new Date(r.h); h.textContent = dos2(f.getHours()) + ':' + dos2(f.getMinutes()) + ':' + dos2(f.getSeconds()) + '  ';
+    d.append(h, document.createTextNode(r.s === '' ? ' ' : r.s));
+    return d;
+  }
+  function chConsola() {
+    if (!esChiller(sel)) return;
+    const body = q('ch-body');
+    body.textContent = '';
+    const arr = chHist[sel] || [];
+    if (!arr.length) {
+      const ph = document.createElement('div'); ph.className = 'cl sys placeholder';
+      ph.textContent = 'Aún no hay salida. Baja la palanca para correr el script.';
+      body.appendChild(ph);
+    } else {
+      const frag = document.createDocumentFragment();
+      for (const r of arr.slice(-2000)) frag.appendChild(chLineaEl(r));
+      body.appendChild(frag);
+    }
+    q('ch-meta').textContent = arr.length.toLocaleString('es') + (arr.length === 1 ? ' línea' : ' líneas');
+    if (chSeguir) body.scrollTop = body.scrollHeight;
+  }
+  function chRecibir(d) {
+    if (!d || !CH_NOMBRES[d.dev] || !Array.isArray(d.lineas)) return;
+    const arr = (chHist[d.dev] = chHist[d.dev] || []);
+    arr.push(...d.lineas);
+    if (arr.length > 3000) arr.splice(0, arr.length - 3000);
+    if (sel !== d.dev || q('ch-guia').hidden) return;
+    const body = q('ch-body');
+    const ph = body.querySelector('.placeholder'); if (ph) ph.remove();
+    const frag = document.createDocumentFragment();
+    for (const r of d.lineas) frag.appendChild(chLineaEl(r));
+    body.appendChild(frag);
+    while (body.childElementCount > 2000) body.firstElementChild.remove();
+    q('ch-meta').textContent = arr.length.toLocaleString('es') + (arr.length === 1 ? ' línea' : ' líneas');
+    if (chSeguir) body.scrollTop = body.scrollHeight;
+  }
+  function chAplicar(e) {
+    if (!e) return;
+    ch = { scripts: e.scripts || {}, ultimo: e.ultimo || {}, trabajo: e.trabajo || null };
+    if (typeof renderDevs === 'function') renderDevs();
+    chPintar();
+  }
+  q('ch-elegir').addEventListener('click', async () => { const r = await window.sistema.chElegir(sel); if (r && r.cambio) chAplicar(await window.sistema.chObtener()); });
+  q('ch-archivos').addEventListener('click', (e) => { e.preventDefault(); chVerArchivos = !chVerArchivos; pintarModo(); });
+  q('ch-log').addEventListener('click', () => window.sistema.chAbrirLog(sel));
+  q('ch-limpiar').addEventListener('click', () => { chHist[sel] = []; chConsola(); });
+  q('ch-seguir').addEventListener('click', () => {
+    chSeguir = !chSeguir; q('ch-seguir').classList.toggle('is-on', chSeguir);
+    if (chSeguir) q('ch-body').scrollTop = q('ch-body').scrollHeight;
+  });
+  q('ch-body').addEventListener('wheel', (e) => {
+    if (e.deltaY < 0 && chSeguir) { chSeguir = false; q('ch-seguir').classList.remove('is-on'); }
+  }, { passive: true });
+  if (window.sistema && window.sistema.chObtener) {
+    window.sistema.onChSalida(chRecibir);
+    window.sistema.onChEstado(chAplicar);
+    window.sistema.onChLimpiar((d) => { if (d && CH_NOMBRES[d.dev]) { chHist[d.dev] = []; if (sel === d.dev) chConsola(); } });
+    window.sistema.chObtener().then((e) => {
+      if (!e) return;
+      for (const [dev, arr] of Object.entries(e.hist || {})) if (CH_NOMBRES[dev]) chHist[dev] = arr.slice(-3000);
+      chAplicar(e);
+      chConsola();
+    }).catch(() => {});
+  }
+
   function pintarModo() {
-    const esOmron = sel === 'omron', esDaq = sel === 'daq';
+    const esOmron = sel === 'omron', esDaq = sel === 'daq', esCh = esChiller(sel);
     q('om-guia').hidden = !esOmron;
     q('daq-guia').hidden = !esDaq;
-    q('cfg-archivos').hidden = (esOmron && !omVerArchivos) || (esDaq && !daqVerArchivos);
+    const chAntes = q('ch-guia').hidden;
+    q('ch-guia').hidden = !esCh;
+    q('ch-archivos').textContent = chVerArchivos ? 'Ocultar archivos de este equipo' : 'Ver archivos de este equipo';
+    if (esCh) { chPintar(); if (chAntes || q('ch-guia').dataset.dev !== sel) { q('ch-guia').dataset.dev = sel; chConsola(); } }
+    q('cfg-archivos').hidden = (esOmron && !omVerArchivos) || (esDaq && !daqVerArchivos) || (esCh && !chVerArchivos);
     q('om-archivos').textContent = omVerArchivos ? 'Ocultar archivos de este equipo' : 'Ver archivos de este equipo';
     q('daq-archivos').textContent = daqVerArchivos ? 'Ocultar archivos de este equipo' : 'Ver archivos de este equipo';
     if (esOmron) omPintar();
@@ -3902,7 +4223,7 @@ function pintarSeleccionIzumi() {
 
   function seleccionar(id) {
     sel = id;
-    omVerArchivos = false; daqVerArchivos = false;
+    omVerArchivos = false; daqVerArchivos = false; chVerArchivos = false;
     renderDevs();
     renderFiles();
     cargarHistorial();

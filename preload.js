@@ -44,6 +44,15 @@ contextBridge.exposeInMainWorld('sistema', {
   // TC-INICIO
   // Generar Test case (UUT_case)
   tcObtener: () => ipcRenderer.invoke('tc-get'),
+  // Chiller monitor (script bash en segundo plano)
+  chObtener: () => ipcRenderer.invoke('ch-get'),
+  chElegir: (dev) => ipcRenderer.invoke('ch-elegir', dev),
+  chCorrer: (dev) => ipcRenderer.invoke('ch-run', dev),
+  chDetener: () => ipcRenderer.invoke('ch-stop'),
+  chAbrirLog: (dev) => ipcRenderer.invoke('ch-open-log', dev),
+  onChSalida: (cb) => ipcRenderer.on('ch-salida', (_e, d) => cb(d)),
+  onChEstado: (cb) => ipcRenderer.on('ch-estado', (_e, d) => cb(d)),
+  onChLimpiar: (cb) => ipcRenderer.on('ch-limpiar', (_e, d) => cb(d)),
   tcHistorial: () => ipcRenderer.invoke('tc-hist'),
   tcGuardar: (slots) => ipcRenderer.invoke('tc-save', slots),
   tcElegirRuta: () => ipcRenderer.invoke('tc-set-path'),

@@ -24,6 +24,8 @@ const consolasIzumi = require('./izumi_main.js');
 
 // Remplazar Izumi: lee las MAC actuales de dhcpd.conf y las remplaza
 const remplazoIzumi = require('./remplazo_main.js');
+// Chiller monitor: scripts bash en segundo plano con salida en la app
+const chillerMonitor = require('./chiller_main.js');
 
 
 
@@ -915,6 +917,12 @@ remplazoIzumi.configurar({
   guardarSudo: (p) => { guardadas.set('sudo', p); emitirCmds({ guardadas: guardadas.size }); },
   olvidarSudo: () => { guardadas.delete('sudo'); emitirCmds({ guardadas: guardadas.size }); },
   systemdRun: async () => ((await probarSystemdRun()) ? SYSTEMD_RUN : null)
+});
+
+// El chiller usa la misma ruta para "no new privileges" (sudo dentro del script)
+chillerMonitor.configurar({
+  systemdRun: async () => ((await probarSystemdRun()) ? SYSTEMD_RUN : null),
+  varsSesion: VARS_SESION
 });
 
 ipcMain.handle('cmds-sudo-olvidar', () => { guardadas.clear(); emitirCmds({ guardadas: 0 }); return true; });
