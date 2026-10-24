@@ -1450,6 +1450,36 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
   .rz-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .status-actions { flex-direction: column; }
 }
+
+/* ---------- Connection validation: título centrado arriba del tablero ---------- */
+#connection-validation .inst-header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; }
+#connection-validation .inst-header-text { grid-column: 2; grid-row: 1; align-self: end; align-items: center; text-align: center; padding-top: 18px; }
+#connection-validation .inst-header > .status-card { grid-column: 3; grid-row: 1; justify-self: end; width: 100%; max-width: 380px; }
+@media (max-width: 1100px) {
+  #connection-validation .inst-header { grid-template-columns: 1fr; }
+  #connection-validation .inst-header-text { grid-column: 1; grid-row: 2; padding-top: 6px; }
+  #connection-validation .inst-header > .status-card { grid-column: 1; grid-row: 1; justify-self: stretch; max-width: none; }
+}
+
+/* ---------- Consolas plegables ---------- */
+.uc-head.plegable { cursor: pointer; user-select: none; }
+.uc-plegar { flex: none; width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 6px; background: transparent; color: #9aa6b6; cursor: pointer; }
+.uc-plegar:hover { background: #2a323d; color: #e3e8ee; }
+.uc-plegar svg { width: 14px; height: 14px; transition: transform .2s ease; }
+.upd-console.plegada .uc-plegar svg { transform: rotate(-90deg); }
+.upd-console > .uc-body, .upd-console > .uc-resp { transition: opacity .18s ease; }
+.upd-console.plegada > .uc-body, .upd-console.plegada > .uc-resp { display: none; }
+.upd-console.plegada .uc-head { border-bottom-color: transparent; }
+
+/* ---------- Animación breve al cambiar de pestaña o de equipo ---------- */
+@keyframes entrada { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+.section.active { animation: entrada .24s cubic-bezier(.2, .7, .3, 1); }
+.cfg-main.entra { animation: entrada .22s cubic-bezier(.2, .7, .3, 1); }
+.nav-link { transition: color .18s, background-color .18s; }
+@media (prefers-reduced-motion: reduce) {
+  .section.active, .cfg-main.entra { animation: none; }
+  .uc-plegar svg { transition: none; }
+}
 </style>
 </head>
 <body>
@@ -2196,6 +2226,39 @@ $('btn-logs').addEventListener('click', async () => {
   const r = await window.sistema.logsAbrir();
   if (r && r.ok === false) alert('No se pudo abrir la carpeta ' + (r.ruta || '') + ': ' + (r.error || ''));
 });
+
+
+/* ---------- Consolas plegables ----------
+   Clic en la barra de cualquier consola (o en la flechita) la pliega o la abre.
+   Se recuerda en esta PC. La del Test case ya se pliega con "Ver detalles". */
+(function consolasPlegables() {
+  const FLECHA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  let estado = {};
+  try { estado = JSON.parse(localStorage.getItem('consolas_plegadas') || '{}') || {}; } catch (e) {}
+  const guardar = () => { try { localStorage.setItem('consolas_plegadas', JSON.stringify(estado)); } catch (e) {} };
+  document.querySelectorAll('.upd-console').forEach((c, i) => {
+    if (c.classList.contains('tc-console')) return;
+    const head = c.querySelector(':scope > .uc-head');
+    if (!head) return;
+    const clave = c.className.replace(/\s*plegada/g, '').trim().split(/\s+/).join('.') + '#' + i;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'uc-plegar'; b.innerHTML = FLECHA;
+    head.classList.add('plegable');
+    head.insertBefore(b, head.firstChild);
+    const pintar = () => {
+      const p = !!estado[clave];
+      c.classList.toggle('plegada', p);
+      b.title = p ? 'Mostrar consola' : 'Ocultar consola';
+      b.setAttribute('aria-expanded', p ? 'false' : 'true');
+    };
+    head.addEventListener('click', (e) => {
+      if (e.target.closest('button, a, input, select, label') && !e.target.closest('.uc-plegar')) return;   // los botones de la barra siguen funcionando
+      estado[clave] = !estado[clave];
+      guardar(); pintar();
+    });
+    pintar();
+  });
+})();
 
 let dhcpCargado = false;
 
@@ -4676,7 +4739,11 @@ function pintarSeleccionIzumi() {
   }
 
   function seleccionar(id) {
-    if (id !== sel) marcarVisto(sel);   // se salió del equipo anterior
+    if (id !== sel) {
+      marcarVisto(sel);   // se salió del equipo anterior
+      const m = document.querySelector('#configuracion .cfg-main');
+      if (m) { m.classList.remove('entra'); void m.offsetWidth; m.classList.add('entra'); }
+    }
     entroUsuario = true;
     sel = id;
     omVerArchivos = false; daqVerArchivos = false; chVerArchivos = false; plcVerArchivos = false;
