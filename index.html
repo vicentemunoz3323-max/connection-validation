@@ -1266,6 +1266,190 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 .plc-pant { width: 100%; height: 100%; border-radius: 4px; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #173a5c, #08131f 75%); overflow: hidden; }
 .plc-letrero { font: 900 34px/1 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .14em; color: #e9f6ff; text-shadow: 0 0 10px rgba(124,196,255,.9), 0 0 26px rgba(79,163,255,.6); animation: plcBrillo 3.5s ease-in-out infinite; }
 @keyframes plcBrillo { 0%, 100% { opacity: 1; } 50% { opacity: .82; } }
+
+/* =====================================================================
+   TEMA · diseño unificado (solo apariencia, no cambia ninguna función)
+   Paleta: grafito + azul señal; estados saturados (sin pasteles).
+   ===================================================================== */
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Regular.otf") format("opentype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Medium.otf") format("opentype"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-SemiBold.otf") format("opentype"); font-weight: 600; font-display: swap; }
+@font-face { font-family: "Inter"; src: url("fonts/Inter-Bold.otf") format("opentype"); font-weight: 700 800; font-display: swap; }
+@font-face { font-family: "DejaVu Sans Mono"; src: url("fonts/DejaVuSansMono.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "DejaVu Sans Mono"; src: url("fonts/DejaVuSansMono-Bold.ttf") format("truetype"); font-weight: 700; font-display: swap; }
+
+:root {
+  --canvas: #eceff3;          /* fondo de la app */
+  --bg: #ffffff;              /* tarjetas */
+  --bg-soft: #f4f6f9;         /* zonas secundarias dentro de tarjetas */
+  --text: #16202b;            /* grafito */
+  --muted: #5b6676;
+  --line: #d8dde4;
+  --line-strong: #c2c9d3;
+  --blue: #1d5ccf;            /* azul señal (marca) */
+  --blue-hover: #174ba9;
+  --blue-tint: rgba(29, 92, 207, .09);
+  --green: #12894a;
+  --red: #c8261d;
+  --yellow: #d48806;          /* en proceso */
+  --orange: #e06a00;          /* ocupada */
+  --panel: #1a2029;           /* controles y consolas oscuras */
+  --panel-2: #222a35;
+  --panel-line: #2e3743;
+  --r: 10px;
+  --r-s: 7px;
+  --sombra: 0 1px 2px rgba(16, 24, 40, .06), 0 1px 1px rgba(16, 24, 40, .03);
+  --font: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: "DejaVu Sans Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+body { background: var(--canvas); color: var(--text); font-family: var(--font); font-size: 14px; font-feature-settings: "cv11", "ss01"; }
+::selection { background: rgba(29, 92, 207, .22); }
+:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Barra superior ---------- */
+.nav { background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--line); box-shadow: 0 1px 0 rgba(16, 24, 40, .03); }
+.nav-inner { height: 58px; }
+.brand-logo { border-radius: 9px; }
+.nav nav { gap: 4px; }
+.nav-link { color: var(--muted); font-size: 13.5px; font-weight: 500; padding: 8px 14px; border-radius: 8px; letter-spacing: -.005em; }
+.nav-link:hover { color: var(--text); background: var(--bg-soft); }
+.nav-link.active { color: var(--blue); background: var(--blue-tint); font-weight: 600; }
+.upd-btn { width: 36px; height: 36px; border-radius: 9px; border-color: var(--line); color: var(--muted); }
+.upd-btn:hover { color: var(--text); background: var(--bg-soft); border-color: var(--line-strong); }
+.upd-btn.hay-nueva { color: var(--blue); border-color: var(--blue); background: var(--blue-tint); }
+
+/* ---------- Contenido y encabezados de sección ---------- */
+main { padding: 22px clamp(16px, 3vw, 32px) 12px; scrollbar-color: #c2c9d3 transparent; }
+h1 { font-size: clamp(22px, 2.3vw, 28px); font-weight: 700; letter-spacing: -.022em; line-height: 1.15; color: var(--text); }
+.inst-eyebrow { display: none; }
+.inst-header { border-bottom: 0; padding-bottom: 6px; align-items: center; gap: 16px 24px; }
+.inst-header-text { gap: 4px; }
+.lead, .inst-header .lead { font-size: 14px; line-height: 1.5; color: var(--muted); letter-spacing: 0; }
+.sec-head { margin-bottom: 14px; gap: 10px; }
+
+/* Tarjeta de estado (incidencias + IP) */
+.status-card { background: #fff; border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sombra); padding: 10px 14px; gap: 10px; }
+.status-title { font-size: 13px; font-weight: 600; }
+.ip { font-family: var(--mono); font-size: 13px; color: var(--muted); }
+.dot { width: 9px; height: 9px; }
+.status-actions .btn, .status-links .link-btn { border-radius: var(--r-s); }
+
+/* ---------- Tarjetas ---------- */
+.card, .tc-card { background: #fff; border: 1px solid var(--line); border-radius: var(--r); box-shadow: var(--sombra); padding: 18px 20px; }
+.card-head { margin-bottom: 14px; }
+.card-title { font-size: 14px; font-weight: 650; letter-spacing: -.01em; text-transform: none; color: var(--text); }
+.card-count { font-size: 12px; color: var(--muted); }
+.om-tit { font-size: 17px; font-weight: 700; letter-spacing: -.015em; }
+.om-sub { font-size: 13px; }
+.om-estado { border-radius: 999px; padding: 4px 11px; font-size: 11.5px; font-weight: 600; }
+.om-paso, .plc-paso, .ch-paso, .cfg-file { border-radius: 8px; }
+
+/* ---------- Botones ---------- */
+.btn { font-family: var(--font); font-size: 13px; font-weight: 600; letter-spacing: -.005em; padding: 8px 15px; border-radius: var(--r-s); background: var(--blue); color: #fff; border: 1px solid transparent; }
+.btn:hover { background: var(--blue-hover); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled, .btn:disabled:hover { background: #e2e6ec; color: #98a2af; border-color: transparent; cursor: not-allowed; }
+.btn-secundario { background: #fff; color: var(--text); border: 1px solid var(--line-strong); }
+.btn-secundario:hover { background: var(--bg-soft); border-color: #aeb6c2; }
+.btn-secundario:disabled, .btn-secundario:disabled:hover { background: #fff; color: #a3acb8; border-color: var(--line); }
+.btn-mini { font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 6px; }
+.btn.btn-secundario.is-on { background: var(--blue-tint); color: var(--blue); border-color: rgba(29, 92, 207, .45); }
+.tc-bar .tc-stop, .tc-bar .tc-stop:hover { background: var(--red); }
+.link-btn { border-radius: var(--r-s) !important; }
+
+/* ---------- Campos ---------- */
+input[type="text"], input[type="number"], input[type="password"], select, textarea, .tc-in, .cmd-input {
+  font-family: var(--font); border-radius: var(--r-s); border: 1px solid var(--line-strong); background: #fff; color: var(--text);
+}
+input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:focus, select:focus, textarea:focus, .tc-in:focus, .cmd-input:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29, 92, 207, .15); outline: none;
+}
+.cmd-input, .tc-ruta, code, kbd { font-family: var(--mono); }
+.chk input, input[type="checkbox"] { accent-color: var(--blue); }
+
+/* ---------- Consolas (todas iguales) ---------- */
+.upd-console, .console-container, .dhcp-box { background: #11161d; border: 1px solid #0b0f14; border-radius: var(--r); overflow: hidden; box-shadow: 0 8px 22px rgba(16, 24, 40, .14); }
+.uc-head, .dhcp-box-header { background: var(--panel); color: #c7d2df; border-top: 0; border-bottom: 1px solid var(--panel-line); font-family: var(--font); font-size: 12.5px; font-weight: 600; padding: 9px 12px; }
+.uc-meta { color: #7f8b9b; font-weight: 500; }
+.uc-body, .console-body, .dhcp-box-body, #console-body { font-family: var(--mono); font-size: 12px; line-height: 1.55; color: #d3dbe5; }
+.uc-head .btn-mini, .dhcp-box-header .btn-mini { background: transparent; color: #c7d2df; border: 1px solid #3a4452; }
+.uc-head .btn-mini:hover { background: #2a323d; }
+.uc-head .btn.btn-secundario.is-on { background: rgba(29, 92, 207, .25); color: #cfe0ff; border-color: rgba(98, 150, 245, .6); }
+.uc-resp { background: var(--panel); border-top: 1px solid var(--panel-line); }
+.uc-resp input[type="text"], .uc-resp input[type="password"] { background: #0e1319; color: #e4ebf3; border-color: #384251; }
+
+/* ---------- Controles oscuros (switch + botón) ---------- */
+.lever-card { background: var(--panel); border: 1px solid #0f141a; border-radius: var(--r); color: #d5dbe3; }
+.lever-card .card-title { color: #e3e8ee; }
+.arm-row { border-bottom-color: rgba(255, 255, 255, .07); }
+.ctrl-go, .ch-go { border-radius: 10px; letter-spacing: .06em; font-family: var(--font); }
+
+/* ---------- Connection validation: tablero ---------- */
+.rect, .izumi { border-radius: 8px; }
+.izumi { border-top-color: var(--line); border-right-color: var(--line); border-bottom-color: var(--line); }
+.izumi-name { font-weight: 600; }
+.izumi-status-text { font-family: var(--font); font-size: 10px; letter-spacing: .03em; }
+.izumi.busy { border-left-color: var(--orange); }
+.izumi.busy .izumi-led { background: var(--orange); }
+.izumi.busy .izumi-status-text { color: #b45300; }
+.panel-title { color: var(--text); font-weight: 650; letter-spacing: .02em; }
+.group-label { letter-spacing: .04em; }
+#connection-validation .instrument-row { border-radius: var(--r); border-left-width: 3px; }
+#connection-validation .instrument-row:hover { transform: none; box-shadow: 0 4px 14px rgba(16, 24, 40, .08); }
+#connection-validation .instrument-icon { border-radius: 9px; background: var(--blue-tint); color: var(--blue); }
+.status-pill { border-radius: 999px; }
+
+/* ---------- Configuración ---------- */
+.cfg-dev { border-radius: 8px; background: #fff; border-color: var(--line); font-size: 12px; letter-spacing: .03em; box-shadow: var(--sombra); }
+.cfg-dev:hover { background: var(--bg-soft); }
+.cfg-dev.sel { border-left-color: var(--blue); background: #fff; box-shadow: 0 0 0 2px rgba(29, 92, 207, .18), var(--sombra); }
+.cfg-dev.ok { border-left-color: var(--green); }
+.cfg-dev .n { font-family: var(--mono); font-size: 12px; }
+
+/* ---------- Test case / Remplazar Izumi / DHCP ---------- */
+.tc-table th { font-size: 11px; letter-spacing: .04em; text-transform: none; font-weight: 600; color: var(--muted); }
+.tc-table tr.sel td { background: var(--blue-tint); }
+.tc-badge { border-radius: 999px; }
+.rz-grid > * { border-radius: 8px; }
+.dhcp-box-header .tag { border-radius: 999px; }
+
+/* ---------- Avisos, ventanas y pie ---------- */
+.upd-toast { border-radius: var(--r); box-shadow: 0 12px 32px rgba(16, 24, 40, .18); }
+.manual-box { border-radius: 14px; }
+.firma { font-size: 11.5px; color: var(--muted); padding-top: 8px; }
+.firma .familia { letter-spacing: .06em; }
+
+/* ---------- Responsivo ---------- */
+@media (max-width: 1100px) {
+  .upd-top { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .cfg-layout { grid-template-columns: 1fr; }
+  .cfg-devs { flex-direction: row; flex-wrap: wrap; gap: 6px; }
+  .cfg-dev { width: auto; flex: 1 1 160px; }
+  .cfg-dev-rect { margin-top: 0; }
+  .inst-header { flex-direction: column; align-items: stretch; }
+  .inst-header > .status-card, .status-card { max-width: none; flex: 1 1 auto; }
+  .ch-top { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .nav-inner { padding: 8px 12px 0; height: auto; min-height: 56px; flex-wrap: wrap; justify-content: flex-start; gap: 6px; }
+  .brand { display: flex; position: static; order: 1; }
+  .upd { position: static; transform: none; margin-left: auto; order: 2; }
+  .nav nav { order: 3; width: 100%; padding-bottom: 8px; }
+  .nav-link { padding: 7px 10px; font-size: 13px; }
+  main { padding: 14px 12px 8px; }
+  .card, .tc-card { padding: 14px; }
+  .tc-card { overflow-x: auto; }
+  .rz-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .plc-escena { transform: scale(.85); transform-origin: top center; }
+}
+@media (max-width: 520px) {
+  .izumi-grid { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
+  .rz-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .status-actions { flex-direction: column; }
+}
 </style>
 </head>
 <body>

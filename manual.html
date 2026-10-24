@@ -5,10 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manual de usuario · Connection Validation</title>
 <style>
-  :root { --text: #1d1d1f; --muted: #6e6e73; --line: #e5e5ea; --soft: #f5f5f7; --blue: #0071e3; --green: #28a745; --red: #d93025; --orange: #f58200; --rojo-claro: #ff7b7b; }
+  @font-face { font-family: "Inter"; src: url("fonts/Inter-Regular.otf") format("opentype"); font-weight: 400; }
+  @font-face { font-family: "Inter"; src: url("fonts/Inter-SemiBold.otf") format("opentype"); font-weight: 600; }
+  @font-face { font-family: "Inter"; src: url("fonts/Inter-Bold.otf") format("opentype"); font-weight: 700; }
+  @font-face { font-family: "DejaVu Sans Mono"; src: url("fonts/DejaVuSansMono.ttf") format("truetype"); }
+  :root { --text: #16202b; --muted: #6e6e73; --line: #e5e5ea; --soft: #f5f5f7; --blue: #1d5ccf; --green: #12894a; --red: #c8261d; --orange: #e06a00; --rojo-claro: #ff7b7b; }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
-  body { margin: 0; font: 14px/1.6 -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text); background: #fff; }
+  body { margin: 0; font: 14px/1.6 Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--text); background: #fff; }
   .wrap { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
   nav { position: sticky; top: 0; align-self: start; height: 100vh; overflow: auto; padding: 22px 14px; border-right: 1px solid var(--line); background: var(--soft); }
   nav b { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 8px 10px; }
@@ -22,7 +26,7 @@
   p, li { max-width: 72ch; }
   ul, ol { padding-left: 22px; }
   li { margin: 3px 0; }
-  code { font: 12.5px SFMono-Regular, Consolas, "Liberation Mono", monospace; background: var(--soft); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+  code { font: 12.5px "DejaVu Sans Mono", SFMono-Regular, Consolas, monospace; background: var(--soft); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
   pre { font: 12.5px/1.5 SFMono-Regular, Consolas, monospace; background: #1e1e1e; color: #d4d4d4; padding: 12px 14px; border-radius: 8px; overflow: auto; }
   table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
   th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
