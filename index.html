@@ -713,6 +713,8 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 }
 .cfg-dev:hover { background: var(--bg-soft); }
 .cfg-dev.sel { border-left-color: var(--blue); background: rgba(0,113,227,.06); }
+.cfg-dev-rect { margin-top: 10px; }
+.cfg-rect .prog-card, .cfg-rect .upd-console { margin-top: 16px; }
 .cfg-dev .n { margin-left: auto; font-size: 11px; font-weight: 600; letter-spacing: 0; color: var(--muted); }
 .cfg-main { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
 
@@ -1205,11 +1207,65 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 .om-estado.run { color: var(--blue); background: rgba(0,113,227,.08); border-color: rgba(0,113,227,.35); }
 .om-estado.bad { color: var(--red); background: rgba(217,48,37,.07); border-color: rgba(217,48,37,.35); }
 .ch-lever:not(.on) .lv-top { color: #e6e6ea; }
+/* Control estándar: switch cola de rata + botón grande (rectificadores y chiller) */
+.ch-ctrl, .ctrl-card { justify-content: flex-start; }
+.ch-ctrl .arm-row, .ctrl-card .arm-row { margin-top: 4px; }
+.ctrl-go, .ch-go { width: 100%; margin-top: 18px; padding: 18px 10px; border-radius: 12px; border: 1px solid #0e5a2c; cursor: pointer;
+  background: linear-gradient(180deg, #2fbf62, #1d8f47); color: #fff; font: 800 15px system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase;
+  box-shadow: 0 5px 0 #0d4f27, 0 8px 16px rgba(0,0,0,.35); transition: transform .08s, box-shadow .08s, filter .2s; }
+.ctrl-go:active:not(:disabled), .ch-go:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 #0d4f27, 0 3px 8px rgba(0,0,0,.35); }
+.ctrl-go:disabled, .ch-go:disabled { cursor: not-allowed; filter: grayscale(1) brightness(.55); }
+.ctrl-go.parar, .ch-go.parar { background: linear-gradient(180deg, #e0463c, #b02a21); border-color: #6d120c; box-shadow: 0 5px 0 #6d120c, 0 8px 16px rgba(0,0,0,.35); }
 .ch-lever.on .lv-bot { color: #2ecc71; }
 .ch-guia .prog-card, .ch-guia .upd-console { margin-top: 16px; }
 .cl.ok { color: #89d185; }
 .cl.warn { color: #e5c07b; }
 @media (max-width: 900px) { .ch-top { grid-template-columns: 1fr; } }
+/* ===== Guía PLC (Configuración → CONFIGURAR PLC) ===== */
+.plc-guia { padding: 20px 22px; }
+.plc-cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; margin-top: 14px; align-items: start; }
+@media (max-width: 1100px) { .plc-cuerpo { grid-template-columns: 1fr; } .plc-escena { margin: 0 auto; } }
+.plc-pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 5px; }
+.plc-fase { font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 10px 0 2px; }
+.plc-fase:first-child { margin-top: 0; }
+.plc-paso { display: grid; grid-template-columns: 24px minmax(0, 1fr) 22px; gap: 10px; align-items: center; padding: 7px 10px; border: 1px solid var(--line); border-left: 3px solid var(--line); background: #fff; cursor: pointer; transition: background .15s, border-color .15s; }
+.plc-paso:hover { background: var(--bg-soft); }
+.plc-paso.hecho { border-left-color: var(--green); background: rgba(40,167,69,.04); }
+.plc-paso.actual { border-left-color: var(--blue); box-shadow: 0 2px 10px rgba(0,113,227,.10); }
+.plc-paso b { display: block; font-size: 13px; }
+.plc-paso small { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; }
+.plc-paso kbd { font: 700 10.5px system-ui, sans-serif; padding: 1px 6px; background: #eef0f3; border: 1px solid #c9ccd2; border-bottom-width: 2px; border-radius: 4px; color: #2b2f36; }
+.plc-paso code { font: 700 11.5px SFMono-Regular, Consolas, monospace; color: var(--blue); }
+.plc-paso.actual .om-num { background: var(--blue); color: #fff; }
+.plc-paso.hecho .om-num { background: var(--green); color: #fff; }
+.plc-paso.hecho .om-check { background: var(--green); border-color: var(--green); }
+.plc-paso.hecho .om-check::after { content: "✓"; color: #fff; font-size: 13px; font-weight: 700; }
+
+/* Dibujo: PLC encendido con el letrero GHOSTFISH y la torreta en verde parpadeando como luz de avión */
+.plc-escena { position: relative; width: 360px; height: 400px; user-select: none; position: sticky; top: 12px; }
+.plc-torre { position: absolute; left: 50%; top: 0; width: 34px; margin-left: -17px; display: flex; flex-direction: column; align-items: center; }
+.plc-torre i { display: block; width: 30px; height: 30px; border-radius: 6px 6px 3px 3px; margin-bottom: 2px; background: #3a3d44; border: 1px solid #22252b; }
+/* Mientras faltan pasos: rojo → ámbar → verde, uno a la vez, con destello doble como luz de avión */
+.plc-torre i { --on: #2ee66b; --glow: rgba(46,230,107,.85); --off: #24402e; background: var(--off); animation: plcAvion 2.4s linear infinite; }
+.plc-torre i.r { --on: #ff3b30; --glow: rgba(255,59,48,.85); --off: #4a2523; animation-delay: 0s; }
+.plc-torre i.a { --on: #ffb300; --glow: rgba(255,179,0,.85); --off: #4a3a17; animation-delay: .8s; }
+.plc-torre i.v { animation-delay: 1.6s; }
+@keyframes plcAvion {
+  0%, 4%, 8.5%, 12.5% { background: var(--on); box-shadow: 0 0 20px 7px var(--glow); }
+  4.1%, 8.4%, 12.6%, 100% { background: var(--off); box-shadow: none; }
+}
+/* Todos los pasos listos: verde fijo */
+.plc-escena.listo .plc-torre i { animation: none; background: var(--off); box-shadow: none; }
+.plc-escena.listo .plc-torre i.v { background: var(--on); box-shadow: 0 0 20px 7px var(--glow); }
+.plc-torre .poste { width: 10px; height: 26px; background: linear-gradient(90deg, #8e9097, #d8d9de, #85878e); }
+.plc-gab { position: absolute; left: 0; right: 0; top: 122px; bottom: 0; border-radius: 12px; background: linear-gradient(180deg, #d9dbe0, #b9bcc4); border: 1px solid #8e9097; box-shadow: inset 0 1px 0 rgba(255,255,255,.7), 0 10px 26px rgba(0,0,0,.18); }
+.plc-marca { position: absolute; left: 18px; top: 10px; font: 800 10px system-ui, sans-serif; letter-spacing: .18em; color: #5d6068; }
+.plc-led { position: absolute; right: 18px; top: 11px; font: 700 9px system-ui, sans-serif; letter-spacing: .1em; color: #4d5058; }
+.plc-led::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; background: #2ee66b; box-shadow: 0 0 6px #2ee66b; }
+.plc-bisel { position: absolute; left: 18px; right: 18px; top: 30px; bottom: 22px; padding: 12px; border-radius: 10px; background: #1d1f24; box-shadow: inset 0 0 0 2px #33363d, 0 3px 8px rgba(0,0,0,.35); }
+.plc-pant { width: 100%; height: 100%; border-radius: 4px; display: grid; place-items: center; background: radial-gradient(ellipse at 50% 40%, #173a5c, #08131f 75%); overflow: hidden; }
+.plc-letrero { font: 900 34px/1 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .14em; color: #e9f6ff; text-shadow: 0 0 10px rgba(124,196,255,.9), 0 0 26px rgba(79,163,255,.6); animation: plcBrillo 3.5s ease-in-out infinite; }
+@keyframes plcBrillo { 0%, 100% { opacity: 1; } 50% { opacity: .82; } }
 </style>
 </head>
 <body>
@@ -1242,7 +1298,6 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
       </div>
       <nav aria-label="Principal">
         <a href="#connection-validation" class="nav-link active" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
-        <a href="#rectificadores" class="nav-link" data-section="rectificadores" title="Actualización de rectificadores"><span class="lbl-full">Actualización de rectificadores</span><span class="lbl-corto">Rectificadores</span></a>
         <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi" title="Remplazar Izumi"><span class="lbl-full">Remplazar Izumi</span><span class="lbl-corto">Izumi</span></a>
         <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
         <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
@@ -1404,127 +1459,6 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
           </div>
           <div id="console-body" class="console-body">Esperando ejecución...</div>
         </div>
-      </div>
-    </section>
-
-    <section id="rectificadores" class="section">
-      <div class="sec-head">
-        <div class="inst-header">
-          <div class="inst-header-text">
-            <span class="inst-eyebrow">Mantenimiento</span>
-            <h1>Actualización de rectificadores</h1>
-            <p class="lead">Define los comandos y ejecútalos al accionar la palanca.</p>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-row-item">
-            <div class="status-info-group">
-              <span class="dot global-dot"></span>
-              <span class="status-title global-title">En espera…</span>
-            </div>
-            <span class="ip global-ip"></span>
-          </div>
-        </div>
-      </div>
-      <div class="upd-top">
-        <div class="card cmd-card">
-          <div class="card-head">
-            <span class="card-title">Comandos</span>
-            <span class="card-count" id="cmd-count">0 comandos</span>
-          </div>
-          <div class="cmd-sets">
-            <select id="set-sel" title="Carga una lista guardada"><option value="">Listas guardadas…</option></select>
-            <input id="set-nombre" type="text" maxlength="40" placeholder="Nombre para guardar esta lista" spellcheck="false" autocomplete="off">
-            <button id="set-guardar" class="btn btn-secundario btn-mini" type="button">Guardar lista</button>
-            <button id="set-borrar" class="btn btn-secundario btn-mini" type="button" disabled title="Borra la lista seleccionada">Borrar</button>
-            <button id="cmd-txt-btn" class="btn btn-secundario btn-mini" type="button" title="Carga los comandos de un archivo .txt (un comando por línea; las líneas con # se ignoran). También puedes arrastrar el .txt aquí.">Cargar .txt</button>
-            <input id="cmd-txt-file" type="file" accept=".txt,text/plain" hidden>
-          </div>
-          <div class="cmd-add">
-            <textarea id="cmd-input" class="cmd-input" rows="2" spellcheck="false" autocomplete="off"
-              placeholder="Escribe un comando y presiona Enter&#10;(Shift+Enter = nueva línea; cada línea es un comando)"></textarea>
-            <button id="cmd-add-btn" class="btn">Agregar</button>
-          </div>
-          <ol id="cmd-list" class="cmd-list"></ol>
-          <div class="cmd-foot">
-            <div class="cmd-opts">
-              <label class="chk"><input type="checkbox" id="stop-on-fail" checked><span>Detener si un comando falla</span></label>
-              <label class="chk lim" title="Si un comando tarda más, se detiene y se marca como fallido · 0 = sin límite">
-                <span>Tiempo límite</span><input type="number" id="lim-min" min="0" max="1440" step="1" value="30"><span>min por comando</span>
-              </label>
-            </div>
-            <button id="cmd-clear-btn" class="btn btn-secundario">Vaciar lista</button>
-          </div>
-        </div>
-
-        <div class="card lever-card" id="lever-card">
-          <div class="card-head">
-            <span class="card-title">Actualizar</span>
-            <span class="lever-status"><span class="lever-led"></span><span id="lever-state">LISTO</span></span>
-          </div>
-          <div class="arm-row" id="arm-row">
-            <div class="rat-wrap">
-              <button type="button" class="rat" id="arm-switch" role="switch" aria-checked="false"
-                      aria-label="Activar la palanca" title="Activa la palanca para poder ejecutar">
-                <span class="rat-plate"></span><span class="rat-nut"></span><span class="rat-lever"></span>
-              </button>
-              <span class="rat-txt" id="arm-txt">OFF</span>
-            </div>
-            <span class="arm-label" id="arm-label">Sube el switch para activar la palanca</span>
-          </div>
-          <div class="lever-wrap">
-            <div class="lever-labels"><span id="lv-top">REPOSO</span><span id="lv-bot">EJECUTAR</span></div>
-            <div class="lever-track" id="lever-track">
-              <div class="lever-ticks"></div>
-              <div class="lever-slot"></div>
-              <div class="lever-handle" id="lever-handle" role="slider" tabindex="0"
-                   aria-label="Palanca de ejecución" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0">
-                <div class="lever-knob"></div>
-              </div>
-            </div>
-          </div>
-          <div class="lever-hint" id="lever-hint">Baja la palanca para ejecutar</div>
-        </div>
-      </div>
-
-      <div class="card prog-card" id="prog-card">
-        <div class="prog-top">
-          <div>
-            <span class="prog-state" id="prog-state">En reposo</span>
-            <span class="prog-sub" id="prog-sub">0 comandos en la lista</span>
-          </div>
-          <span class="prog-pct" id="prog-pct">0%</span>
-        </div>
-        <div class="prog-bar">
-          <div class="prog-active" id="prog-active"></div>
-          <div class="prog-done" id="prog-done"></div>
-        </div>
-        <div class="prog-meta"><span id="prog-time">Tiempo: 00:00</span><span id="prog-log"></span></div>
-      </div>
-
-      <div class="upd-console">
-        <div class="uc-head">
-          <span>Consola · segundo plano</span>
-          <span class="uc-meta" id="uc-meta">0 líneas</span>
-          <span class="uc-sudo" id="uc-sudo" hidden><span id="uc-sudo-txt">🔑 contraseñas recordadas</span> <button type="button" id="uc-olvidar" title="Borra las contraseñas recordadas (sudo, racks…)">Olvidar</button></span>
-          <div class="uc-actions">
-            <button id="uc-follow" class="btn btn-secundario btn-mini is-on">Seguir salida</button>
-            <button id="uc-log" class="btn btn-secundario btn-mini">Abrir log</button>
-            <button id="uc-clear" class="btn btn-secundario btn-mini">Limpiar</button>
-          </div>
-        </div>
-        <div id="uc-body" class="uc-body" tabindex="0"><div class="cl sys placeholder">Esperando ejecución…</div></div>
-        <form class="uc-resp" id="uc-resp" autocomplete="off">
-          <div class="uc-pide" id="uc-pide">Si un comando pregunta algo (contraseña, s/n…), contéstale aquí.</div>
-          <div class="uc-row">
-            <span class="uc-prompt" id="uc-prompt">›</span>
-            <input id="uc-in" type="text" spellcheck="false" autocomplete="off" disabled placeholder="Respuesta para el comando que está corriendo">
-            <span class="uc-rapidas" id="uc-rapidas" hidden></span>
-            <button type="submit" id="uc-enviar" class="btn btn-mini" disabled>Enviar</button>
-            <button type="button" id="uc-ctrlc" class="btn btn-secundario btn-mini" disabled title="Interrumpe el comando actual">Ctrl+C</button>
-          </div>
-          <label class="uc-rec" id="uc-rec" hidden><input type="checkbox" id="uc-recordar" checked> <span id="uc-rec-txt">Recordar esta contraseña mientras la app esté abierta (no se guarda en disco)</span></label>
-        </form>
       </div>
     </section>
 
@@ -1804,39 +1738,37 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
                 <div class="om-head">
                   <div>
                     <div class="om-tit" id="ch-tit">Chiller monitor</div>
-                    <div class="om-sub">Selecciona el script de despliegue y córrelo con la palanca. Corre en segundo plano.</div>
+                    <div class="om-sub">Sube el switch y presiona <b>Configurar</b>. Corre en segundo plano.</div>
                   </div>
                   <span class="om-estado" id="ch-estado">Sin correr</span>
                 </div>
                 <div class="ch-script">
                   <span class="ch-ico">SH</span>
                   <div class="ch-script-info">
-                    <b id="ch-nombre">Sin script</b>
-                    <small id="ch-ruta">Elige el archivo .sh que corres para este chiller</small>
+                    <b id="ch-nombre">configurar_chiller.sh</b>
+                    <small id="ch-ruta">Incluido en la app · el mismo para los dos chiller</small>
                   </div>
-                  <button type="button" class="btn btn-secundario" id="ch-elegir">Seleccionar script</button>
                 </div>
                 <ol class="ch-pasos" id="ch-pasos"></ol>
                 <a href="#" class="tcs-link om-archivos" id="ch-archivos">Ver archivos de este equipo</a>
               </div>
 
-              <div class="card lever-card ch-lever" id="ch-lever-card">
+              <div class="card lever-card ch-lever ch-ctrl" id="ch-lever-card">
                 <div class="card-head">
-                  <span class="card-title">Correr</span>
+                  <span class="card-title">Configurar</span>
                   <span class="lever-status"><span class="lever-led"></span><span id="ch-lever-state">LISTO</span></span>
                 </div>
-                <div class="lever-wrap">
-                  <div class="lever-labels"><span class="lv-top">REPOSO</span><span class="lv-bot">EJECUTAR</span></div>
-                  <div class="lever-track" id="ch-lever-track">
-                    <div class="lever-ticks"></div>
-                    <div class="lever-slot"></div>
-                    <div class="lever-handle" id="ch-lever-handle" role="slider" tabindex="0"
-                         aria-label="Palanca para correr el script" aria-valuemin="0" aria-valuemax="1" aria-valuenow="0">
-                      <div class="lever-knob"></div>
-                    </div>
+                <div class="arm-row" id="ch-arm-row">
+                  <div class="rat-wrap">
+                    <button type="button" class="rat" id="ch-arm" role="switch" aria-checked="false" aria-label="Activar Configurar" title="Sube el switch para activar Configurar">
+                      <span class="rat-plate"></span><span class="rat-nut"></span><span class="rat-lever"></span>
+                    </button>
+                    <span class="rat-txt" id="ch-arm-txt">OFF</span>
                   </div>
+                  <span class="arm-label" id="ch-arm-label">Sube el switch para activar</span>
                 </div>
-                <div class="lever-hint" id="ch-hint">Baja la palanca para correr el script</div>
+                <button type="button" class="ctrl-go ch-go" id="ch-go" disabled>Configurar</button>
+                <div class="lever-hint" id="ch-hint">Sube el switch y presiona Configurar</div>
               </div>
             </div>
 
@@ -1867,6 +1799,130 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
               </div>
               <div class="uc-body" id="ch-body" tabindex="0"></div>
             </div>
+          </div>
+
+          <!-- Guía del PLC (solo se ve en CONFIGURAR PLC) -->
+          <div class="card om-guia plc-guia" id="plc-guia" hidden>
+            <div class="om-head">
+              <div>
+                <div class="om-tit">Configurar PLC</div>
+                <div class="om-sub">Sigue los pasos y marca cada uno al terminarlo.</div>
+              </div>
+              <span class="om-estado" id="plc-estado">Sin configurar</span>
+            </div>
+            <div class="plc-cuerpo">
+              <ol class="plc-pasos" id="plc-pasos"></ol>
+              <div class="plc-escena" id="plc-escena" aria-hidden="true">
+                <div class="plc-torre"><i class="r"></i><i class="a"></i><i class="v"></i><div class="poste"></div></div>
+                <div class="plc-gab">
+                  <span class="plc-marca">PLC · HMI</span>
+                  <span class="plc-led">ON</span>
+                  <div class="plc-bisel"><div class="plc-pant"><span class="plc-letrero">GHOSTFISH</span></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="om-pie">
+              <span class="om-avance" id="plc-avance">0 pasos</span>
+              <div class="om-acc">
+                <button type="button" class="btn btn-secundario" id="plc-reiniciar">Empezar de nuevo</button>
+                <button type="button" class="btn" id="plc-listo" disabled>Listo, PLC configurado</button>
+              </div>
+            </div>
+            <a href="#" class="tcs-link om-archivos" id="plc-archivos">Ver archivos de este equipo</a>
+          </div>
+
+          <!-- Actualización de rectificadores (se ve al elegir ACTUALIZAR RECTIFICADORES) -->
+          <div id="cfg-rect" class="cfg-rect" hidden>
+      <div class="upd-top">
+        <div class="card cmd-card">
+          <div class="card-head">
+            <span class="card-title">Comandos</span>
+            <span class="card-count" id="cmd-count">0 comandos</span>
+          </div>
+          <div class="cmd-sets">
+            <select id="set-sel" title="Carga una lista guardada"><option value="">Listas guardadas…</option></select>
+            <input id="set-nombre" type="text" maxlength="40" placeholder="Nombre para guardar esta lista" spellcheck="false" autocomplete="off">
+            <button id="set-guardar" class="btn btn-secundario btn-mini" type="button">Guardar lista</button>
+            <button id="set-borrar" class="btn btn-secundario btn-mini" type="button" disabled title="Borra la lista seleccionada">Borrar</button>
+            <button id="cmd-txt-btn" class="btn btn-secundario btn-mini" type="button" title="Carga los comandos de un archivo .txt (un comando por línea; las líneas con # se ignoran). También puedes arrastrar el .txt aquí.">Cargar .txt</button>
+            <input id="cmd-txt-file" type="file" accept=".txt,text/plain" hidden>
+          </div>
+          <div class="cmd-add">
+            <textarea id="cmd-input" class="cmd-input" rows="2" spellcheck="false" autocomplete="off"
+              placeholder="Escribe un comando y presiona Enter&#10;(Shift+Enter = nueva línea; cada línea es un comando)"></textarea>
+            <button id="cmd-add-btn" class="btn">Agregar</button>
+          </div>
+          <ol id="cmd-list" class="cmd-list"></ol>
+          <div class="cmd-foot">
+            <div class="cmd-opts">
+              <label class="chk"><input type="checkbox" id="stop-on-fail" checked><span>Detener si un comando falla</span></label>
+              <label class="chk lim" title="Si un comando tarda más, se detiene y se marca como fallido · 0 = sin límite">
+                <span>Tiempo límite</span><input type="number" id="lim-min" min="0" max="1440" step="1" value="30"><span>min por comando</span>
+              </label>
+            </div>
+            <button id="cmd-clear-btn" class="btn btn-secundario">Vaciar lista</button>
+          </div>
+        </div>
+
+        <div class="card lever-card ctrl-card" id="lever-card">
+          <div class="card-head">
+            <span class="card-title">Actualizar</span>
+            <span class="lever-status"><span class="lever-led"></span><span id="lever-state">LISTO</span></span>
+          </div>
+          <div class="arm-row" id="arm-row">
+            <div class="rat-wrap">
+              <button type="button" class="rat" id="arm-switch" role="switch" aria-checked="false"
+                      aria-label="Activar Actualizar" title="Sube el switch para activar Actualizar">
+                <span class="rat-plate"></span><span class="rat-nut"></span><span class="rat-lever"></span>
+              </button>
+              <span class="rat-txt" id="arm-txt">OFF</span>
+            </div>
+            <span class="arm-label" id="arm-label">Sube el switch para activar</span>
+          </div>
+          <button type="button" class="ctrl-go" id="rect-go" disabled>Actualizar</button>
+          <div class="lever-hint" id="lever-hint">Sube el switch y presiona Actualizar</div>
+        </div>
+      </div>
+
+      <div class="card prog-card" id="prog-card">
+        <div class="prog-top">
+          <div>
+            <span class="prog-state" id="prog-state">En reposo</span>
+            <span class="prog-sub" id="prog-sub">0 comandos en la lista</span>
+          </div>
+          <span class="prog-pct" id="prog-pct">0%</span>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-active" id="prog-active"></div>
+          <div class="prog-done" id="prog-done"></div>
+        </div>
+        <div class="prog-meta"><span id="prog-time">Tiempo: 00:00</span><span id="prog-log"></span></div>
+      </div>
+
+      <div class="upd-console">
+        <div class="uc-head">
+          <span>Consola · segundo plano</span>
+          <span class="uc-meta" id="uc-meta">0 líneas</span>
+          <span class="uc-sudo" id="uc-sudo" hidden><span id="uc-sudo-txt">🔑 contraseñas recordadas</span> <button type="button" id="uc-olvidar" title="Borra las contraseñas recordadas (sudo, racks…)">Olvidar</button></span>
+          <div class="uc-actions">
+            <button id="uc-follow" class="btn btn-secundario btn-mini is-on">Seguir salida</button>
+            <button id="uc-log" class="btn btn-secundario btn-mini">Abrir log</button>
+            <button id="uc-clear" class="btn btn-secundario btn-mini">Limpiar</button>
+          </div>
+        </div>
+        <div id="uc-body" class="uc-body" tabindex="0"><div class="cl sys placeholder">Esperando ejecución…</div></div>
+        <form class="uc-resp" id="uc-resp" autocomplete="off">
+          <div class="uc-pide" id="uc-pide">Si un comando pregunta algo (contraseña, s/n…), contéstale aquí.</div>
+          <div class="uc-row">
+            <span class="uc-prompt" id="uc-prompt">›</span>
+            <input id="uc-in" type="text" spellcheck="false" autocomplete="off" disabled placeholder="Respuesta para el comando que está corriendo">
+            <span class="uc-rapidas" id="uc-rapidas" hidden></span>
+            <button type="submit" id="uc-enviar" class="btn btn-mini" disabled>Enviar</button>
+            <button type="button" id="uc-ctrlc" class="btn btn-secundario btn-mini" disabled title="Interrumpe el comando actual">Ctrl+C</button>
+          </div>
+          <label class="uc-rec" id="uc-rec" hidden><input type="checkbox" id="uc-recordar" checked> <span id="uc-rec-txt">Recordar esta contraseña mientras la app esté abierta (no se guarda en disco)</span></label>
+        </form>
+      </div>
           </div>
 
           <div id="cfg-archivos">
@@ -2688,21 +2744,20 @@ function aplicarEstadoCmds(s) {
   pintarReloj();
 
   $('lever-state').textContent = f === 'ejecutando' ? 'EN MARCHA' : 'LISTO';
-  if (!arrastrando) {
-    if (f === 'ejecutando') {
-      posicion(1);
-      setHint('Sube la palanca para detener');
-    } else {
-      posicion(0);
-      setHint(f === 'listo' ? 'Proceso completado · palanca en reposo'
-        : f === 'detenido' ? 'Proceso detenido · palanca en reposo'
-        : f === 'error' ? 'Terminó con errores · revisa la consola'
-        : 'Baja la palanca para ejecutar');
-    }
+  if (f === 'ejecutando') {
+    posicion(1);
+    setHint('Corriendo en segundo plano');
+  } else {
+    posicion(0);
+    setHint(f === 'listo' ? 'Proceso completado'
+      : f === 'detenido' ? 'Proceso detenido'
+      : f === 'error' ? 'Terminó con errores · revisa la consola'
+      : 'Sube el switch y presiona Actualizar');
   }
   aplicarPregunta(cmdEstado);
   renderComandos();
   revisarFinParaDesarmar(cmdEstado);   // el switch se apaga solo al terminar
+  if (typeof window.cfgRefrescarEquipos === 'function') window.cfgRefrescarEquipos();
 }
 
 /* ---------- Respuestas al comando (contraseña, s/n, etc.) ---------- */
@@ -2753,8 +2808,8 @@ function aplicarPregunta(s) {
     inp.placeholder = 'Respuesta para el comando que está corriendo';
   }
   if (nueva) {
-    const sec = $('rectificadores');
-    if (sec && sec.classList.contains('active')) { inp.focus(); inp.scrollIntoView({ block: 'nearest' }); }
+    const sec = $('cfg-rect');
+    if (sec && !sec.hidden && $('configuracion').classList.contains('active')) { inp.focus(); inp.scrollIntoView({ block: 'nearest' }); }
   }
   revisarSudo();
 }
@@ -2878,7 +2933,7 @@ $('cmd-txt-btn').addEventListener('click', () => { const f = $('cmd-txt-file'); 
 $('cmd-txt-file').addEventListener('change', (e) => cargarTxt(e.target.files && e.target.files[0]));
 // Arrastrar un .txt sobre la tarjeta de comandos
 (() => {
-  const card = document.querySelector('#rectificadores .cmd-card');
+  const card = document.querySelector('#cfg-rect .cmd-card');
   if (!card) return;
   card.addEventListener('dragover', (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); card.classList.add('soltar'); } });
   card.addEventListener('dragleave', (e) => { if (!card.contains(e.relatedTarget)) card.classList.remove('soltar'); });
@@ -2891,143 +2946,71 @@ $('cmd-txt-file').addEventListener('change', (e) => cargarTxt(e.target.files && 
   });
 })();
 
-/* ---------- Palanca ---------- */
-const leverHandle = $('lever-handle');
-const leverTrack = $('lever-track');
-
+/* ---------- Switch cola de rata + botón Actualizar ----------
+   Mismo control que el chiller monitor. Apagado = no se puede ejecutar.
+   Se apaga solo al terminar (así no se vuelve a correr por accidente). Mientras corre no se puede apagar. */
 function setHint(t) { $('lever-hint').textContent = t; }
-
-function posicion(v) {
-  leverY = v ? LEVER_TRAVEL : 0;
-  leverHandle.style.setProperty('--y', leverY + 'px');
-  $('lever-card').classList.toggle('on', !!v);
-  leverHandle.setAttribute('aria-valuenow', v ? '1' : '0');
-}
-
-function sacudir() {
-  leverHandle.classList.remove('shake');
-  void leverHandle.offsetWidth;
-  leverHandle.classList.add('shake');
-}
+function posicion(v) { $('lever-card').classList.toggle('on', !!v); pintarArmado(); }
+function sacudir() { const sw = $('arm-switch'); sw.classList.remove('shake'); void sw.offsetWidth; sw.classList.add('shake'); }
 
 async function iniciarEjecucion() {
-  if (estaEjecutando()) { posicion(1); return; }
-  if (!armado) { posicion(0); palancaPermitida(); return; }
-  if (!haySistemaCmds()) {
-    setHint('Abre la app mediante Electron para ejecutar comandos');
-    posicion(0); sacudir(); return;
-  }
-  if (!comandos.length) {
-    setHint('Agrega al menos un comando a la lista');
-    posicion(0); sacudir(); return;
-  }
-  posicion(1);
+  if (estaEjecutando()) return;
+  if (!armado) { setHint('Primero sube el switch'); sacudir(); return; }
+  if (!haySistemaCmds()) { setHint('Abre la app mediante Electron para ejecutar comandos'); sacudir(); return; }
+  if (!comandos.length) { setHint('Agrega al menos un comando a la lista'); sacudir(); return; }
   setHint('Iniciando…');
   try {
     listaCambiada = false;
     const r = await window.sistema.cmdsEjecutar(comandos.slice(), $('stop-on-fail').checked, leerLimite());
-    if (r && r.ok === false) {
-      setHint(r.error || 'No se pudo iniciar');
-      posicion(0); sacudir();
-    }
+    if (r && r.ok === false) { setHint(r.error || 'No se pudo iniciar'); sacudir(); }
   } catch (e) {
     setHint('Error al iniciar: ' + e.message);
-    posicion(0);
   }
 }
 
 function detenerEjecucion() {
-  posicion(0);
-  if (estaEjecutando() && haySistemaCmds()) {
-    setHint('Deteniendo…');
-    window.sistema.cmdsDetener();
-  }
+  if (!estaEjecutando() || !haySistemaCmds()) return;
+  if (!confirm('¿Detener la actualización de rectificadores?')) return;
+  setHint('Deteniendo…');
+  window.sistema.cmdsDetener();
 }
 
-/* ---------- Switch "cola de rata": activa la palanca ----------
-   Apagado = la palanca no se mueve. Se apaga solo al terminar cada ejecución
-   (así no se vuelve a correr por accidente). Mientras corre no se puede apagar. */
 let armado = false;
 function pintarArmado() {
+  const corre = estaEjecutando();
   const sw = $('arm-switch');
   sw.setAttribute('aria-checked', armado ? 'true' : 'false');
-  sw.disabled = estaEjecutando();
-  sw.title = estaEjecutando() ? 'Ejecutando: la palanca sigue activa para poder detener'
-    : armado ? 'Bajar: desactivar la palanca' : 'Subir: activar la palanca para poder ejecutar';
+  sw.disabled = corre;
+  sw.title = corre ? 'Ejecutando' : armado ? 'Bajar: desactivar' : 'Subir: activar Actualizar';
   $('arm-txt').textContent = armado ? 'ON' : 'OFF';
   $('arm-txt').classList.toggle('on', armado);
-  $('arm-row').classList.toggle('on', armado);
-  $('arm-label').textContent = estaEjecutando() ? 'Activada · ejecutando' : armado ? 'Palanca activada' : 'Sube el switch para activar la palanca';
-  $('lever-card').classList.toggle('desarmada', !armado && !estaEjecutando());
-}
-function palancaPermitida() {
-  if (armado || estaEjecutando()) return true;    // mientras corre siempre se puede subir para detener
-  setHint('Primero sube el switch para activar la palanca');
-  sacudir();
-  const sw = $('arm-switch'); sw.classList.remove('shake'); void sw.offsetWidth; sw.classList.add('shake');
-  return false;
+  $('arm-row').classList.toggle('on', armado || corre);
+  $('arm-label').textContent = corre ? 'Actualizando…' : armado ? 'Listo para actualizar' : 'Sube el switch para activar';
+  const go = $('rect-go');
+  go.textContent = corre ? 'Detener' : 'Actualizar';
+  go.classList.toggle('parar', corre);
+  go.disabled = !corre && !armado;
 }
 $('arm-switch').addEventListener('click', () => {
   if (estaEjecutando()) return;
   armado = !armado;
   pintarArmado();
-  registrarAccion('Rectificadores', armado ? 'Activó la palanca (switch ON)' : 'Desactivó la palanca (switch OFF)');
-  setHint(armado ? 'Baja la palanca para ejecutar' : 'Palanca desactivada');
+  setHint(armado ? 'Presiona Actualizar' : 'Sube el switch y presiona Actualizar');
+  registrarAccion('Rectificadores', armado ? 'Switch ON' : 'Switch OFF');
 });
+$('rect-go').addEventListener('click', () => { if (estaEjecutando()) detenerEjecucion(); else iniciarEjecucion(); });
 let faseAnteriorCmds = 'reposo';
 function revisarFinParaDesarmar(s) {
   const fase = s && s.fase;
-  if (faseAnteriorCmds === 'ejecutando' && fase && fase !== 'ejecutando') armado = false;   // terminó: se desactiva sola
+  if (faseAnteriorCmds === 'ejecutando' && fase && fase !== 'ejecutando') armado = false;   // terminó: el switch se apaga solo
   if (fase) faseAnteriorCmds = fase;
   pintarArmado();
-  if (!armado && fase !== 'ejecutando' && $('lever-hint').textContent === 'Baja la palanca para ejecutar') setHint('Sube el switch para activar la palanca');
 }
-
-function decidirPalanca(frac) {
-  if (estaEjecutando()) {
-    if (frac < 0.5) detenerEjecucion(); else posicion(1);
-  } else {
-    if (frac >= 0.75) iniciarEjecucion(); else posicion(0);
-  }
-}
-
-leverHandle.addEventListener('pointerdown', (e) => {
-  if (e.button !== undefined && e.button !== 0) return;
-  if (!palancaPermitida()) { e.preventDefault(); return; }
-  arrastrando = true;
-  leverTrack.classList.add('dragging');
-  grabDy = e.clientY - leverHandle.getBoundingClientRect().top;
-  leverHandle.setPointerCapture(e.pointerId);
-  e.preventDefault();
-});
-leverHandle.addEventListener('pointermove', (e) => {
-  if (!arrastrando) return;
-  const r = leverTrack.getBoundingClientRect();
-  leverY = Math.max(0, Math.min(LEVER_TRAVEL, e.clientY - r.top - grabDy));
-  leverHandle.style.setProperty('--y', leverY + 'px');
-});
-function soltarPalanca() {
-  if (!arrastrando) return;
-  arrastrando = false;
-  leverTrack.classList.remove('dragging');
-  decidirPalanca(leverY / LEVER_TRAVEL);
-}
-leverHandle.addEventListener('pointerup', soltarPalanca);
-leverHandle.addEventListener('pointercancel', soltarPalanca);
-leverHandle.addEventListener('keydown', (e) => {
-  if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key) && !palancaPermitida()) { e.preventDefault(); return; }
-  if (e.key === 'ArrowDown') { e.preventDefault(); iniciarEjecucion(); }
-  else if (e.key === 'ArrowUp') { e.preventDefault(); detenerEjecucion(); }
-  else if (e.key === 'Enter' || e.key === ' ') {
-    e.preventDefault();
-    if (estaEjecutando()) detenerEjecucion(); else iniciarEjecucion();
-  }
-});
 
 /* ---------- Arranque ---------- */
 cargarComandos();
 renderComandos();
-posicion(0);
+pintarArmado();
 aplicarEstadoCmds({ fase: 'reposo' });
 if (window.sistema && typeof window.sistema.onCmdsEstado === 'function') {
   window.sistema.onCmdsEstado(aplicarEstadoCmds);
@@ -3660,10 +3643,28 @@ function pintarSeleccionIzumi() {
   const POR_DEFECTO = [
     { id: 'server', nombre: 'SERVER' }, { id: 'juniper', nombre: 'JUNIPER' }, { id: 'tros', nombre: 'TROSS' },
     { id: 'zpe', nombre: 'ZPE' }, { id: 'daq', nombre: 'DAQ' }, { id: 'omron', nombre: 'SENSOR OMRON' },
-    { id: 'chiller_omron', nombre: 'CHILLER MONITOR CON OMRON' }, { id: 'chiller_termopar', nombre: 'CHILLER MONITOR CON TERMOPAR' }
+    { id: 'chiller_omron', nombre: 'CHILLER MONITOR CON OMRON' }, { id: 'chiller_termopar', nombre: 'CHILLER MONITOR CON TERMOPAR' },
+    { id: 'plc', nombre: 'CONFIGURAR PLC' }
   ];
+  // Actualización de rectificadores: va al final, abajo del chiller con termopar (no es un equipo con archivos)
+  const RECT = { id: 'rectificadores', nombre: 'ACTUALIZAR RECTIFICADORES' };
+  const conRect = (lista) => (lista.some((d) => d.id === RECT.id) ? lista : lista.concat(RECT));
+  const esRect = (id) => id === RECT.id;
+  /* Revisado: cada equipo empieza en gris con 0; cuando el usuario entra y luego se sale, queda en verde con 1.
+     Se guarda en esta PC (localStorage). */
+  const VISTOS_KEY = 'cfg_vistos_v1';
+  let vistos = {};
+  try { vistos = JSON.parse(localStorage.getItem(VISTOS_KEY) || '{}') || {}; } catch (e) { vistos = {}; }
+  let entroUsuario = false;          // la selección actual la hizo el usuario (no la automática al abrir)
+  function marcarVisto(id) {
+    if (!id || !entroUsuario || vistos[id]) return;
+    vistos[id] = Date.now();
+    try { localStorage.setItem(VISTOS_KEY, JSON.stringify(vistos)); } catch (e) {}
+    if (typeof registrarAccion === 'function') registrarAccion('Configuración', 'Revisó equipo', id.toUpperCase());
+  }
+  const rectCorriendo = () => { try { return typeof cmdEstado !== 'undefined' && cmdEstado.fase === 'ejecutando'; } catch (e) { return false; } };
 
-  let dispositivos = POR_DEFECTO;
+  let dispositivos = conRect(POR_DEFECTO);
   let archivos = {};
   let sel = 'server';
   let seguir = true;
@@ -3697,11 +3698,11 @@ function pintarSeleccionIzumi() {
     cont.textContent = '';
     for (const d of dispositivos) {
       const lista = archivos[d.id] || [];
-      const enCurso = lista.filter((a) => a.corriendo).length;
+      const enCurso = esRect(d.id) ? (rectCorriendo() ? 1 : 0) : lista.filter((a) => a.corriendo).length;
       const b = document.createElement('button');
       b.type = 'button';
       // El sensor OMRON se marca en verde con "1" cuando ya está configurado
-      const omOk = (d.id === 'omron' && omConfigurado()) || (d.id === 'daq' && daqConfigurado()) || (esChiller(d.id) && chConfigurado(d.id));
+      const omOk = !!vistos[d.id];
       b.className = 'cfg-dev' + (d.id === sel ? ' sel' : '') + (omOk ? ' ok' : '');
       const dot = document.createElement('span');
       dot.className = 'dot' + (enCurso ? ' busy' : omOk ? ' online' : '');
@@ -3709,8 +3710,9 @@ function pintarSeleccionIzumi() {
       nom.textContent = d.nombre;
       const n = document.createElement('span');
       n.className = 'n';
-      n.textContent = enCurso ? enCurso + ' en curso' : omOk ? '1' : String(lista.length);
-      if (omOk) b.title = d.id === 'daq' ? 'IP configurada' : esChiller(d.id) ? 'Último script: PASS' : 'Sensor configurado';
+      n.textContent = enCurso ? 'en curso' : omOk ? '1' : '0';
+      if (esRect(d.id)) b.classList.add('cfg-dev-rect');
+      b.title = omOk ? 'Revisado ' + new Date(vistos[d.id]).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Sin revisar';
       b.append(dot, nom, n);
       b.addEventListener('click', () => seleccionar(d.id));
       cont.appendChild(b);
@@ -3972,61 +3974,42 @@ function pintarSeleccionIzumi() {
   const chHist = {};             // dev -> líneas
   let chVerArchivos = false, chSeguir = true, chTimer = null, chArrastre = false, chGrab = 0, chY = 0;
   function esChiller(id) { return !!(CH_NOMBRES && CH_NOMBRES[id]); }
-  function chConfigurado(id) { const u = ch && ch.ultimo && ch.ultimo[id]; return !u || u.codigo === 0 || !!u.detenido; }   // ya configurado; solo deja de estar en verde si la última corrida falló
+  function chConfigurado(id) { const u = ch && ch.ultimo && ch.ultimo[id]; return !!(u && u.codigo === 0 && !u.errores && !u.detenido); }   // solo si la última vez terminó sin errores
   const chCorriendo = () => !!ch.trabajo;
   const chMio = () => !!(ch.trabajo && ch.trabajo.dev === sel);
   const dos2 = (n) => String(n).padStart(2, '0');
   const mmss = (ms) => { const s = Math.max(0, Math.round(ms / 1000)); return dos2(Math.floor(s / 60)) + ':' + dos2(s % 60); };
   const fechaCorta = (ms) => new Date(ms).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
 
-  function chPosicion(v) {
-    chY = v ? CH_TRAVEL : 0;
-    q('ch-lever-handle').style.setProperty('--y', chY + 'px');
-    q('ch-lever-card').classList.toggle('on', !!v);
-    q('ch-lever-handle').setAttribute('aria-valuenow', v ? '1' : '0');
+  /* Switch cola de rata + botón Configurar. El switch se apaga solo al terminar. */
+  let chArmado = false, chEraMio = false;
+  function chArmar(v) {
+    chArmado = !!v;
+    q('ch-arm').setAttribute('aria-checked', chArmado ? 'true' : 'false');
+    q('ch-arm-txt').textContent = chArmado ? 'ON' : 'OFF';
+    q('ch-arm-txt').classList.toggle('on', chArmado);
+    q('ch-arm-row').classList.toggle('on', chArmado);
   }
-  function chSacudir() { const h = q('ch-lever-handle'); h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); }
+  function chSacudir() { const h = q('ch-arm'); h.classList.remove('shake'); void h.offsetWidth; h.classList.add('shake'); }
   async function chIniciar() {
-    if (!window.sistema || !window.sistema.chCorrer) { q('ch-hint').textContent = 'Abre la app con Electron para correr scripts'; chPosicion(0); chSacudir(); return; }
-    if (chCorriendo()) { if (chMio()) chPosicion(1); else { chPosicion(0); chSacudir(); } return; }
-    const sc = ch.scripts[sel];
-    if (!sc || !sc.existe) { q('ch-hint').textContent = 'Primero selecciona el script'; chPosicion(0); chSacudir(); return; }
-    chPosicion(1);
+    if (!window.sistema || !window.sistema.chCorrer) { q('ch-hint').textContent = 'Abre la app con Electron para configurar'; return; }
+    if (chCorriendo()) return;
+    if (!chArmado) { q('ch-hint').textContent = 'Primero sube el switch'; chSacudir(); return; }
     q('ch-hint').textContent = 'Iniciando…';
+    if (typeof registrarAccion === 'function') registrarAccion('Chiller', 'Presionó Configurar', CH_NOMBRES[sel]);
     const r = await window.sistema.chCorrer(sel).catch((e) => ({ ok: false, error: e.message }));
-    if (r && r.ok === false) { q('ch-hint').textContent = r.error || 'No se pudo iniciar'; chPosicion(0); chSacudir(); }
+    if (r && r.ok === false) { q('ch-hint').textContent = r.error || 'No se pudo iniciar'; chSacudir(); }
   }
   function chDetener() {
-    if (chMio()) { q('ch-hint').textContent = 'Deteniendo…'; window.sistema.chDetener(); }
-    else chPosicion(0);
+    if (chMio() && confirm('¿Detener la configuración del chiller?\n\nNo va a quedar configurado.')) { q('ch-hint').textContent = 'Deteniendo…'; window.sistema.chDetener(); }
   }
-  function chDecidir(frac) {
-    if (chMio()) { if (frac < 0.5) chDetener(); else chPosicion(1); }
-    else { if (frac >= 0.75) chIniciar(); else chPosicion(0); }
-  }
-  (function palancaChiller() {
-    const h = q('ch-lever-handle'), tr = q('ch-lever-track');
-    h.addEventListener('pointerdown', (e) => {
-      if (e.button !== undefined && e.button !== 0) return;
-      chArrastre = true; tr.classList.add('dragging');
-      chGrab = e.clientY - h.getBoundingClientRect().top;
-      h.setPointerCapture(e.pointerId); e.preventDefault();
-    });
-    h.addEventListener('pointermove', (e) => {
-      if (!chArrastre) return;
-      const rr = tr.getBoundingClientRect();
-      chY = Math.max(0, Math.min(CH_TRAVEL, e.clientY - rr.top - chGrab));
-      h.style.setProperty('--y', chY + 'px');
-    });
-    const soltar = () => { if (!chArrastre) return; chArrastre = false; tr.classList.remove('dragging'); chDecidir(chY / CH_TRAVEL); };
-    h.addEventListener('pointerup', soltar);
-    h.addEventListener('pointercancel', soltar);
-    h.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowDown') { e.preventDefault(); chIniciar(); }
-      else if (e.key === 'ArrowUp') { e.preventDefault(); chDetener(); }
-      else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); if (chMio()) chDetener(); else chIniciar(); }
-    });
-  })();
+  q('ch-arm').addEventListener('click', () => {
+    if (chCorriendo()) return;
+    chArmar(!chArmado);
+    if (typeof registrarAccion === 'function') registrarAccion('Chiller', chArmado ? 'Switch ON' : 'Switch OFF', CH_NOMBRES[sel]);
+    chPintar();
+  });
+  q('ch-go').addEventListener('click', () => { if (chMio()) chDetener(); else chIniciar(); });
 
   function chPintar() {
     if (!esChiller(sel)) return;
@@ -4034,11 +4017,10 @@ function pintarSeleccionIzumi() {
     const u = ch.ultimo[sel];
     const t = chMio() ? ch.trabajo : null;
     q('ch-tit').textContent = CH_NOMBRES[sel];
-    q('ch-nombre').textContent = sc.ruta ? sc.ruta.split('/').pop() + (sc.existe ? '' : ' (no existe)') : 'Sin script';
-    q('ch-ruta').textContent = sc.ruta || 'Elige el archivo .sh que corres para este chiller';
-    q('ch-ruta').title = sc.ruta || '';
-    q('ch-elegir').textContent = sc.ruta ? 'Cambiar' : 'Seleccionar script';
-    q('ch-elegir').disabled = !!t;
+    q('ch-nombre').textContent = 'configurar_chiller.sh' + (sc.existe === false ? ' (falta en la app)' : '');
+    // al terminar una corrida, el switch se apaga solo
+    if (chEraMio && !t) chArmar(false);
+    chEraMio = !!t;
 
     // Pasos del script ("[1/5] ...")
     const pasos = sc.pasos || [];
@@ -4050,7 +4032,7 @@ function pintarSeleccionIzumi() {
       const li = document.createElement('li');
       let cls = '';
       if (t) cls = p.n < pasoAct ? 'ok' : p.n === pasoAct ? 'run' : '';
-      else if (u && u.codigo === 0) cls = 'ok';
+      else if (u && chConfigurado(sel)) cls = 'ok';
       else if (u && (u.codigo != null || u.detenido)) cls = p.n < pasoAct ? 'ok' : p.n === pasoAct ? (u.detenido ? 'stop' : 'bad') : '';
       li.className = 'ch-paso ' + cls;
       const n = document.createElement('span'); n.className = 'ch-pn'; n.textContent = p.n;
@@ -4062,25 +4044,31 @@ function pintarSeleccionIzumi() {
     // Estado (arriba a la derecha)
     const est = q('ch-estado');
     est.className = 'om-estado';
-    if (t) { est.textContent = 'Corriendo…'; est.classList.add('run'); }
-    else if (u && u.codigo === 0) { est.textContent = 'PASS ' + fechaCorta(u.fin); est.classList.add('ok'); }
-    else if (u && u.detenido) { est.textContent = 'Detenido ' + fechaCorta(u.fin); }
-    else if (u) { est.textContent = 'Falló ' + fechaCorta(u.fin); est.classList.add('bad'); }
-    else { est.textContent = 'Configurado'; est.classList.add('ok'); }
+    if (t) { est.textContent = 'Configurando…'; est.classList.add('run'); }
+    else if (chConfigurado(sel)) { est.textContent = 'Configurado ' + fechaCorta(u.fin); est.classList.add('ok'); }
+    else if (u && u.detenido) { est.textContent = 'Sin configurar · detenido ' + fechaCorta(u.fin); }
+    else if (u) { est.textContent = 'Sin configurar · falló ' + fechaCorta(u.fin); est.classList.add('bad'); }
+    else { est.textContent = 'Sin configurar'; }
 
-    // Palanca
+    // Switch y botón
     const otro = ch.trabajo && !t;
     q('ch-lever-state').textContent = t ? 'EN MARCHA' : 'LISTO';
-    if (!chArrastre) chPosicion(!!t);
-    q('ch-hint').textContent = t ? 'Sube la palanca para detener'
-      : otro ? 'Ya corre el script de ' + CH_NOMBRES[ch.trabajo.dev].replace('Chiller monitor · ', 'chiller ')
-      : !sc.existe ? 'Primero selecciona el script' : 'Baja la palanca para correr el script';
+    q('ch-lever-card').classList.toggle('on', !!t);
+    q('ch-arm').disabled = !!t || !!otro;
+    const go = q('ch-go');
+    go.textContent = t ? 'Detener' : 'Configurar';
+    go.classList.toggle('parar', !!t);
+    go.disabled = !t && (!chArmado || !!otro || sc.existe === false);
+    q('ch-arm-label').textContent = t ? 'Configurando…' : chArmado ? 'Listo para configurar' : 'Sube el switch para activar';
+    q('ch-hint').textContent = t ? 'Corriendo en segundo plano'
+      : otro ? 'Ya se está configurando el ' + CH_NOMBRES[ch.trabajo.dev].replace('Chiller monitor · ', 'chiller ')
+      : sc.existe === false ? 'Falta el script dentro de la app' : chArmado ? 'Presiona Configurar' : 'Sube el switch y presiona Configurar';
 
     // Avance
     const card = q('ch-prog');
     card.classList.remove('running', 'ok', 'err', 'stop');
     const total = (t ? t.total : u && u.total) || pasos.length || 0;
-    let pct = 0, estado = 'En reposo', sub = sc.existe ? (pasos.length ? pasos.length + ' pasos en el script' : 'Script listo') : 'Sin script';
+    let pct = 0, estado = 'En reposo', sub = pasos.length ? pasos.length + ' pasos' : 'Listo';
     if (t) {
       card.classList.add('running');
       pct = total ? Math.max(0, Math.min(99, Math.round(((Math.max(t.paso, 1) - 1) / total) * 100))) : 0;
@@ -4088,7 +4076,8 @@ function pintarSeleccionIzumi() {
       const p = pasos.find((x) => x.n === t.paso);
       sub = p ? p.titulo : 'Iniciando…';
     } else if (u) {
-      if (u.codigo === 0) { card.classList.add('ok'); pct = 100; estado = 'PASS · terminó sin errores'; sub = 'Última vez: ' + fechaCorta(u.fin); }
+      if (chConfigurado(sel)) { card.classList.add('ok'); pct = 100; estado = 'Configurado · sin errores'; sub = 'Última vez: ' + fechaCorta(u.fin); }
+      else if (u.codigo === 0 && u.errores) { card.classList.add('err'); pct = 100; estado = 'No quedó configurado · ' + u.errores + ' error(es)'; sub = 'Revisa la consola'; }
       else if (u.detenido) { card.classList.add('stop'); pct = total && u.paso ? Math.round(((u.paso - 1) / total) * 100) : 0; estado = 'Detenido'; sub = u.tituloPaso ? 'En: ' + u.tituloPaso : ''; }
       else { card.classList.add('err'); pct = total && u.paso ? Math.round(((u.paso - 1) / total) * 100) : 0; estado = 'Falló (código ' + u.codigo + ')'; sub = u.tituloPaso ? 'En el paso ' + u.paso + ': ' + u.tituloPaso : 'Revisa la consola'; }
     }
@@ -4156,7 +4145,6 @@ function pintarSeleccionIzumi() {
     if (typeof renderDevs === 'function') renderDevs();
     chPintar();
   }
-  q('ch-elegir').addEventListener('click', async () => { const r = await window.sistema.chElegir(sel); if (r && r.cambio) chAplicar(await window.sistema.chObtener()); });
   q('ch-archivos').addEventListener('click', (e) => { e.preventDefault(); chVerArchivos = !chVerArchivos; pintarModo(); });
   q('ch-log').addEventListener('click', () => window.sistema.chAbrirLog(sel));
   q('ch-limpiar').addEventListener('click', () => { chHist[sel] = []; chConsola(); });
@@ -4179,8 +4167,92 @@ function pintarSeleccionIzumi() {
     }).catch(() => {});
   }
 
+  /* ---------- Guía PLC ----------
+     Lista de pasos con palomita (se marcan a mano). Se guarda en esta PC (localStorage). */
+  const PLC_KEY = 'plc_guia_v1';
+  const PLC_SP = 18;                       // presión que se pone en el set
+  const PLC_USER = 'tech', PLC_PASS = 'cth';
+  const PLC_PASOS = [
+    { fase: 'Preparar', id: 'encender', que: 'Enciende el PLC', txt: 'Switch de <kbd>POWER</kbd>' },
+    { id: 'sd', que: 'Carga los archivos en la memoria', txt: 'Desde tu PC copia los archivos del programa a la SD / USB del PLC' },
+    { id: 'usb', que: 'Inserta la USB en el PLC', txt: 'En el puerto <kbd>USB</kbd> del PLC' },
+    { fase: 'Restaurar el programa', id: 'settings', que: 'Toca Settings', txt: 'En la pantalla principal' },
+    { id: 'service', que: 'Toca Service and Commissioning', txt: 'Dentro de Settings' },
+    { id: 'restore', que: 'Toca Restore', txt: 'Dentro de Service and Commissioning' },
+    { id: 'sig1', que: 'Siguiente', txt: 'Primera pantalla del asistente' },
+    { id: 'sig2', que: 'Siguiente  >', txt: 'El botón con la flecha' },
+    { id: 'aceptar', que: 'Aceptar', txt: 'Empieza a restaurar' },
+    { id: 'apaga', que: 'Espera a que se apague solo', txt: 'El PLC se apaga al terminar de restaurar' },
+    { id: 'retirar', que: 'Retira la USB', txt: 'Ya apagado, saca la memoria' },
+    { fase: 'Arranque', id: 'encender2', que: 'Enciéndelo de nuevo', txt: 'Switch de <kbd>POWER</kbd>' },
+    { id: 'start', que: 'Presiona START', txt: 'El botón verde' },
+    { id: 'datos', que: 'Revisa que haya datos cargados', txt: 'Si se ven valores en la pantalla, quedó bien' },
+    { fase: 'Ajustar la presión', id: 'pid', que: 'Toca PID control', txt: 'En la pantalla principal' },
+    { id: 'login', que: 'Inicia sesión', txt: 'Usuario <code>' + PLC_USER + '</code> · contraseña <code>' + PLC_PASS + '</code>' },
+    { id: 'setp', que: 'Pon el Set de presión en ' + PLC_SP, txt: 'Toca el campo <kbd>Set presión</kbd> y escribe ' + PLC_SP },
+    { id: 'auto', que: 'Ponlo en Automatic', txt: 'Cambia de Manual a Automatic' },
+    { id: 'change', que: 'Toca Change mode', txt: 'Para aplicar el modo' },
+    { id: 'perilla', que: 'Ajusta con la perilla roja', txt: 'Gírala hasta que la torreta quede en <b style="color:var(--green)">verde</b>' }
+  ];
+  let plc = { hechos: [], fecha: null };
+  try { plc = { ...plc, ...JSON.parse(localStorage.getItem(PLC_KEY) || '{}') }; } catch (e) {}
+  if (!Array.isArray(plc.hechos)) plc.hechos = [];
+  function plcConfigurado() { try { return !!(plc && plc.fecha); } catch (e) { return false; } }
+  const plcGuardar = () => { try { localStorage.setItem(PLC_KEY, JSON.stringify(plc)); } catch (e) {} if (typeof renderDevs === 'function') renderDevs(); };
+  let plcVerArchivos = false;
+
+  function plcPintar() {
+    const ol = q('plc-pasos');
+    ol.textContent = '';
+    const actual = PLC_PASOS.findIndex((p) => !plc.hechos.includes(p.id));
+    PLC_PASOS.forEach((p, i) => {
+      if (p.fase) { const f = document.createElement('li'); f.className = 'plc-fase'; f.textContent = p.fase; ol.appendChild(f); }
+      const li = document.createElement('li');
+      const hecho = plc.hechos.includes(p.id);
+      li.className = 'plc-paso' + (hecho ? ' hecho' : '') + (i === actual ? ' actual' : '');
+      li.innerHTML = '<span class="om-num"></span><div><b></b><small></small></div><span class="om-check" role="checkbox"></span>';
+      li.querySelector('.om-num').textContent = i + 1;
+      li.querySelector('b').textContent = p.que;
+      li.querySelector('small').innerHTML = p.txt;
+      li.querySelector('.om-check').setAttribute('aria-checked', hecho ? 'true' : 'false');
+      li.addEventListener('click', () => {
+        if (hecho) plc.hechos = plc.hechos.filter((x) => x !== p.id); else plc.hechos.push(p.id);
+        plcGuardar(); plcPintar();
+      });
+      ol.appendChild(li);
+    });
+    const n = plc.hechos.length;
+    q('plc-avance').textContent = n === PLC_PASOS.length ? 'Todos los pasos listos ✓' : n + ' de ' + PLC_PASOS.length + ' pasos';
+    q('plc-listo').disabled = n !== PLC_PASOS.length;
+    q('plc-escena').classList.toggle('listo', n === PLC_PASOS.length);   // torreta en verde fijo
+    const est = q('plc-estado');
+    est.classList.toggle('ok', !!plc.fecha);
+    est.textContent = plc.fecha ? 'Configurado ' + new Date(plc.fecha).toLocaleString('es', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Sin configurar';
+  }
+  q('plc-reiniciar').addEventListener('click', () => { plc.hechos = []; plcGuardar(); plcPintar(); });
+  q('plc-listo').addEventListener('click', () => {
+    plc.fecha = Date.now(); plcGuardar(); plcPintar();
+    if (typeof registrarAccion === 'function') registrarAccion('Configuración', 'PLC configurado', 'Set de presión ' + PLC_SP + ' · ajuste con perilla hasta torreta en verde');
+  });
+  q('plc-archivos').addEventListener('click', (e) => { e.preventDefault(); plcVerArchivos = !plcVerArchivos; pintarModo(); });
+
   function pintarModo() {
     const esOmron = sel === 'omron', esDaq = sel === 'daq', esCh = esChiller(sel);
+    q('cfg-rect').hidden = !esRect(sel);
+    const esPlc = sel === 'plc';
+    const plcAntes = q('plc-guia').hidden;
+    q('plc-guia').hidden = !esPlc;
+    if (esRect(sel)) {
+      q('om-guia').hidden = true; q('daq-guia').hidden = true; q('ch-guia').hidden = true; q('cfg-archivos').hidden = true;
+      return;
+    }
+    if (esPlc) {
+      q('om-guia').hidden = true; q('daq-guia').hidden = true; q('ch-guia').hidden = true;
+      q('cfg-archivos').hidden = !plcVerArchivos;
+      q('plc-archivos').textContent = plcVerArchivos ? 'Ocultar archivos de este equipo' : 'Ver archivos de este equipo';
+      if (plcAntes) plcPintar();
+      return;
+    }
     q('om-guia').hidden = !esOmron;
     q('daq-guia').hidden = !esDaq;
     const chAntes = q('ch-guia').hidden;
@@ -4196,6 +4268,7 @@ function pintarSeleccionIzumi() {
 
   function renderFiles() {
     pintarModo();
+    if (esRect(sel)) return;          // la actualización de rectificadores tiene su propio panel
     const lista = archivos[sel] || [];
     q('cfg-dev-title').textContent = nombreDe(sel);
     q('cfg-console-dev').textContent = nombreDe(sel);
@@ -4419,12 +4492,15 @@ function pintarSeleccionIzumi() {
   }
 
   function seleccionar(id) {
+    if (id !== sel) marcarVisto(sel);   // se salió del equipo anterior
+    entroUsuario = true;
     sel = id;
-    omVerArchivos = false; daqVerArchivos = false; chVerArchivos = false;
+    omVerArchivos = false; daqVerArchivos = false; chVerArchivos = false; plcVerArchivos = false;
     renderDevs();
     renderFiles();
-    cargarHistorial();
+    if (!esRect(id)) cargarHistorial();
   }
+  window.cfgRefrescarEquipos = renderDevs;   // la actualización de rectificadores avisa cuando empieza y termina
 
   function aplicar(s) {
     if (s && s.dispositivos) archivos = s.dispositivos;
@@ -4451,6 +4527,13 @@ function pintarSeleccionIzumi() {
     if (alFinal !== seguir) { seguir = alFinal; q('cfg-follow').classList.toggle('is-on', seguir); }
   });
 
+  // Al irse a otra pestaña, el equipo que estaba abierto cuenta como revisado
+  // (en fase de captura: así corre antes de que se cambie de sección)
+  document.addEventListener('click', (e) => {
+    const l = e.target.closest && e.target.closest('.nav-link');
+    if (!l || l.dataset.section === 'configuracion' || !q('configuracion').classList.contains('active')) return;
+    marcarVisto(sel); renderDevs();
+  }, true);
   // Al abrir la sección se refresca el estado
   document.querySelectorAll('.nav-link[data-section="configuracion"]').forEach((l) => {
     l.addEventListener('click', () => {
@@ -4464,7 +4547,7 @@ function pintarSeleccionIzumi() {
 
   if (hayApi()) {
     window.sistema.cfgObtener().then((r) => {
-      dispositivos = r.lista || POR_DEFECTO;
+      dispositivos = conRect(r.lista || POR_DEFECTO);
       sel = dispositivos[0].id;
       aplicar(r);
       return cargarHistorial();

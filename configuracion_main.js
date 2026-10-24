@@ -22,7 +22,8 @@ const DISPOSITIVOS = [
   { id: 'daq', nombre: 'DAQ' },
   { id: 'omron', nombre: 'SENSOR OMRON' },
   { id: 'chiller_omron', nombre: 'CHILLER MONITOR CON OMRON' },
-  { id: 'chiller_termopar', nombre: 'CHILLER MONITOR CON TERMOPAR' }
+  { id: 'chiller_termopar', nombre: 'CHILLER MONITOR CON TERMOPAR' },
+  { id: 'plc', nombre: 'CONFIGURAR PLC' }
 ];
 const IDS = new Set(DISPOSITIVOS.map((d) => d.id));
 

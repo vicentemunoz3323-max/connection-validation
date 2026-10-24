@@ -54,6 +54,7 @@
   <a href="#dhcp">Files DHCP</a>
   <a href="#testcase">Generar Test case</a>
   <a href="#configuracion">Configuración</a>
+  <a href="#plc">Configurar PLC</a>
   <a href="#consolas">Consolas de Izumi</a>
   <a href="#logs">Carpeta de logs</a>
   <a href="#actualizaciones">Actualizaciones de la app</a>
@@ -97,7 +98,7 @@
   <div class="ojo">Los dos Enter le llegan a la Izumi aunque esté corriendo una prueba.</div>
 
   <h2 id="rectificadores">Actualización de rectificadores</h2>
-  <p>Corre una lista de comandos en orden, en segundo plano, y te muestra la salida en vivo.</p>
+  <p>Está en <b>Configuración → ACTUALIZAR RECTIFICADORES</b>, abajo de CHILLER MONITOR CON TERMOPAR. Corre una lista de comandos en orden, en segundo plano, y te muestra la salida en vivo. Mientras corre, en la lista de equipos dice "en curso".</p>
   <h3>Armar la lista</h3>
   <ul>
     <li>Escribe un comando y presiona <b>Enter</b> (o <b>Agregar</b>). Con Shift+Enter puedes escribir varios: cada línea es un comando.</li>
@@ -112,11 +113,11 @@ ssh root@10.0.0.5 "fw_update -f rect.bin"
 echo listo</pre>
   <h3>Ejecutar</h3>
   <ol class="pasos">
-    <li>Sube el <b>switch</b> (cola de rata) que está arriba de la palanca. Con el switch apagado, la palanca no se mueve.</li>
-    <li><b>Baja la palanca</b> hasta abajo. Empieza la ejecución.</li>
-    <li>Para detener, <b>sube la palanca</b>.</li>
+    <li>Sube el <b>switch</b> (cola de rata). Con el switch apagado, el botón no se puede presionar.</li>
+    <li>Presiona <b>Actualizar</b>. Empieza la ejecución.</li>
+    <li>Para detener, presiona <b>Detener</b> (el mismo botón) y confirma.</li>
   </ol>
-  <p>Al terminar, el switch se apaga solo para que no se vuelva a correr por accidente. Mientras corre, el switch no se puede apagar.</p>
+  <p>Es el mismo control que el del chiller monitor. Al terminar, el switch se apaga solo para que no se vuelva a correr por accidente. Mientras corre, el switch no se puede apagar.</p>
   <h3>Cuando un comando pregunta algo</h3>
   <p>Si un comando pide contraseña (sudo, ssh) o una confirmación (s/n), aparece abajo de la consola un campo para contestar. Puedes marcar <b>Recordar esta contraseña</b>: se guarda solo mientras la app esté abierta, nunca en disco. <b>Olvidar</b> borra las contraseñas recordadas. <b>Ctrl+C</b> interrumpe el comando actual.</p>
   <p>Cuando termina, sale una notificación de Ubuntu con el resultado.</p>
@@ -156,13 +157,24 @@ echo listo</pre>
   <p><b>Detener</b> corta la ejecución en el slot donde vaya.</p>
 
   <h2 id="configuracion">Configuración</h2>
-  <p>Cada equipo (SERVER, JUNIPER, TROSS, ZPE, DAQ, SENSOR OMRON y los dos CHILLER MONITOR) tiene su lista de archivos.</p>
+  <p>Cada equipo (SERVER, JUNIPER, TROSS, ZPE, DAQ, SENSOR OMRON, los dos CHILLER MONITOR y CONFIGURAR PLC) tiene su lista de archivos. Al final de la lista está <b>ACTUALIZAR RECTIFICADORES</b>, que se explica en <a href="#rectificadores">su propia sección</a>.</p>
   <ul>
     <li><b>Cargar archivos:</b> agrega archivos a la lista del equipo. Los <code>.py</code> se pueden ejecutar; los demás solo se guardan para abrirlos.</li>
     <li><b>Switch ON/OFF</b> de cada <code>.py</code>: ON lo ejecuta en segundo plano y OFF lo detiene. La salida se ve en la consola del equipo.</li>
     <li><b>Sensor OMRON</b> y <b>DAQ</b> tienen una guía paso a paso para configurarlos.</li>
-    <li><b>Chiller monitor:</b> eliges su script de bash una vez y lo corres con la palanca. La barra de avance usa los pasos <code>[n/N]</code> del script.</li>
+    <li><b>Chiller monitor (con OMRON y con termopar):</b> la app ya trae el script de configuración por dentro, el mismo para los dos. Sube el switch cola de rata y presiona <b>Configurar</b>: corre en segundo plano y la barra muestra sus 5 pasos. Solo queda <b>Configurado</b> (en verde) si el script termina sin errores. Si falla o lo detienes, queda <b>Sin configurar</b> y en la consola ves en qué paso se quedó. Al terminar, el switch se apaga solo.</li>
   </ul>
+
+  <h2 id="plc">Configurar PLC</h2>
+  <p>Está en <b>Configuración → CONFIGURAR PLC</b>. Es una lista de pasos que vas marcando al terminar cada uno.</p>
+  <ol class="pasos">
+    <li><b>Preparar:</b> enciende el PLC, copia los archivos del programa a la SD / USB desde tu PC e inserta la USB en el PLC.</li>
+    <li><b>Restaurar el programa:</b> Settings → <b>Service and Commissioning</b> → Restore → Siguiente → Siguiente &gt; → Aceptar. El PLC se apaga solo al terminar. Después retira la USB.</li>
+    <li><b>Arranque:</b> enciéndelo de nuevo y presiona <b>START</b>. Si quedó bien, vas a ver datos cargados en la pantalla.</li>
+    <li><b>Ajustar la presión:</b> toca <b>PID control</b>, inicia sesión (usuario <code>tech</code>, contraseña <code>cth</code>), pon el <b>Set de presión en 18</b>, cámbialo a <b>Automatic</b> y toca <b>Change mode</b>.</li>
+    <li>Gira la <b>perilla roja</b> hasta que la <b>torreta quede en verde</b>.</li>
+  </ol>
+  <p>Al terminar, presiona <b>Listo, PLC configurado</b>: se guarda la fecha y el equipo se pone en verde en la lista. "Ver archivos de este equipo" sirve para guardar ahí los archivos del programa del PLC.</p>
 
   <h2 id="consolas">Consolas de Izumi</h2>
   <p>Da clic en una Izumi de la pantalla principal y se abre su consola en una ventana aparte (<code>telnet 10.0.0.253 7000+N</code>). Ahí puedes escribirle comandos. Si se cae la conexión, la consola reintenta sola cada 3 segundos. Todo lo que manda la Izumi se guarda en su log, aunque limpies la pantalla. Al cerrar la ventana principal se cierran también las consolas.</p>
