@@ -669,4 +669,5 @@ ipcMain.handle('tc-open-log', () => {
 });
 
 app.on('before-quit', () => { if (trabajo) { trabajo.abort = true; matarArbol(trabajo.proc); } });
+module.exports.escaneando = () => !!(trabajo && trabajo.tipo === 'escaneo');
 console.log('[testcase] módulo de Test case cargado');

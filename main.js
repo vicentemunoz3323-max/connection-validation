@@ -26,6 +26,12 @@ const consolasIzumi = require('./izumi_main.js');
 const remplazoIzumi = require('./remplazo_main.js');
 // Chiller monitor: scripts bash en segundo plano con salida en la app
 const chillerMonitor = require('./chiller_main.js');
+// Revisión de Izumis por telnet (independiente del script de los rectificadores)
+const revisionIzumis = require('./izumi_check.js');
+revisionIzumis.configurar({
+  consolaAbierta: (n) => consolasIzumi.abierta(n),
+  escaneando: () => { try { return require('./testcase_main.js').escaneando(); } catch (e) { return false; } }
+});
 
 
 
@@ -326,6 +332,8 @@ const PASADAS_VALIDACION = 5;   // el script se corre varias veces seguidas: los
 
 async function iniciarProcesoValidacion() {
   if (estadoActual.fase === 'buscando' || estadoActual.fase === 'ejecutando') return;   // ya hay una validación en curso
+  // Las Izumis se revisan por su cuenta, en paralelo (telnet al ZPE); no esperan al script
+  revisionIzumis.revisarTodas((t) => emitirConsola('[Izumis] ' + t)).catch((e) => emitirConsola('[Izumis] Error: ' + e.message + '\n'));
   emitirEstado({ fase: 'buscando', error: null, salida: '', pasada: 0, pasadas: PASADAS_VALIDACION });
   try {
     const ruta = await buscarScriptCompleto();

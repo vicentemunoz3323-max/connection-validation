@@ -6,6 +6,10 @@ contextBridge.exposeInMainWorld('sistema', {
   estado: () => ipcRenderer.invoke('get-estado'),
   onEstado: (cb) => ipcRenderer.on('validation-state', (_e, s) => cb(s)),
   onConsoleLog: (cb) => ipcRenderer.on('console-log', (_e, t) => cb(t)),
+  // Izumis: revisión por telnet (conectada / ocupada / booteando / sin conexión)
+  izumisObtener: () => ipcRenderer.invoke('izumis-get'),
+  onIzumiEstado: (cb) => ipcRenderer.on('izumi-estado', (_e, d) => cb(d)),
+  onIzumisReset: (cb) => ipcRenderer.on('izumis-reset', () => cb()),
   abrirWeb: (id) => ipcRenderer.invoke('open-web', id),
 
   // Red y archivos

@@ -3,7 +3,7 @@
    REMPLAZAR IZUMI (proceso principal)
    - Lee /etc/dhcp/dhcpd.conf y encuentra la MAC actual de cada Izumi
      (host izumi-N, o por su IP fija 10.0.0.N).
-   - La MAC que va en el DHCP es la de la etiqueta + 3 (suma hexadecimal con acarreo).
+   - La MAC que va en el DHCP es la de la etiqueta + 3 en el último dígito (regla del equipo, ver sumarMac).
    - Remplaza SOLO la MAC de las líneas "host izumi-N" directamente en el archivo (sed),
      revisa el archivo (dhcpd -t) y reinicia el servicio DHCP.
    - En /etc/dhcp/dhcpd6.conf la Izumi N es "host diorite-N" y su MAC va dentro del
