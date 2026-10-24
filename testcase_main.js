@@ -15,6 +15,7 @@ const path = require('path');
 const net = require('net');
 const { spawn } = require('child_process');
 const { StringDecoder } = require('string_decoder');
+const bitacora = require('./bitacora.js');
 
 /* ---------- Valores del script original (edítalos aquí si cambian) ---------- */
 const CONFIG = {
@@ -193,20 +194,22 @@ function abrirTrabajo(tipo, total) {
   const inicio = Date.now();
   let log = null, logStream = null;
   try {
-    const dir = path.join(app.getPath('userData'), 'logs', 'testcase');
-    fs.mkdirSync(dir, { recursive: true });
+    const dir = bitacora.dir('testcase');
     log = path.join(dir, tipo + '_' + fechaTxt(inicio).replace(/[: ]/g, '-') + '.log');
     logStream = fs.createWriteStream(log, { flags: 'a' });
     logStream.on('error', () => {});   // un fallo de disco no debe tumbar la app
     logStream.write('# Generar Test case · ' + tipo + ' · ' + fechaTxt(inicio) + '\n\n');
   } catch (e) { logStream = null; }
   trabajo = { tipo, inicio, total, hechos: 0, abort: false, proc: null, log, logStream, killTimer: null };
+  bitacora.registrar('Test case', { escaneo: 'Inició escaneo de slots', script: 'Generó con script', ejecucion: 'Inició ejecución' }[tipo] || tipo, total ? total + ' slot(s)' : '');
   ultimoLog = log;
   emitirEstado();
   return trabajo;
 }
-function cerrarTrabajo() {
+function cerrarTrabajo(resumen) {
   if (!trabajo) return;
+  bitacora.registrar('Test case', 'Terminó ' + trabajo.tipo + (trabajo.abort ? ' (detenido por el usuario)' : ''),
+    (resumen || '') + ' · ' + ((Date.now() - trabajo.inicio) / 1000).toFixed(1) + ' s' + (trabajo.log ? ' · ' + trabajo.log : ''));
   if (trabajo.killTimer) clearTimeout(trabajo.killTimer);
   if (trabajo.log) linea('sys', 'Log guardado en: ' + trabajo.log);   // antes de cerrar el archivo
   if (trabajo.logStream) { trabajo.logStream.write('\n# fin · ' + fechaTxt(Date.now()) + '\n'); trabajo.logStream.end(); trabajo.logStream = null; }
@@ -417,12 +420,13 @@ async function escanear() {
     const ruta = escribirArchivo(slots);
     linea('sys', '[ÉXITO] Archivo ' + ruta + ' guardado y actualizado.');
     enviar('tc-slots', { slots });
+    t.resumen = slots.filter((s) => s.parte || s.serial).length + ' de 16 slots con unidad: ' + slots.map((s, i) => s.serial ? (i + 1) + '=' + s.parte + '/' + s.serial : null).filter(Boolean).join(', ');
     return { ok: true, slots };
   } catch (e) {
     linea('err', 'Error en el escaneo: ' + e.message);
     return { ok: false, error: e.message };
   } finally {
-    cerrarTrabajo();
+    cerrarTrabajo(t.resumen);
   }
 }
 
@@ -475,7 +479,7 @@ async function correrScript() {
     const leido = leerArchivo();
     if (leido.existe) enviar('tc-slots', { slots: leido.slots });
   } catch (e) {}
-  cerrarTrabajo();
+  cerrarTrabajo('código ' + codigo);
   return { ok: codigo === 0, codigo };
 }
 
@@ -545,7 +549,7 @@ async function correr(slotsEntrada, seleccion) {
   else if (codigo === 0) { linea('sys', '✓ [ÉXITO] La ejecución ha finalizado (código 0) · ' + seg + ' s'); resultado = { ok: true, codigo }; }
   else { linea('sys', '✕ La ejecución terminó con código ' + codigo + ' · ' + seg + ' s (con && se detiene en el primer comando que falla)'); resultado = { ok: true, codigo }; }
   t.hechos = t.total;
-  cerrarTrabajo();
+  cerrarTrabajo(descr + ' · código ' + codigo);
   return resultado;
 }
 
@@ -561,6 +565,7 @@ ipcMain.handle('tc-save', (_e, slotsEntrada) => {
   try {
     const ruta = escribirArchivo(norm.slots);
     linea('sys', '[ÉXITO] Archivo ' + ruta + ' guardado y actualizado.');
+    bitacora.registrar('Test case', 'Guardó la tabla', ruta + ' · ' + norm.slots.map((s, i) => s.serial ? (i + 1) + '=' + s.parte + '/' + s.serial : null).filter(Boolean).join(', '));
     flush();
     emitirEstado();
     return { ok: true, ruta };
@@ -581,6 +586,7 @@ ipcMain.handle('tc-set-path', async (e) => {
   });
   if (r.canceled || !r.filePath) return { ok: true, cambio: false };
   guardarRutaCfg(r.filePath);
+  bitacora.registrar('Test case', 'Cambió la ubicación del archivo', r.filePath);
   linea('sys', 'Archivo de trabajo: ' + r.filePath);
   flush();
   emitirEstado();
@@ -636,6 +642,7 @@ ipcMain.handle('tc-write-file', async (_e, texto) => {
     await fs.promises.rename(tmp, ruta);            // se reemplaza de golpe: nunca queda a medias
     try { fs.chmodSync(ruta, 0o755); } catch (e) {}
     linea('sys', '✎ Archivo editado a mano y guardado: ' + ruta);
+    bitacora.registrar('Test case', 'Editó el archivo a mano', ruta);
     flush();
     emitirEstado();
     return { ok: true, ruta, ...leerArchivo() };
@@ -655,13 +662,14 @@ ipcMain.handle('tc-stop', () => {
   if (!trabajo) return { ok: false };
   trabajo.abort = true;
   linea('sys', '… Deteniendo ' + trabajo.tipo);
+  bitacora.registrar('Test case', 'Presionó Detener', trabajo.tipo);
   if (trabajo.proc) trabajo.killTimer = matarArbol(trabajo.proc);
   flush();
   return { ok: true };
 });
 
 ipcMain.handle('tc-open-log', () => {
-  const dir = path.join(app.getPath('userData'), 'logs', 'testcase');
+  const dir = bitacora.dir('testcase');
   const log = (trabajo && trabajo.log) || ultimoLog;
   if (log && fs.existsSync(log)) shell.showItemInFolder(log);
   else { fs.mkdirSync(dir, { recursive: true }); shell.openPath(dir); }

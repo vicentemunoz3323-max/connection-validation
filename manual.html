@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual de usuario · Connection Validation</title>
+<style>
+  :root { --text: #1d1d1f; --muted: #6e6e73; --line: #e5e5ea; --soft: #f5f5f7; --blue: #0071e3; --green: #28a745; --red: #d93025; --orange: #f58200; --rojo-claro: #ff7b7b; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; font: 14px/1.6 -apple-system, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif; color: var(--text); background: #fff; }
+  .wrap { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
+  nav { position: sticky; top: 0; align-self: start; height: 100vh; overflow: auto; padding: 22px 14px; border-right: 1px solid var(--line); background: var(--soft); }
+  nav b { display: block; font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin: 0 8px 10px; }
+  nav a { display: block; padding: 5px 8px; border-radius: 6px; color: var(--text); text-decoration: none; font-size: 13px; }
+  nav a:hover { background: #e8e8ed; }
+  main { padding: 32px 44px 60px; max-width: 900px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -.02em; }
+  .sub { color: var(--muted); margin: 0 0 26px; }
+  h2 { font-size: 19px; margin: 38px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); letter-spacing: -.01em; }
+  h3 { font-size: 15px; margin: 20px 0 4px; }
+  p, li { max-width: 72ch; }
+  ul, ol { padding-left: 22px; }
+  li { margin: 3px 0; }
+  code { font: 12.5px SFMono-Regular, Consolas, "Liberation Mono", monospace; background: var(--soft); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+  pre { font: 12.5px/1.5 SFMono-Regular, Consolas, monospace; background: #1e1e1e; color: #d4d4d4; padding: 12px 14px; border-radius: 8px; overflow: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 10px 0; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--soft); font-weight: 600; }
+  .c { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .nota { border-left: 3px solid var(--blue); background: rgba(0,113,227,.06); padding: 9px 13px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+  .ojo { border-left: 3px solid var(--orange); background: rgba(245,130,0,.07); padding: 9px 13px; margin: 12px 0; border-radius: 0 6px 6px 0; }
+  .pasos { counter-reset: p; list-style: none; padding-left: 0; }
+  .pasos li { counter-increment: p; position: relative; padding-left: 34px; margin: 8px 0; }
+  .pasos li::before { content: counter(p); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--blue); color: #fff; font-size: 12px; font-weight: 700; display: grid; place-items: center; }
+  .pie { margin-top: 50px; color: var(--muted); font-size: 12px; }
+  @media (max-width: 780px) { .wrap { grid-template-columns: 1fr; } nav { position: static; height: auto; border-right: 0; border-bottom: 1px solid var(--line); } main { padding: 22px 18px; } }
+  @media print {
+    .wrap { display: block; } nav { display: none; } main { padding: 0; max-width: none; }
+    h2 { break-after: avoid; } table, pre, .nota, .ojo { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav>
+  <b>Contenido</b>
+  <a href="#inicio">Inicio rápido</a>
+  <a href="#validacion">Connection validation</a>
+  <a href="#izumis">Colores de las Izumis</a>
+  <a href="#rectificadores">Actualización de rectificadores</a>
+  <a href="#remplazar">Remplazar Izumi</a>
+  <a href="#dhcp">Files DHCP</a>
+  <a href="#testcase">Generar Test case</a>
+  <a href="#configuracion">Configuración</a>
+  <a href="#consolas">Consolas de Izumi</a>
+  <a href="#logs">Carpeta de logs</a>
+  <a href="#actualizaciones">Actualizaciones de la app</a>
+  <a href="#problemas">Problemas comunes</a>
+</nav>
+<main>
+  <h1>Manual de usuario</h1>
+  <p class="sub">Connection Validation · Ghostfish</p>
+
+  <h2 id="inicio">Inicio rápido</h2>
+  <p>La app junta en un solo lugar lo que se hace en una estación Ghostfish: revisar la conexión de rectificadores e Izumis, actualizar rectificadores, cambiar Izumis en el DHCP, generar y correr el Test case y correr los scripts de configuración de cada equipo.</p>
+  <p>Arriba a la derecha hay tres botones redondos:</p>
+  <table>
+    <tr><th>Botón</th><th>Para qué sirve</th></tr>
+    <tr><td>📖 Manual</td><td>Abre este manual. Desde aquí lo puedes guardar en PDF.</td></tr>
+    <tr><td>📁 Logs</td><td>Abre la carpeta central de logs (<code>~/Ghostfish-Logs</code>). Ver <a href="#logs">Carpeta de logs</a>.</td></tr>
+    <tr><td>⟳ Actualizar</td><td>Busca si hay una versión nueva de la app. Un punto rojo significa que hay una disponible.</td></tr>
+  </table>
+
+  <h2 id="validacion">Connection validation</h2>
+  <p>Es la pantalla principal. Al presionar <b>Probar conexión</b> pasan dos cosas al mismo tiempo:</p>
+  <ul>
+    <li><b>Rectificadores (Jolt, 24 unidades):</b> la app busca el script <code>connection_validation.py</code> y lo corre 5 veces seguidas, porque los rectificadores tardan en detectarse. Cada rectificador se pinta con su voltaje (verde) o como sin lectura (rojo).</li>
+    <li><b>Izumis (16):</b> se revisan aparte, cada una por telnet al ZPE. Tarda unos 5 segundos. Ver <a href="#izumis">Colores de las Izumis</a>.</li>
+  </ul>
+  <p>El botón <b>Consola</b> muestra lo que va imprimiendo el script. Los botones <b>OpenTest</b> y <b>ChillerMonitor</b> abren esas páginas en Chrome (<code>127.0.0.1:8090</code> y <code>127.0.0.1:5000</code>).</p>
+  <p>Abajo, en <b>Instrumentos</b>, la app hace ping cada 5 segundos al DAQ970A (10.0.0.100), al Juniper (10.0.0.254), al ZPE (10.0.0.253) y al controlador de rectificadores (10.254.128.3). Esto funciona aunque no presiones nada.</p>
+  <p>Arriba se ve el resumen: <b>Todo en orden</b> o <b>Con N incidencias</b>. Cuentan como incidencia los rectificadores sin lectura y las Izumis en rojo.</p>
+
+  <h2 id="izumis">Colores de las Izumis</h2>
+  <p>Para cada Izumi la app se conecta a <code>telnet 10.0.0.253 7000+N</code> (la Izumi 1 es el puerto 7001, la 2 el 7002…). Escucha 2 segundos, manda dos Enter y ve qué contesta. No inicia sesión: solo mira la respuesta y cierra.</p>
+  <table>
+    <tr><th>Color</th><th>Dice</th><th>Qué significa</th></tr>
+    <tr><td><span class="c" style="background:var(--green)"></span>Verde</td><td>Conectada</td><td>Contestó con <code>login:</code>. Tiene conexión y está libre.</td></tr>
+    <tr><td><span class="c" style="background:var(--orange)"></span>Naranja</td><td>Ocupada · pruebas Ghostfish</td><td>Contestó otra cosa (help, Ctrl-X, un menú, un prompt). Está corriendo pruebas.</td></tr>
+    <tr><td><span class="c" style="background:var(--rojo-claro)"></span>Rojo claro</td><td>Booteando</td><td>Manda texto sola o mensajes de arranque (U-Boot, kernel…). Está iniciando.</td></tr>
+    <tr><td><span class="c" style="background:var(--red)"></span>Rojo</td><td>Sin conexión / Sin respuesta</td><td>El ZPE no conectó o la Izumi no contestó nada.</td></tr>
+    <tr><td><span class="c" style="background:#aeaeb2"></span>Gris</td><td>Consola abierta / Sin revisar</td><td>No se revisó porque tienes su consola abierta en la app o el Test case está escaneando (usan los mismos puertos).</td></tr>
+  </table>
+  <p>Pasa el mouse sobre una Izumi para ver la última línea que contestó.</p>
+  <div class="ojo">Los dos Enter le llegan a la Izumi aunque esté corriendo una prueba.</div>
+
+  <h2 id="rectificadores">Actualización de rectificadores</h2>
+  <p>Corre una lista de comandos en orden, en segundo plano, y te muestra la salida en vivo.</p>
+  <h3>Armar la lista</h3>
+  <ul>
+    <li>Escribe un comando y presiona <b>Enter</b> (o <b>Agregar</b>). Con Shift+Enter puedes escribir varios: cada línea es un comando.</li>
+    <li><b>Cargar .txt:</b> carga los comandos de un archivo de texto, uno por línea. Las líneas vacías y las que empiezan con <code>#</code> se ignoran. También puedes arrastrar el archivo encima de la lista. Si la lista ya tiene comandos, te pregunta si quieres reemplazarla o agregarlos al final.</li>
+    <li><b>Listas guardadas:</b> ponle nombre a la lista y dale <b>Guardar lista</b> para usarla después.</li>
+    <li><b>Detener si un comando falla:</b> si un comando falla, los siguientes ya no corren.</li>
+    <li><b>Tiempo límite:</b> si un comando tarda más de esos minutos, se detiene y se marca como fallido (0 = sin límite).</li>
+  </ul>
+  <pre># ejemplo de comandos.txt
+sudo apt update
+ssh root@10.0.0.5 "fw_update -f rect.bin"
+echo listo</pre>
+  <h3>Ejecutar</h3>
+  <ol class="pasos">
+    <li>Sube el <b>switch</b> (cola de rata) que está arriba de la palanca. Con el switch apagado, la palanca no se mueve.</li>
+    <li><b>Baja la palanca</b> hasta abajo. Empieza la ejecución.</li>
+    <li>Para detener, <b>sube la palanca</b>.</li>
+  </ol>
+  <p>Al terminar, el switch se apaga solo para que no se vuelva a correr por accidente. Mientras corre, el switch no se puede apagar.</p>
+  <h3>Cuando un comando pregunta algo</h3>
+  <p>Si un comando pide contraseña (sudo, ssh) o una confirmación (s/n), aparece abajo de la consola un campo para contestar. Puedes marcar <b>Recordar esta contraseña</b>: se guarda solo mientras la app esté abierta, nunca en disco. <b>Olvidar</b> borra las contraseñas recordadas. <b>Ctrl+C</b> interrumpe el comando actual.</p>
+  <p>Cuando termina, sale una notificación de Ubuntu con el resultado.</p>
+
+  <h2 id="remplazar">Remplazar Izumi</h2>
+  <p>Cambia la MAC de una o varias Izumis en el DHCP cuando las remplazas físicamente.</p>
+  <ol class="pasos">
+    <li>Marca las Izumis que vas a cambiar (una, varias o <b>Seleccionar las 16</b>).</li>
+    <li>Escribe la <b>MAC de la etiqueta</b> de cada Izumi nueva.</li>
+    <li>Presiona <b>Remplazar en DHCP</b> y confirma. Si te la pide, escribe tu contraseña de Ubuntu.</li>
+  </ol>
+  <p>Regla de la MAC:</p>
+  <ul>
+    <li><b><code>dhcpd.conf</code> (host izumi-N):</b> se le suma 3 al último dígito de la etiqueta. Si pasa de F, ese resultado remplaza los dos últimos dígitos (ej. <code>…:FE</code> → <code>…:11</code>).</li>
+    <li><b><code>dhcpd6.conf</code> (host diorite-N):</b> la MAC de la etiqueta tal cual, dentro del client-id.</li>
+  </ul>
+  <p>La app cambia solo la MAC de esas líneas, revisa los archivos con <code>dhcpd -t</code> y reinicia el servicio DHCP. Si algo falla, regresa las MAC anteriores. Si alguien cambió el archivo desde que lo leíste, te pide <b>Volver a leer</b>.</p>
+
+  <h2 id="dhcp">Files DHCP</h2>
+  <p>Muestra <code>/etc/dhcp/dhcpd.conf</code> y <code>/etc/dhcp/dhcpd6.conf</code> en solo lectura. <b>⟳ Refrescar</b> los vuelve a leer. También los puedes abrir en el editor de texto de Ubuntu.</p>
+
+  <h2 id="testcase">Generar Test case</h2>
+  <p>Arma el archivo <code>UUT_case</code> con la parte y el serial de cada slot y lo corre con <code>ot_regression.py</code>.</p>
+  <h3>Llenar la tabla</h3>
+  <ul>
+    <li><b>Generar:</b> corre el script <code>uut_case.py</code> (la app lo busca sola, o lo eliges con "cambiar" junto a su ruta) y llena la tabla con lo que deja en el archivo.</li>
+    <li>La parte y el serial solo pueden llevar letras, números, punto, guion y guion bajo.</li>
+    <li><b>Ver archivo:</b> muestra el <code>UUT_case</code>. Lo puedes editar ahí mismo y guardarlo con Ctrl+S.</li>
+  </ul>
+  <h3>Correr</h3>
+  <p>Cada slot es una línea así:</p>
+  <pre>~/viper-test/opentest/tools/ot_regression.py &lt;slot&gt; &lt;parte&gt; &lt;serial&gt; 0 10</pre>
+  <ul>
+    <li><b>Correr todo:</b> guarda la tabla en el archivo y corre los 16 slots <b>uno tras otro</b> (el 2 empieza cuando termina el 1). Si falta parte o serial en algún slot, primero te avisa.</li>
+  </ul>
+  <div class="ojo">Los comandos van unidos con <code>&amp;&amp;</code>: <b>si un slot falla, los que siguen ya no corren</b>. Un slot vacío queda como <code>CORRIJA_PARTE</code> / <code>CORRIJA_SERIAL</code> y también corta la cadena.</div>
+  <p><b>Detener</b> corta la ejecución en el slot donde vaya.</p>
+
+  <h2 id="configuracion">Configuración</h2>
+  <p>Cada equipo (SERVER, JUNIPER, TROSS, ZPE, DAQ, SENSOR OMRON y los dos CHILLER MONITOR) tiene su lista de archivos.</p>
+  <ul>
+    <li><b>Cargar archivos:</b> agrega archivos a la lista del equipo. Los <code>.py</code> se pueden ejecutar; los demás solo se guardan para abrirlos.</li>
+    <li><b>Switch ON/OFF</b> de cada <code>.py</code>: ON lo ejecuta en segundo plano y OFF lo detiene. La salida se ve en la consola del equipo.</li>
+    <li><b>Sensor OMRON</b> y <b>DAQ</b> tienen una guía paso a paso para configurarlos.</li>
+    <li><b>Chiller monitor:</b> eliges su script de bash una vez y lo corres con la palanca. La barra de avance usa los pasos <code>[n/N]</code> del script.</li>
+  </ul>
+
+  <h2 id="consolas">Consolas de Izumi</h2>
+  <p>Da clic en una Izumi de la pantalla principal y se abre su consola en una ventana aparte (<code>telnet 10.0.0.253 7000+N</code>). Ahí puedes escribirle comandos. Si se cae la conexión, la consola reintenta sola cada 3 segundos. Todo lo que manda la Izumi se guarda en su log, aunque limpies la pantalla. Al cerrar la ventana principal se cierran también las consolas.</p>
+
+  <h2 id="logs">Carpeta de logs</h2>
+  <p>Todo lo que pasa en la app queda guardado en una sola carpeta del servidor: <code>~/Ghostfish-Logs</code>. Se abre con el botón 📁 de arriba a la derecha.</p>
+  <table>
+    <tr><th>Carpeta</th><th>Qué guarda</th></tr>
+    <tr><td><code>actividad/</code></td><td>Qué se hizo en la app, con fecha, hora, usuario y equipo. Un archivo por día.</td></tr>
+    <tr><td><code>validacion/</code></td><td>Salida de cada "Probar conexión".</td></tr>
+    <tr><td><code>izumis/</code></td><td>Resultado de cada revisión de las 16 Izumis.</td></tr>
+    <tr><td><code>rectificadores/</code></td><td>Cada actualización: los comandos y toda su salida.</td></tr>
+    <tr><td><code>testcase/</code></td><td>Escaneos, generación y ejecuciones del Test case.</td></tr>
+    <tr><td><code>configuracion/</code></td><td>Scripts corridos desde Configuración.</td></tr>
+    <tr><td><code>chiller/</code></td><td>Scripts del chiller monitor.</td></tr>
+    <tr><td><code>consolas-izumi/</code></td><td>Todo lo que mandó cada Izumi por su consola.</td></tr>
+    <tr><td><code>remplazo-izumi/</code></td><td>Cada cambio de MAC en el DHCP (antes y después).</td></tr>
+  </table>
+  <p>Así se ve una línea de <code>actividad/</code>:</p>
+  <pre>2026-10-24 13:05:09 | testusr@ghostfish-ist-flg-054 | RECTIFICADORES | Inició actualización | 3 comando(s): …</pre>
+  <div class="nota">Los logs no se borran solos. Si la carpeta crece mucho, puedes borrar los archivos viejos a mano.</div>
+
+  <h2 id="actualizaciones">Actualizaciones de la app</h2>
+  <p>La app busca versiones nuevas al abrir y cada hora. Cuando hay una, sale una notificación y el botón ⟳ se pone azul con un punto rojo.</p>
+  <ol class="pasos">
+    <li>Presiona <b>Descargar</b>.</li>
+    <li>Al terminar, presiona <b>Reiniciar e instalar</b>. Si no, se instala sola al cerrar la app.</li>
+  </ol>
+  <div class="ojo">Instalar o cerrar la app <b>detiene lo que esté corriendo</b>: una actualización de rectificadores, el Test case, scripts de Configuración o el chiller. Espera a que terminen antes de instalar.</div>
+
+  <h2 id="problemas">Problemas comunes</h2>
+  <table>
+    <tr><th>Qué pasa</th><th>Qué hacer</th></tr>
+    <tr><td>"Script no encontrado" al probar conexión</td><td>Copia <code>connection_validation.py</code> al Escritorio, a Documentos o a tu carpeta personal.</td></tr>
+    <tr><td>sudo no funciona ("no new privileges")</td><td>Abre la app desde el menú de aplicaciones de Ubuntu, no desde la terminal de VS Code.</td></tr>
+    <tr><td>Todas las Izumis en rojo "Sin conexión"</td><td>Revisa el cable y que el ZPE (10.0.0.253) responda en Instrumentos.</td></tr>
+    <tr><td>Una Izumi "Sin conexión" y las demás bien</td><td>Puede que otra sesión esté usando su puerto del ZPE. Ciérrala y vuelve a probar.</td></tr>
+    <tr><td>El Test case se detuvo en un slot</td><td>Ese slot falló o estaba vacío (<code>CORRIJA_*</code>). Revisa la consola para ver cuál fue.</td></tr>
+    <tr><td>La app dice que ya tienes la última versión, pero no es así</td><td>La versión nueva debe tener un número mayor que la instalada.</td></tr>
+  </table>
+
+  <p class="pie">Connection Validation · Manual de usuario</p>
+</main>
+</div>
+</body>
+</html>

@@ -558,7 +558,24 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 }
 .lever-handle:focus-visible .lever-knob { outline: 2px solid #4da3ff; outline-offset: 3px; }
 .lever-handle.shake { animation: sacudir .38s; }
+/* Manual de usuario */
+.manual-modal { position: fixed; inset: 0; z-index: 900; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; padding: 24px; }
+.manual-modal[hidden] { display: none; }
+.manual-box { width: min(1100px, 100%); height: min(860px, 100%); background: #fff; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.manual-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.manual-head b { margin-right: auto; font-size: 14px; }
+.manual-box iframe { flex: 1; width: 100%; border: 0; }
+.rat.shake { animation: sacudir .38s; }
 @keyframes sacudir { 0%,100% { transform: translateX(0); } 20% { transform: translateX(-6px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); } }
+.arm-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 2px 4px 10px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,.08); }
+.arm-label { font-size: 11px; line-height: 1.35; color: #a5a7ae; }
+.arm-row.on .arm-label { color: #2ecc71; }
+.lever-card .rat-txt { color: #8e9097; }
+.lever-card .rat-txt.on { color: #2ecc71; }
+/* Palanca sin activar: se ve apagada y no se mueve */
+.lever-card.desarmada .lever-wrap { opacity: .4; filter: grayscale(1); }
+.lever-card.desarmada .lever-handle { cursor: not-allowed; }
+.cmd-card.soltar { outline: 2px dashed var(--blue); outline-offset: -6px; }
 .lever-hint { margin-top: 10px; min-height: 30px; text-align: center; font-size: 11px; line-height: 1.4; color: #a5a7ae; }
 
 /* Progreso */
@@ -818,7 +835,8 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .nav-inner { padding: 0 76px 0 80px; justify-content: safe center; }
 .nav nav { min-width: 0; }
 @media (max-width: 760px) { .nav-inner { padding-left: 16px; } }
-.upd { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); }
+.upd { position: absolute; right: 24px; top: 50%; transform: translateY(-50%); display: flex; gap: 8px; }
+.nav-inner { padding-right: 150px; }
 .upd-btn { position: relative; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); background: #fff; color: var(--text); border-radius: 50%; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
 .upd-btn:hover { background: var(--bg-soft); border-color: #b9b9bf; }
 .upd-btn svg { width: 16px; height: 16px; }
@@ -1195,12 +1213,28 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
 </style>
 </head>
 <body>
+  <div class="manual-modal" id="manual-modal" hidden>
+    <div class="manual-box" role="dialog" aria-label="Manual de usuario">
+      <div class="manual-head">
+        <b>Manual de usuario</b>
+        <button type="button" class="btn btn-secundario btn-mini" id="manual-pdf">Guardar PDF</button>
+        <button type="button" class="btn btn-mini" id="manual-cerrar">Cerrar</button>
+      </div>
+      <iframe id="manual-frame" title="Manual de usuario"></iframe>
+    </div>
+  </div>
   <header class="nav">
     <div class="nav-inner">
       <span class="brand">
         <img class="brand-logo" src="icons/64x64.png" alt="Connection Validation" title="Connection Validation">
       </span>
       <div class="upd">
+        <button id="btn-manual" class="upd-btn" type="button" title="Manual de usuario" aria-label="Manual de usuario">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H19"/><path d="M9 7h6M9 10.5h4"/></svg>
+        </button>
+        <button id="btn-logs" class="upd-btn" type="button" title="Carpeta de logs (~/Ghostfish-Logs)" aria-label="Abrir carpeta de logs">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M8 12.5h8M8 15.5h5"/></svg>
+        </button>
         <button id="btn-update" class="upd-btn" type="button" title="Buscar actualizaciones" aria-label="Buscar actualizaciones">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
           <i class="punto"></i>
@@ -1403,6 +1437,8 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
             <input id="set-nombre" type="text" maxlength="40" placeholder="Nombre para guardar esta lista" spellcheck="false" autocomplete="off">
             <button id="set-guardar" class="btn btn-secundario btn-mini" type="button">Guardar lista</button>
             <button id="set-borrar" class="btn btn-secundario btn-mini" type="button" disabled title="Borra la lista seleccionada">Borrar</button>
+            <button id="cmd-txt-btn" class="btn btn-secundario btn-mini" type="button" title="Carga los comandos de un archivo .txt (un comando por línea; las líneas con # se ignoran). También puedes arrastrar el .txt aquí.">Cargar .txt</button>
+            <input id="cmd-txt-file" type="file" accept=".txt,text/plain" hidden>
           </div>
           <div class="cmd-add">
             <textarea id="cmd-input" class="cmd-input" rows="2" spellcheck="false" autocomplete="off"
@@ -1425,6 +1461,16 @@ kbd { display: inline-block; padding: 1px 6px; border: 1px solid #c7c7cc; border
           <div class="card-head">
             <span class="card-title">Actualizar</span>
             <span class="lever-status"><span class="lever-led"></span><span id="lever-state">LISTO</span></span>
+          </div>
+          <div class="arm-row" id="arm-row">
+            <div class="rat-wrap">
+              <button type="button" class="rat" id="arm-switch" role="switch" aria-checked="false"
+                      aria-label="Activar la palanca" title="Activa la palanca para poder ejecutar">
+                <span class="rat-plate"></span><span class="rat-nut"></span><span class="rat-lever"></span>
+              </button>
+              <span class="rat-txt" id="arm-txt">OFF</span>
+            </div>
+            <span class="arm-label" id="arm-label">Sube el switch para activar la palanca</span>
           </div>
           <div class="lever-wrap">
             <div class="lever-labels"><span id="lv-top">REPOSO</span><span id="lv-bot">EJECUTAR</span></div>
@@ -1884,6 +1930,32 @@ for (const k of ['alert', 'confirm']) {
     return r;
   };
 }
+
+/* ---------- Manual de usuario y carpeta de logs (botones de arriba a la derecha) ---------- */
+function registrarAccion(seccion, accion, detalle) {
+  try { if (window.sistema && typeof window.sistema.bitacora === 'function') window.sistema.bitacora(seccion, accion, detalle); } catch (e) {}
+}
+$('btn-manual').addEventListener('click', () => {
+  const f = $('manual-frame');
+  if (!f.getAttribute('src')) f.setAttribute('src', 'manual.html');
+  $('manual-modal').hidden = false;
+});
+$('manual-cerrar').addEventListener('click', () => { $('manual-modal').hidden = true; });
+$('manual-modal').addEventListener('click', (e) => { if (e.target === $('manual-modal')) $('manual-modal').hidden = true; });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('manual-modal').hidden) $('manual-modal').hidden = true; });
+$('manual-pdf').addEventListener('click', async () => {
+  if (!window.sistema || typeof window.sistema.manualPdf !== 'function') { alert('Reinicia la app para usar esta opción.'); return; }
+  const b = $('manual-pdf'); b.disabled = true; b.textContent = 'Guardando…';
+  try {
+    const r = await window.sistema.manualPdf();
+    if (r && r.ok === false && !r.cancelado) alert('No se pudo guardar el PDF: ' + (r.error || 'error desconocido'));
+  } finally { b.disabled = false; b.textContent = 'Guardar PDF'; }
+});
+$('btn-logs').addEventListener('click', async () => {
+  if (!window.sistema || typeof window.sistema.logsAbrir !== 'function') { alert('Reinicia la app para usar esta opción.'); return; }
+  const r = await window.sistema.logsAbrir();
+  if (r && r.ok === false) alert('No se pudo abrir la carpeta ' + (r.ruta || '') + ': ' + (r.error || ''));
+});
 
 let dhcpCargado = false;
 
@@ -2436,6 +2508,7 @@ function renderComandos() {
   $('set-sel').disabled = bloqueado;
   $('set-guardar').disabled = bloqueado || !comandos.length;
   $('set-borrar').disabled = bloqueado || !$('set-sel').value;
+  if ($('cmd-txt-btn')) $('cmd-txt-btn').disabled = bloqueado;
 }
 
 function agregarDesdeInput() {
@@ -2629,6 +2702,7 @@ function aplicarEstadoCmds(s) {
   }
   aplicarPregunta(cmdEstado);
   renderComandos();
+  revisarFinParaDesarmar(cmdEstado);   // el switch se apaga solo al terminar
 }
 
 /* ---------- Respuestas al comando (contraseña, s/n, etc.) ---------- */
@@ -2771,6 +2845,52 @@ $('set-borrar').addEventListener('click', () => {
 });
 pintarSets();
 
+/* ---------- Cargar comandos desde un .txt ----------
+   Un comando por línea. Se ignoran las líneas vacías y las que empiezan con #. */
+function comandosDeTexto(texto) {
+  return String(texto || '').replace(/^\uFEFF/, '').split(/\r?\n/)
+    .map((l) => l.trim()).filter((l) => l && !l.startsWith('#'));
+}
+async function cargarTxt(archivo) {
+  if (!archivo) return;
+  if (estaEjecutando()) { alert('Espera a que termine la ejecución para cambiar la lista.'); return; }
+  if (archivo.size > 2 * 1024 * 1024) { alert('El archivo es muy grande (máximo 2 MB).'); return; }
+  let texto;
+  try { texto = await archivo.text(); } catch (e) { alert('No se pudo leer el archivo: ' + e.message); return; }
+  const nuevos = comandosDeTexto(texto);
+  if (!nuevos.length) { alert('«' + archivo.name + '» no tiene comandos (está vacío o solo tiene comentarios con #).'); return; }
+  let reemplazar = true;
+  if (comandos.length) {
+    reemplazar = confirm('La lista ya tiene ' + comandos.length + ' comando(s).\n\n' +
+      '«' + archivo.name + '» trae ' + nuevos.length + ' comando(s).\n\n' +
+      'Aceptar = REEMPLAZAR la lista\nCancelar = AGREGARLOS al final');
+  }
+  comandos = reemplazar ? nuevos : comandos.concat(nuevos);
+  listaCambiada = true;
+  guardarComandos();
+  renderComandos();
+  const ul = $('cmd-list');
+  ul.scrollTop = reemplazar ? 0 : ul.scrollHeight;
+  setHint(nuevos.length + ' comando(s) cargados de ' + archivo.name + (reemplazar ? '' : ' (agregados al final)'));
+  registrarAccion('Rectificadores', 'Cargó comandos de .txt', archivo.name + ' · ' + nuevos.length + ' comando(s) · ' + (reemplazar ? 'reemplazó la lista' : 'agregados al final'));
+}
+$('cmd-txt-btn').addEventListener('click', () => { const f = $('cmd-txt-file'); f.value = ''; f.click(); });
+$('cmd-txt-file').addEventListener('change', (e) => cargarTxt(e.target.files && e.target.files[0]));
+// Arrastrar un .txt sobre la tarjeta de comandos
+(() => {
+  const card = document.querySelector('#rectificadores .cmd-card');
+  if (!card) return;
+  card.addEventListener('dragover', (e) => { if (e.dataTransfer && [...e.dataTransfer.types].includes('Files')) { e.preventDefault(); card.classList.add('soltar'); } });
+  card.addEventListener('dragleave', (e) => { if (!card.contains(e.relatedTarget)) card.classList.remove('soltar'); });
+  card.addEventListener('drop', (e) => {
+    card.classList.remove('soltar');
+    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (!f) return;
+    e.preventDefault();
+    cargarTxt(f);
+  });
+})();
+
 /* ---------- Palanca ---------- */
 const leverHandle = $('lever-handle');
 const leverTrack = $('lever-track');
@@ -2792,6 +2912,7 @@ function sacudir() {
 
 async function iniciarEjecucion() {
   if (estaEjecutando()) { posicion(1); return; }
+  if (!armado) { posicion(0); palancaPermitida(); return; }
   if (!haySistemaCmds()) {
     setHint('Abre la app mediante Electron para ejecutar comandos');
     posicion(0); sacudir(); return;
@@ -2823,6 +2944,45 @@ function detenerEjecucion() {
   }
 }
 
+/* ---------- Switch "cola de rata": activa la palanca ----------
+   Apagado = la palanca no se mueve. Se apaga solo al terminar cada ejecución
+   (así no se vuelve a correr por accidente). Mientras corre no se puede apagar. */
+let armado = false;
+function pintarArmado() {
+  const sw = $('arm-switch');
+  sw.setAttribute('aria-checked', armado ? 'true' : 'false');
+  sw.disabled = estaEjecutando();
+  sw.title = estaEjecutando() ? 'Ejecutando: la palanca sigue activa para poder detener'
+    : armado ? 'Bajar: desactivar la palanca' : 'Subir: activar la palanca para poder ejecutar';
+  $('arm-txt').textContent = armado ? 'ON' : 'OFF';
+  $('arm-txt').classList.toggle('on', armado);
+  $('arm-row').classList.toggle('on', armado);
+  $('arm-label').textContent = estaEjecutando() ? 'Activada · ejecutando' : armado ? 'Palanca activada' : 'Sube el switch para activar la palanca';
+  $('lever-card').classList.toggle('desarmada', !armado && !estaEjecutando());
+}
+function palancaPermitida() {
+  if (armado || estaEjecutando()) return true;    // mientras corre siempre se puede subir para detener
+  setHint('Primero sube el switch para activar la palanca');
+  sacudir();
+  const sw = $('arm-switch'); sw.classList.remove('shake'); void sw.offsetWidth; sw.classList.add('shake');
+  return false;
+}
+$('arm-switch').addEventListener('click', () => {
+  if (estaEjecutando()) return;
+  armado = !armado;
+  pintarArmado();
+  registrarAccion('Rectificadores', armado ? 'Activó la palanca (switch ON)' : 'Desactivó la palanca (switch OFF)');
+  setHint(armado ? 'Baja la palanca para ejecutar' : 'Palanca desactivada');
+});
+let faseAnteriorCmds = 'reposo';
+function revisarFinParaDesarmar(s) {
+  const fase = s && s.fase;
+  if (faseAnteriorCmds === 'ejecutando' && fase && fase !== 'ejecutando') armado = false;   // terminó: se desactiva sola
+  if (fase) faseAnteriorCmds = fase;
+  pintarArmado();
+  if (!armado && fase !== 'ejecutando' && $('lever-hint').textContent === 'Baja la palanca para ejecutar') setHint('Sube el switch para activar la palanca');
+}
+
 function decidirPalanca(frac) {
   if (estaEjecutando()) {
     if (frac < 0.5) detenerEjecucion(); else posicion(1);
@@ -2833,6 +2993,7 @@ function decidirPalanca(frac) {
 
 leverHandle.addEventListener('pointerdown', (e) => {
   if (e.button !== undefined && e.button !== 0) return;
+  if (!palancaPermitida()) { e.preventDefault(); return; }
   arrastrando = true;
   leverTrack.classList.add('dragging');
   grabDy = e.clientY - leverHandle.getBoundingClientRect().top;
@@ -2854,6 +3015,7 @@ function soltarPalanca() {
 leverHandle.addEventListener('pointerup', soltarPalanca);
 leverHandle.addEventListener('pointercancel', soltarPalanca);
 leverHandle.addEventListener('keydown', (e) => {
+  if (['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(e.key) && !palancaPermitida()) { e.preventDefault(); return; }
   if (e.key === 'ArrowDown') { e.preventDefault(); iniciarEjecucion(); }
   else if (e.key === 'ArrowUp') { e.preventDefault(); detenerEjecucion(); }
   else if (e.key === 'Enter' || e.key === ' ') {

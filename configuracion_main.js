@@ -12,6 +12,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { spawn } = require('child_process');
 const { StringDecoder } = require('string_decoder');
+const bitacora = require('./bitacora.js');
 
 const DISPOSITIVOS = [
   { id: 'server', nombre: 'SERVER' },
@@ -195,6 +196,8 @@ function finalizar(run, codigo, motivo) {
   else if (estado === 'detenido') linea(run.devId, run.fileId, run.nombre, 'sys', '■ Detenido por el usuario · ' + seg + ' s');
   else linea(run.devId, run.fileId, run.nombre, 'sys', '✕ Terminó con error (código ' + codigo + ') · ' + seg + ' s');
   linea(run.devId, run.fileId, run.nombre, 'sys', 'Log guardado en: ' + run.log);
+  bitacora.registrar('Configuración', estado === 'ok' ? 'Script terminó bien' : estado === 'detenido' ? 'Script detenido' : 'Script falló',
+    run.devId.toUpperCase() + ' · ' + run.nombre + ' · código ' + codigo + ' · ' + seg + ' s');
 
   if (run.logStream) { run.logStream.end(); run.logStream = null; }
   const enc = buscarArchivo(run.fileId);
@@ -225,8 +228,7 @@ function iniciar(devId, fileId) {
   let logPath = null;
   let logStream = null;
   try {
-    const dir = path.join(app.getPath('userData'), 'logs', 'configuracion');
-    fs.mkdirSync(dir, { recursive: true });
+    const dir = bitacora.dir('configuracion');
     const sello = fechaTxt(inicio).replace(/[: ]/g, '-');
     const seguro = arch.nombre.replace(/[^\w.\-]+/g, '_');
     logPath = path.join(dir, devId + '_' + seguro + '_' + sello + '.log');
@@ -238,6 +240,7 @@ function iniciar(devId, fileId) {
   }
 
   const run = { devId, fileId, nombre: arch.nombre, inicio, log: logPath, logStream, proc: null, abortado: false, terminado: false };
+  bitacora.registrar('Configuración', 'Ejecutó script', devId.toUpperCase() + ' · ' + arch.nombre + ' · ' + arch.ruta);
   corriendo.set(fileId, run);
   linea(devId, fileId, arch.nombre, 'sys', '▶ Iniciando ' + arch.nombre);
   linea(devId, fileId, arch.nombre, 'sys', 'Archivo: ' + arch.ruta);
@@ -329,7 +332,7 @@ ipcMain.handle('cfg-add', async (e, devId) => {
     agregados++;
     linea(devId, '', '', 'sys', '+ Archivo cargado: ' + path.basename(ruta) + (EJECUTABLES[ext] ? ' (se puede ejecutar)' : ' (solo documento)'));
   }
-  if (agregados) guardar();
+  if (agregados) { guardar(); bitacora.registrar('Configuración', 'Cargó archivos', devId.toUpperCase() + ' · ' + r.filePaths.map((x) => path.basename(x)).join(', ')); }
   flush();
   emitirEstado();
   return { ok: true, agregados };
@@ -343,6 +346,7 @@ ipcMain.handle('cfg-remove', (_e, devId, fileId) => {
   lista.splice(lista.findIndex((a) => a.id === fileId), 1);
   guardar();
   linea(devId, '', '', 'sys', '− Archivo quitado de la lista: ' + enc.arch.nombre);
+  bitacora.registrar('Configuración', 'Quitó archivo', devId.toUpperCase() + ' · ' + enc.arch.nombre);
   flush();
   emitirEstado();
   return { ok: true };
@@ -360,7 +364,7 @@ ipcMain.handle('cfg-run', (_e, devId, fileId) => iniciar(devId, fileId));
 ipcMain.handle('cfg-stop', (_e, fileId) => detener(fileId));
 
 ipcMain.handle('cfg-open-log', (_e, fileId) => {
-  const dir = path.join(app.getPath('userData'), 'logs', 'configuracion');
+  const dir = bitacora.dir('configuracion');
   const run = fileId ? corriendo.get(fileId) : null;
   const enc = fileId ? buscarArchivo(fileId) : null;
   const log = (run && run.log) || (enc && enc.arch.ultimo && enc.arch.ultimo.log);

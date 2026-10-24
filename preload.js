@@ -76,6 +76,12 @@ contextBridge.exposeInMainWorld('sistema', {
   // TC-FIN
 
   reenfocar: () => ipcRenderer.invoke('app:reenfocar'),
+  // Carpeta central de logs (~/Ghostfish-Logs) y bitácora de acciones
+  logsAbrir: (seccion) => ipcRenderer.invoke('bitacora-abrir', seccion),
+  logsRuta: () => ipcRenderer.invoke('bitacora-ruta'),
+  bitacora: (seccion, accion, detalle) => ipcRenderer.invoke('bitacora-registrar', seccion, accion, detalle),
+  // Manual de usuario en PDF
+  manualPdf: () => ipcRenderer.invoke('manual-pdf'),
 
   // Remplazar Izumi: MAC actuales leídas de /etc/dhcp/dhcpd.conf
   rzLeerMacs: () => ipcRenderer.invoke('rz-leer'),

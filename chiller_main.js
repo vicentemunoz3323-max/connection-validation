@@ -15,6 +15,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const { StringDecoder } = require('string_decoder');
+const bitacora = require('./bitacora.js');
 
 const DEVS = {
   chiller_omron: 'CHILLER MONITOR CON OMRON',
@@ -167,7 +168,7 @@ async function correr(dev) {
   if (!ruta || !fs.existsSync(ruta)) return { ok: false, error: 'Primero selecciona el script' };
 
   const dir = path.join(app.getPath('userData'), 'chiller', dev);      // ahí caen los scp con "."
-  const dirLogs = path.join(app.getPath('userData'), 'logs', 'chiller');
+  const dirLogs = bitacora.dir('chiller');
   try { fs.mkdirSync(dir, { recursive: true }); fs.mkdirSync(dirLogs, { recursive: true }); } catch (e) {}
   const log = path.join(dirLogs, dev + '_' + sello() + '.log');
   let logStream = null;
@@ -175,6 +176,7 @@ async function correr(dev) {
 
   const t = { dev, inicio: Date.now(), proc: null, unidad: null, log, logStream, abort: false, color: null, paso: 0, total: pasosDe(ruta).length ? pasosDe(ruta)[0].total : 0 };
   trabajo = t;
+  bitacora.registrar('Chiller', 'Corrió script', DEVS[dev] + ' · ' + ruta);
   hist[dev] = [];
   enviar('ch-limpiar', { dev });
   linea(dev, 'sys', '▶ ' + path.basename(ruta) + ' · ' + new Date().toLocaleString('es'));
@@ -219,6 +221,7 @@ async function correr(dev) {
   try { if (logStream) logStream.end(); } catch (e) {}
 
   const c = cargar();
+  bitacora.registrar('Chiller', t.abort ? 'Script detenido' : codigo === 0 ? 'Script terminó bien' : 'Script falló', DEVS[dev] + ' · código ' + codigo + ' · ' + dur + ' · ' + log);
   c.ultimo[dev] = { codigo: t.abort ? null : codigo, detenido: !!t.abort, fin: Date.now(), paso: t.paso, total: t.total, tituloPaso: t.tituloPaso || '', log };
   guardar();
   trabajo = null;
@@ -274,9 +277,7 @@ ipcMain.handle('ch-open-log', (_e, dev) => {
   const u = cargar().ultimo[dev];
   const p = (trabajo && trabajo.dev === dev && trabajo.log) || (u && u.log);
   if (p && fs.existsSync(p)) { shell.showItemInFolder(p); return true; }
-  const dir = path.join(app.getPath('userData'), 'logs', 'chiller');
-  try { fs.mkdirSync(dir, { recursive: true }); } catch (e) {}
-  shell.openPath(dir);
+  shell.openPath(bitacora.dir('chiller'));
   return true;
 });
 

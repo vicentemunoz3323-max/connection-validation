@@ -16,6 +16,7 @@ const { app, ipcMain } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const bitacora = require('./bitacora.js');
 
 const RUTAS = {
   dhcpd: process.env.CV_DHCPD_PATH || '/etc/dhcp/dhcpd.conf',
@@ -297,6 +298,17 @@ ipcMain.handle('rz-aplicar', async (_e, datos = {}) => {
     return { ok: false, error: 'sudo está bloqueado ("no new privileges"). Abre la app desde el menú de aplicaciones.', pasos, detalle: detalle.slice(-15) };
   }
   const ok = r.codigo === 0 && pasos.escribir && pasos.escribir.estado === 'ok';
+  // Bitácora: qué se cambió (antes → después) y cómo terminó cada paso
+  const lineasCambio = cambios.map((c) => 'Izumi ' + c.n + ' (' + c.host + '): ' + c.vieja + ' → ' + c.nueva +
+    (c.v6 ? ' · v6 ' + c.v6.host + ': ' + c.v6.vieja + ' → ' + c.v6.nueva : ''));
+  const archivo = bitacora.guardar('remplazo-izumi', 'remplazo_' + bitacora.sello() + '.log', [
+    '# Remplazar Izumi · ' + bitacora.fecha() + ' ' + bitacora.hora() + ' · ' + (ok ? 'APLICADO' : 'NO SE APLICÓ (código ' + r.codigo + ')'),
+    '# ' + RUTAS.dhcpd + (c6.length ? ' y ' + RUTAS.dhcpd6 : ''), '',
+    ...lineasCambio, '',
+    'Pasos:', ...Object.entries(pasos).map(([k, v]) => '  ' + k + ': ' + v.estado + (v.dato ? ' (' + v.dato + ')' : '')),
+    ...(detalle.length ? ['', 'Salida:', ...detalle.map((l) => '  ' + l)] : []), ''
+  ].join('\n'));
+  bitacora.registrar('Remplazar Izumi', ok ? 'Cambió MAC en DHCP' : 'Falló el cambio de MAC', lineasCambio.join(' ; ') + (archivo ? ' · ' + archivo : ''));
   return {
     ok, codigo: r.codigo, pasos,
     cambios: cambios.map(({ n, host, vieja, nueva, v6 }) => ({ n, host, vieja, nueva, v6: v6 ? { host: v6.host, vieja: v6.vieja, nueva: v6.nueva } : null })),

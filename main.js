@@ -11,6 +11,9 @@ const { StringDecoder } = require('string_decoder');
 
 console.log('[main] cargado desde:', __filename);
 
+// Bitácora central: todos los logs en ~/Ghostfish-Logs (una carpeta por sección)
+const bitacora = require('./bitacora.js');
+
 // CFG-INICIO
 require('./configuracion_main.js');
 // CFG-FIN
@@ -276,6 +279,7 @@ function ejecutarScript(ruta) {
       proc.stdout.on('data', (d) => {
         const texto = d.toString('utf8');
         salida += texto;
+        escribirLogValidacion(texto);
         for (const w of BrowserWindow.getAllWindows()) {
           if (!w.isDestroyed()) w.webContents.send('console-log', texto);
         }
@@ -284,6 +288,7 @@ function ejecutarScript(ruta) {
       proc.stderr.on('data', (d) => {
         const texto = d.toString('utf8');
         err += texto;
+        escribirLogValidacion('[ERR] ' + texto);
         for (const w of BrowserWindow.getAllWindows()) {
           if (!w.isDestroyed()) w.webContents.send('console-log', '[ERR] ' + texto);
         }
@@ -315,7 +320,25 @@ function ejecutarScript(ruta) {
 
 let estadoActual = { fase: 'reposo', salida: '', error: null, ruta: null };
 
+// Log de la validación en ~/Ghostfish-Logs/validacion (una corrida = un archivo)
+let logValidacion = null;
+function escribirLogValidacion(t) { if (logValidacion) { try { logValidacion.write(t); } catch (e) {} } }
+function abrirLogValidacion() {
+  cerrarLogValidacion();
+  try {
+    logValidacion = require('fs').createWriteStream(path.join(bitacora.dir('validacion'), 'validacion_' + bitacora.sello() + '.log'), { flags: 'a' });
+    logValidacion.on('error', () => {});
+    logValidacion.write('# Probar conexión · ' + bitacora.fecha() + ' ' + bitacora.hora() + '\n\n');
+  } catch (e) { logValidacion = null; }
+}
+function cerrarLogValidacion(final) {
+  if (!logValidacion) return;
+  try { if (final) logValidacion.write('\n# ' + final + ' · ' + bitacora.hora() + '\n'); logValidacion.end(); } catch (e) {}
+  logValidacion = null;
+}
+
 function emitirConsola(texto) {
+  escribirLogValidacion(texto);
   for (const w of BrowserWindow.getAllWindows()) {
     if (!w.isDestroyed()) w.webContents.send('console-log', texto);
   }
@@ -334,12 +357,16 @@ async function iniciarProcesoValidacion() {
   if (estadoActual.fase === 'buscando' || estadoActual.fase === 'ejecutando') return;   // ya hay una validación en curso
   // Las Izumis se revisan por su cuenta, en paralelo (telnet al ZPE); no esperan al script
   revisionIzumis.revisarTodas((t) => emitirConsola('[Izumis] ' + t)).catch((e) => emitirConsola('[Izumis] Error: ' + e.message + '\n'));
+  abrirLogValidacion();
+  bitacora.registrar('Validación', 'Probar conexión', PASADAS_VALIDACION + ' pasadas del script + revisión de Izumis');
   emitirEstado({ fase: 'buscando', error: null, salida: '', pasada: 0, pasadas: PASADAS_VALIDACION });
   try {
     const ruta = await buscarScriptCompleto();
     if (ruta) emitirConsola('Script: ' + ruta + '\n');
     if (!ruta) {
       emitirEstado({ fase: 'no-encontrado', error: 'No se encontró el archivo connection_validation.py' });
+      bitacora.registrar('Validación', 'Script no encontrado', 'connection_validation.py');
+      cerrarLogValidacion('Script no encontrado');
       return;
     }
 
@@ -355,14 +382,20 @@ async function iniciarProcesoValidacion() {
       }
       if (!resultado.ok) {
         emitirEstado({ fase: 'error', ruta, salida: resultado.salida, error: 'Pasada ' + i + ' de ' + PASADAS_VALIDACION + ': ' + (resultado.error || 'falló la ejecución'), hora: Date.now() });
+        bitacora.registrar('Validación', 'Falló', 'Pasada ' + i + ': ' + String(resultado.error || '').slice(0, 300));
+        cerrarLogValidacion('Falló en la pasada ' + i);
         return;
       }
     }
 
     // El estado final es el de la última pasada (la más reciente)
     emitirEstado({ fase: 'listo', ruta, salida: resultado.salida, error: resultado.error, hora: Date.now(), pasada: PASADAS_VALIDACION });
+    bitacora.registrar('Validación', 'Terminó', PASADAS_VALIDACION + ' pasadas · ' + ruta);
+    cerrarLogValidacion('Terminó');
   } catch (e) {
     emitirEstado({ fase: 'error', error: 'Error inesperado: ' + e.message, hora: Date.now() });
+    bitacora.registrar('Validación', 'Error inesperado', e.message);
+    cerrarLogValidacion('Error: ' + e.message);
   }
 }
 
@@ -475,6 +508,7 @@ ipcMain.handle('open-dhcp-files', async (_e, cual) => {
     }
     const err = await shell.openPath(ruta);   // devuelve '' si se abrió bien
     resultado[clave] = err ? { ok: false, ruta, error: err } : { ok: true, ruta };
+    bitacora.registrar('Files DHCP', 'Abrió archivo', ruta + (err ? ' (error: ' + err + ')' : ''));
   }
   return resultado;
 });
@@ -786,17 +820,16 @@ async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
   let logPath = null;
 
   try {
-    const dir = path.join(app.getPath('userData'), 'logs');
-    fs.mkdirSync(dir, { recursive: true });
-    const sello = new Date().toISOString().replace(/[:.]/g, '-');
-    logPath = path.join(dir, `actualizacion_${sello}.log`);
+    logPath = path.join(bitacora.dir('rectificadores'), `actualizacion_${bitacora.sello()}.log`);
     logStream = fs.createWriteStream(logPath, { flags: 'a' });
     logStream.on('error', (e) => console.log('[cmds] no se pudo escribir el log:', e.message));   // disco lleno, etc.: no debe tumbar la app
+    logStream.write('# Actualización de rectificadores · ' + bitacora.fecha() + ' ' + bitacora.hora() + '\n# Comandos:\n' + lista.map((c, i) => '#   ' + (i + 1) + '. ' + c).join('\n') + '\n\n');
   } catch (e) {
     logStream = null;
   }
 
   ejecCmds = { abortado: false, proc: null };
+  bitacora.registrar('Rectificadores', 'Inició actualización', total + ' comando(s): ' + lista.join(' ; '));
   emitirCmds({
     fase: 'ejecutando', total, completados: 0, actual: 0, pide: null,
     resultados: [...resultados], inicio: Date.now(), fin: null, error: null, logPath,
@@ -850,6 +883,8 @@ async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
     error: hayFallos ? 'Uno o más comandos fallaron' : null
   });
   avisarFinActualizacion(fase, resultados);
+  bitacora.registrar('Rectificadores', fase === 'listo' ? 'Terminó bien' : fase === 'detenido' ? 'Detenida por el usuario' : 'Terminó con errores',
+    resultados.filter((r) => r === 'ok').length + ' de ' + total + ' correctos' + (logPath ? ' · ' + logPath : ''));
 }
 
 // Notificación de Ubuntu al terminar (por si no estás viendo la pantalla)
@@ -937,7 +972,7 @@ ipcMain.handle('cmds-sudo-olvidar', () => { guardadas.clear(); emitirCmds({ guar
 ipcMain.handle('cmds-sudo-hay', () => guardadas.size);
 
 ipcMain.handle('cmds-open-log', () => {
-  const dir = path.join(app.getPath('userData'), 'logs');
+  const dir = bitacora.dir('rectificadores');
   if (estadoCmds.logPath && fs.existsSync(estadoCmds.logPath)) {
     shell.showItemInFolder(estadoCmds.logPath);
   } else {
@@ -1049,6 +1084,7 @@ if (autoUpdater) {
   autoUpdater.on('download-progress', (p) => enviarUpdate('descargando', { porcentaje: Math.round(p.percent) }));
   autoUpdater.on('update-downloaded', (info) => {
     enviarUpdate('lista', { version: info.version });
+    bitacora.registrar('App', 'Actualización descargada', 'v' + info.version);
     if (Notification.isSupported()) {
       new Notification({ title: 'Connection Validation', body: `Versión ${info.version} lista. Reinicia la app para instalarla.` }).show();
     }
@@ -1065,6 +1101,31 @@ async function buscarActualizaciones() {
 
 ipcMain.handle('app:version', () => app.getVersion());
 
+// Manual de usuario: se guarda en PDF (se imprime manual.html en una ventana oculta)
+ipcMain.handle('manual-pdf', async (e) => {
+  const { dialog } = require('electron');
+  const padre = BrowserWindow.fromWebContents(e.sender) || undefined;
+  const r = await dialog.showSaveDialog(padre, {
+    title: 'Guardar manual de usuario',
+    defaultPath: path.join(app.getPath('documents') || os.homedir(), 'Manual-Connection-Validation.pdf'),
+    filters: [{ name: 'PDF', extensions: ['pdf'] }]
+  });
+  if (r.canceled || !r.filePath) return { ok: false, cancelado: true };
+  const w = new BrowserWindow({ show: false, webPreferences: { contextIsolation: true } });
+  try {
+    await w.loadFile(path.join(__dirname, 'manual.html'));
+    const pdf = await w.webContents.printToPDF({ printBackground: true, pageSize: 'Letter', margins: { top: 0.6, bottom: 0.6, left: 0.6, right: 0.6 } });
+    fs.writeFileSync(r.filePath, pdf);
+    bitacora.registrar('App', 'Guardó el manual en PDF', r.filePath);
+    shell.showItemInFolder(r.filePath);
+    return { ok: true, ruta: r.filePath };
+  } catch (err) {
+    return { ok: false, error: err.message };
+  } finally {
+    if (!w.isDestroyed()) w.destroy();
+  }
+});
+
 // Bug de Electron en Linux: después de un alert()/confirm() los campos de texto ya no reciben el teclado.
 // Quitar y regresar el foco a la ventana lo arregla.
 ipcMain.handle('app:reenfocar', (e) => {
@@ -1079,7 +1140,7 @@ ipcMain.handle('update:descargar', async () => {
   try { await autoUpdater.downloadUpdate(); } catch (e) { enviarUpdate('error', { mensaje: e.message }); }
   finally { descargando = false; }
 });
-ipcMain.handle('update:instalar', () => { if (autoUpdater) autoUpdater.quitAndInstall(); });
+ipcMain.handle('update:instalar', () => { if (autoUpdater) { bitacora.registrar('App', 'Instalar actualización', 'desde v' + app.getVersion()); autoUpdater.quitAndInstall(); } });
 
 app.whenReady().then(() => {
   if (!app.isPackaged || !esInstanciaPrincipal) return;

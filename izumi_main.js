@@ -13,6 +13,7 @@ const os = require('os');
 const path = require('path');
 const net = require('net');
 const { StringDecoder } = require('string_decoder');
+const bitacora = require('./bitacora.js');
 
 // Mismos datos del ZPE que usa "Generar Test case" (un solo lugar para cambiarlos)
 let ZPE = { ZPE_IP: '10.0.0.253', ZPE_PUERTO_BASE: 7000 };
@@ -94,8 +95,7 @@ function aviso(s, texto) {
 /* ---------- Log ---------- */
 function abrirLog(s) {
   try {
-    const dir = path.join(app.getPath('userData'), 'logs', 'izumi');
-    fs.mkdirSync(dir, { recursive: true });
+    const dir = bitacora.dir('consolas-izumi');
     const sello = fechaTxt().replace(/[: ]/g, '-');
     s.log = path.join(dir, 'izumi-' + dos(s.n) + '_' + sello + '.log');
     s.logStream = fs.createWriteStream(s.log, { flags: 'a' });
@@ -264,6 +264,7 @@ function abrirConsola(n) {
   };
   sesiones.set(n, s);
   abrirLog(s);
+  bitacora.registrar('Consola Izumi', 'Abrió consola', 'Izumi ' + n + ' · ' + ZPE.ZPE_IP + ':' + s.puerto);
 
   const win = new BrowserWindow({
     width: 1040, height: 700, minWidth: 640, minHeight: 420,
@@ -293,6 +294,7 @@ function cerrarSesion(n) {
   const s = sesiones.get(n);
   if (!s) return;
   s.cerrando = true;
+  bitacora.registrar('Consola Izumi', 'Cerró consola', 'Izumi ' + n + ' · ' + s.bytes + ' bytes recibidos' + (s.log ? ' · ' + s.log : ''));
   limpiarTimers(s);
   if (s.timerFlush) clearTimeout(s.timerFlush);
   if (s.sock) { s.sock.removeAllListeners(); s.sock.destroy(); s.sock = null; }
@@ -343,9 +345,7 @@ ipcMain.handle('izu:carpeta-logs', (e) => {
   const s = sesionDe(e.sender);
   if (s && s.log && fs.existsSync(s.log)) shell.showItemInFolder(s.log);
   else {
-    const dir = path.join(app.getPath('userData'), 'logs', 'izumi');
-    fs.mkdirSync(dir, { recursive: true });
-    shell.openPath(dir);
+    shell.openPath(bitacora.dir('consolas-izumi'));
   }
   return true;
 });

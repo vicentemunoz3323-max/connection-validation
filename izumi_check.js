@@ -19,6 +19,7 @@
 const { ipcMain, BrowserWindow } = require('electron');
 const net = require('net');
 const { StringDecoder } = require('string_decoder');
+const bitacora = require('./bitacora.js');
 
 let ZPE = { ZPE_IP: '10.0.0.253', ZPE_PUERTO_BASE: 7000 };
 try { ZPE = { ...ZPE, ...(require('./testcase_main.js').CONFIG || {}) }; } catch (e) {}
@@ -163,6 +164,17 @@ async function revisarTodas(log) {
     enCurso = false;
   }
   enviar('izumis-listo', resultados);
+  // Bitácora: archivo con el detalle de las 16 y un resumen en la actividad del día
+  const cuenta = {};
+  for (const r of Object.values(resultados)) cuenta[r.texto] = (cuenta[r.texto] || 0) + 1;
+  const resumen = Object.entries(cuenta).map(([k, v]) => v + ' ' + k).join(', ');
+  const archivo = bitacora.guardar('izumis', 'izumis_' + bitacora.sello() + '.log',
+    '# Revisión de Izumis · ' + bitacora.fecha() + ' ' + bitacora.hora() + '\n# ' + resumen + '\n\n' +
+    Array.from({ length: NUM_IZUMIS }, (_, k) => k + 1).map((n) => {
+      const r = resultados[n] || {};
+      return 'Izumi ' + String(n).padStart(2, ' ') + ' | ' + (r.texto || '—').padEnd(28) + ' | ' + ZPE.ZPE_IP + ':' + (ZPE.ZPE_PUERTO_BASE + n) + ' | ' + (r.detalle || '');
+    }).join('\n') + '\n');
+  bitacora.registrar('Izumis', 'Revisión por telnet', resumen + (archivo ? ' · ' + archivo : ''));
   return { ok: true, resultados };
 }
 
