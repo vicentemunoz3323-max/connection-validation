@@ -1310,7 +1310,8 @@ body { background: var(--canvas); color: var(--text); font-family: var(--font); 
 /* ---------- Barra superior ---------- */
 .nav { background: #fff; backdrop-filter: none; -webkit-backdrop-filter: none; border-bottom: 1px solid var(--line); box-shadow: 0 1px 0 rgba(16, 24, 40, .03); }
 .nav-inner { height: 58px; }
-.brand-logo { border-radius: 9px; }
+.brand-logo { width: 46px; height: 46px; border-radius: 11px; image-rendering: auto; box-shadow: 0 1px 3px rgba(16, 24, 40, .18); }
+.nav-inner { height: 64px; }
 .nav nav { gap: 4px; }
 .nav-link { color: var(--muted); font-size: 13.5px; font-weight: 500; padding: 8px 14px; border-radius: 8px; letter-spacing: -.005em; }
 .nav-link:hover { color: var(--text); background: var(--bg-soft); }
@@ -1454,6 +1455,8 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 /* ---------- Connection validation: título centrado arriba del tablero ---------- */
 #connection-validation .inst-header { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: start; }
 #connection-validation .inst-header-text { grid-column: 2; grid-row: 1; align-self: end; align-items: center; text-align: center; padding-top: 18px; }
+#connection-validation h1 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -.028em; }
+#connection-validation .inst-header .lead { font-size: 15.5px; }
 #connection-validation .inst-header > .status-card { grid-column: 3; grid-row: 1; justify-self: end; width: 100%; max-width: 380px; }
 @media (max-width: 1100px) {
   #connection-validation .inst-header { grid-template-columns: 1fr; }
@@ -1472,9 +1475,9 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .upd-console.plegada .uc-head { border-bottom-color: transparent; }
 
 /* ---------- Animación breve al cambiar de pestaña o de equipo ---------- */
-@keyframes entrada { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-.section.active { animation: entrada .24s cubic-bezier(.2, .7, .3, 1); }
-.cfg-main.entra { animation: entrada .22s cubic-bezier(.2, .7, .3, 1); }
+@keyframes entrada { from { opacity: 0; transform: translateY(18px); } 60% { opacity: 1; } to { opacity: 1; transform: none; } }
+.section.active { animation: entrada .45s cubic-bezier(.16, .8, .3, 1); }
+.cfg-main.entra { animation: entrada .4s cubic-bezier(.16, .8, .3, 1); }
 .nav-link { transition: color .18s, background-color .18s; }
 @media (prefers-reduced-motion: reduce) {
   .section.active, .cfg-main.entra { animation: none; }
@@ -1496,7 +1499,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
   <header class="nav">
     <div class="nav-inner">
       <span class="brand">
-        <img class="brand-logo" src="icons/64x64.png" alt="Connection Validation" title="Connection Validation">
+        <img class="brand-logo" src="icons/nav-46.png" srcset="icons/nav-46.png 1x, icons/nav-92.png 2x" width="46" height="46" alt="Connection Validation" title="Connection Validation">
       </span>
       <div class="upd">
         <button id="btn-manual" class="upd-btn" type="button" title="Manual de usuario" aria-label="Manual de usuario">
