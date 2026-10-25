@@ -1483,6 +1483,18 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
   .section.active, .cfg-main.entra { animation: none; }
   .uc-plegar svg { transition: none; }
 }
+
+/* ---------- Recuadro de IP con ping (debajo del título de cada ventana) ---------- */
+.ip-box { display: inline-flex; align-items: center; gap: 10px; margin-top: 10px; padding: 7px 13px; background: #fff; border: 1px solid var(--line); border-radius: 999px; box-shadow: var(--sombra); font-size: 13px; align-self: flex-start; }
+#connection-validation .ip-box { align-self: center; }
+.ip-box .dot { width: 10px; height: 10px; }
+.ip-box.online .dot { background: var(--green); box-shadow: 0 0 0 3px rgba(18, 137, 74, .18); }
+.ip-box.offline .dot { background: var(--red); box-shadow: 0 0 0 3px rgba(200, 38, 29, .15); }
+.ip-box.revisando .dot { background: var(--yellow); }
+.ip-estado { font-weight: 600; color: var(--text); }
+.ip-box.online .ip-estado { color: var(--green); }
+.ip-box.offline .ip-estado { color: var(--red); }
+.ip-num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); padding-left: 10px; border-left: 1px solid var(--line); }
 </style>
 </head>
 <body>
@@ -1532,15 +1544,9 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <span class="inst-eyebrow">Diagnóstico de red</span>
             <h1>Connection validation</h1>
             <p class="lead">Estado de conectividad de rectificadores e Izumis.</p>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
           <div class="status-card">
-            <div class="status-row-item">
-              <div class="status-info-group">
-                <span class="dot global-dot"></span>
-                <span class="status-title global-title">En espera…</span>
-              </div>
-              <span class="ip global-ip"></span>
-            </div>
             <div class="status-actions">
               <button id="test-btn" class="btn">Probar conexión</button>
               <button id="toggle-console-btn" class="btn btn-secundario">Consola</button>
@@ -1686,15 +1692,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <span class="inst-eyebrow">Mantenimiento</span>
             <h1>Remplazar Izumi</h1>
             <p class="lead">Elige qué Izumi vas a remplazar: una, varias o las 16.</p>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-row-item">
-            <div class="status-info-group">
-              <span class="dot global-dot"></span>
-              <span class="status-title global-title">En espera…</span>
-            </div>
-            <span class="ip global-ip"></span>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
         </div>
       </div>
@@ -1759,15 +1757,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <span class="inst-eyebrow">Configuración</span>
             <h1>Files DHCP</h1>
             <p class="lead">Vista previa de los archivos de configuración (/etc/dhcp/).</p>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-row-item">
-            <div class="status-info-group">
-              <span class="dot global-dot"></span>
-              <span class="status-title global-title">En espera…</span>
-            </div>
-            <span class="ip global-ip"></span>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
         </div>
       </div>
@@ -1796,6 +1786,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <span class="inst-eyebrow">Pruebas</span>
             <h1>Generar Test case</h1>
             <p class="lead">Genera el Test case, revísalo y córrelo.</p>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
         </div>
       </div>
@@ -1878,15 +1869,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <span class="inst-eyebrow">Ajustes</span>
             <h1>Configuración</h1>
             <p class="lead">Carga archivos por equipo y ejecuta los scripts Python en segundo plano.</p>
-          </div>
-        </div>
-        <div class="status-card">
-          <div class="status-row-item">
-            <div class="status-info-group">
-              <span class="dot global-dot"></span>
-              <span class="status-title global-title">En espera…</span>
-            </div>
-            <span class="ip global-ip"></span>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
         </div>
       </div>
@@ -2262,6 +2245,28 @@ $('btn-logs').addEventListener('click', async () => {
     pintar();
   });
 })();
+
+
+/* ---------- Recuadro de IP: ping cada 5 s a la IP del servidor (eno1 / sfc) ---------- */
+async function revisarIpBox() {
+  const cajas = document.querySelectorAll('.ip-box');
+  const pintar = (clase, estado, ip) => cajas.forEach((c) => {
+    c.classList.remove('online', 'offline', 'revisando');
+    if (clase) c.classList.add(clase);
+    c.querySelector('.ip-estado').textContent = estado;
+    c.querySelector('.ip-num').textContent = 'IP: ' + (ip || 'no disponible');
+  });
+  if (!window.sistema || typeof window.sistema.obtenerIPs !== 'function') return;
+  let ip = null;
+  try { const ips = await window.sistema.obtenerIPs(); ip = ips && ips[0] ? ips[0].ip : null; } catch (e) {}
+  if (!ip) return pintar('offline', 'Sin IP', null);
+  if (!cajas[0].classList.contains('online') && !cajas[0].classList.contains('offline')) pintar('revisando', 'Revisando…', ip);
+  let vivo = false;
+  try { vivo = typeof window.sistema.hacerPing === 'function' ? await window.sistema.hacerPing(ip) : false; } catch (e) {}
+  pintar(vivo ? 'online' : 'offline', vivo ? 'En línea' : 'Sin respuesta', ip);
+}
+revisarIpBox();
+setInterval(revisarIpBox, 5000);
 
 let dhcpCargado = false;
 
