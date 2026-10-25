@@ -1655,6 +1655,24 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .rec-salida { margin: 14px 0 0; padding: 9px 12px; background: #11161d; color: #c9d4e0; border-radius: 8px; font: 12.5px var(--mono); white-space: pre-wrap; word-break: break-word; }
 @media (max-width: 640px) { .rec-eje, .rec-tanque { height: 220px; } .rec-barras { background-size: 100% 220px; background-image: repeating-linear-gradient(to top, var(--line) 0 1px, transparent 1px 55px); } }
 @media (prefers-reduced-motion: reduce) { .rec-ola { animation: none !important; } }
+/* Aviso "qué revisar" con foco que se prende */
+.revisa { display: flex; gap: 14px; align-items: flex-start; margin: 12px 0 4px; padding: 12px 16px; border: 1px solid rgba(224,106,0,.35); border-left: 4px solid #f29e0b; background: linear-gradient(90deg, rgba(255,210,63,.13), rgba(255,255,255,0) 60%), #fff; border-radius: 10px; box-shadow: var(--sombra); animation: revisaEntra .35s ease-out; }
+.revisa.crit { border-color: rgba(200,38,29,.35); border-left-color: var(--red); background: linear-gradient(90deg, rgba(239,91,76,.12), rgba(255,255,255,0) 60%), #fff; }
+@keyframes revisaEntra { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.revisa-txt { min-width: 0; font-size: 13px; line-height: 1.5; padding-top: 2px; }
+.revisa-txt > b { display: block; font-size: 14px; color: #8a4300; margin-bottom: 2px; }
+.revisa.crit .revisa-txt > b { color: var(--red); }
+.revisa-txt ul { margin: 0; padding-left: 18px; }
+.revisa-txt code { font-size: 12px; background: var(--bg-soft); padding: 1px 5px; border-radius: 4px; }
+.foco { flex: none; width: 40px; height: 54px; }
+.foco svg { width: 100%; height: 100%; overflow: visible; }
+.foco-halo { fill: #ffd23f; opacity: 0; transform-origin: 24px 22px; animation: focoHalo 1.6s ease-in-out .7s infinite; }
+.foco-vidrio { stroke: #c98a00; stroke-width: 1.2; animation: focoPrende .7s steps(1, end) forwards; filter: grayscale(1) brightness(1.15); }
+.foco-fil { stroke: #b35c00; stroke-width: 1.6; stroke-linecap: round; }
+.revisa.crit .foco-halo { fill: #ff7a5c; }
+@keyframes focoPrende { 0% { filter: grayscale(1) brightness(1.15); } 20% { filter: none; } 35% { filter: grayscale(1) brightness(1.15); } 50% { filter: none; } 62% { filter: grayscale(1) brightness(1.15); } 75%, 100% { filter: drop-shadow(0 0 6px rgba(255,190,40,.9)); } }
+@keyframes focoHalo { 0%, 100% { opacity: .18; transform: scale(.9); } 50% { opacity: .5; transform: scale(1.18); } }
+@media (prefers-reduced-motion: reduce) { .foco-halo, .foco-vidrio { animation: none; filter: none; } }
 </style>
 </head>
 <body>
@@ -1740,8 +1758,10 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <h2 class="panel-title">Jolt</h2>
           <div class="group-label"><span>Rectificadores</span><span>24 unidades</span></div>
           <div id="rectifiers" class="rect-grid" aria-label="Rectificadores"></div>
+          <div class="revisa" id="rect-aviso" hidden><div class="foco" aria-hidden="true"><svg viewBox="0 0 48 64"><defs><radialGradient id="fg-r" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff6c2"/><stop offset=".55" stop-color="#ffd23f"/><stop offset="1" stop-color="#f29e0b"/></radialGradient></defs><circle class="foco-halo" cx="24" cy="22" r="22"/><path class="foco-vidrio" fill="url(#fg-r)" d="M24 4C14 4 7 11.5 7 21c0 6.4 3.3 10.6 6.3 13.8 2 2.2 3.2 4.4 3.5 7.2h14.4c.3-2.8 1.5-5 3.5-7.2C37.7 31.6 41 27.4 41 21 41 11.5 34 4 24 4z"/><path class="foco-fil" d="M18 30c2-6 4-8 6-8s4 2 6 8" fill="none"/><rect x="16.5" y="44" width="15" height="4" rx="1.5" fill="#9aa4b2"/><rect x="17.5" y="49" width="13" height="4" rx="1.5" fill="#7d8796"/><rect x="19.5" y="54" width="9" height="4" rx="2" fill="#5f6875"/></svg></div><div class="revisa-txt"><b id="rect-aviso-tit"></b><ul id="rect-aviso-lista"></ul></div></div>
           <h2 class="panel-title panel-title-sec">Izumis</h2>
           <div id="izumis" class="izumi-grid" aria-label="Izumis"></div>
+          <div class="revisa" id="izu-aviso" hidden><div class="foco" aria-hidden="true"><svg viewBox="0 0 48 64"><defs><radialGradient id="fg-i" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff6c2"/><stop offset=".55" stop-color="#ffd23f"/><stop offset="1" stop-color="#f29e0b"/></radialGradient></defs><circle class="foco-halo" cx="24" cy="22" r="22"/><path class="foco-vidrio" fill="url(#fg-i)" d="M24 4C14 4 7 11.5 7 21c0 6.4 3.3 10.6 6.3 13.8 2 2.2 3.2 4.4 3.5 7.2h14.4c.3-2.8 1.5-5 3.5-7.2C37.7 31.6 41 27.4 41 21 41 11.5 34 4 24 4z"/><path class="foco-fil" d="M18 30c2-6 4-8 6-8s4 2 6 8" fill="none"/><rect x="16.5" y="44" width="15" height="4" rx="1.5" fill="#9aa4b2"/><rect x="17.5" y="49" width="13" height="4" rx="1.5" fill="#7d8796"/><rect x="19.5" y="54" width="9" height="4" rx="2" fill="#5f6875"/></svg></div><div class="revisa-txt"><b id="izu-aviso-tit"></b><ul id="izu-aviso-lista"></ul></div></div>
           <h2 class="panel-title panel-title-sec">Instrumentos</h2>
           <div class="instruments-list cv-instr" aria-label="Instrumentos">
             <!-- DAQ970A -->
@@ -2710,7 +2730,11 @@ const EQUIPOS_INSTR = [
 ];
 
 // Pinta el estado que el proceso principal calcula en segundo plano
+let ultimoInstr = null;
+const estadoInstrZpe = () => { const r = ultimoInstr && ultimoInstr['10.0.0.253']; return r ? !!r.vivo : null; };
 function aplicarInstrumentos(estado) {
+  ultimoInstr = estado || ultimoInstr;
+  if (typeof revisarIzumis === 'function') try { revisarIzumis(); } catch (e) {}
   for (const eq of EQUIPOS_INSTR) {
     const r = estado && estado[eq.ip];
     if (!r) {
@@ -2887,6 +2911,65 @@ function tituloIzumi(i, extra) {
 
 /* Los rectificadores se leen en main.js con vrmu_util (ya no con connection_validation.py):
    el estado trae rects = { 1..24: voltaje }. */
+
+/* ---------- "Qué revisar": avisos con foco para rectificadores e Izumis ---------- */
+function mostrarRevisa(id, titulo, puntos, critico) {
+  const box = $(id);
+  if (!box) return;
+  if (!titulo) { box.hidden = true; box.dataset.firma = ''; return; }
+  const firma = titulo + '|' + puntos.join('|') + '|' + !!critico;
+  if (box.dataset.firma === firma && !box.hidden) return;   // igual que antes: no se vuelve a animar
+  box.dataset.firma = firma;
+  box.classList.toggle('crit', !!critico);
+  $(id + '-tit').textContent = titulo;
+  $(id + '-lista').innerHTML = puntos.map((p) => '<li>' + p + '</li>').join('');
+  // reinicia la animación del foco
+  box.hidden = true; void box.offsetWidth; box.hidden = false;
+  const svg = box.querySelector('.foco svg'); if (svg) svg.replaceWith(svg.cloneNode(true));
+}
+const listaR = (ns) => ns.map((n) => 'R' + n).join(', ');
+function revisarRectificadores(s) {
+  if (!s || s.fase === 'buscando' || s.fase === 'ejecutando' || s.fase === 'reposo') { mostrarRevisa('rect-aviso', null); return; }
+  if (s.fase === 'no-encontrado') {
+    mostrarRevisa('rect-aviso', 'No se encontró vrmu_util en esta PC', [
+      'Tiene que estar en tu carpeta personal: <code>~/vrmu_util</code>.',
+      'Se descarga en el paso <b>VRMU util</b> de Configuración → SERVER (o cópialo a mano).'], true);
+    return;
+  }
+  const rects = s.rects || {};
+  const faltan = []; for (let n = 1; n <= 24; n++) if (!(typeof rects[n] === 'number' && rects[n] > 0)) faltan.push(n);
+  if (s.fase === 'error' || faltan.length === 24) {
+    mostrarRevisa('rect-aviso', 'Ningún rectificador contestó', [
+      '<b>Revisa la conexión del Tross</b>: cable de red y que esté encendido.',
+      'Revisa que el controlador de rectificadores (10.254.128.3) esté en línea en Instrumentos.'
+    ].concat(s.error ? ['Error: <code>' + String(s.error).replace(/[<>&]/g, '') + '</code>'] : []), true);
+    return;
+  }
+  if (faltan.length) {
+    mostrarRevisa('rect-aviso', faltan.length === 1 ? 'Revisa el rectificador R' + faltan[0] : 'Revisa los rectificadores ' + listaR(faltan), [
+      'Que no ' + (faltan.length === 1 ? 'esté alarmado' : 'estén alarmados') + ' (LED de alarma en el frente) y que ' + (faltan.length === 1 ? 'esté bien insertado' : 'estén bien insertados') + ' en el shelf.',
+      'Vuelve a presionar <b>Probar conexión</b>; si sigue en rojo, retíralo y vuelve a insertarlo.']);
+    return;
+  }
+  mostrarRevisa('rect-aviso', null);
+}
+function revisarIzumis() {
+  const res = Object.entries(izumiRes);
+  if (!res.length || res.some(([, r]) => r.estado === 'revisando')) { mostrarRevisa('izu-aviso', null); return; }
+  const rojas = res.filter(([, r]) => r.estado === 'bad').map(([n]) => +n).sort((a, b) => a - b);
+  if (!rojas.length) { mostrarRevisa('izu-aviso', null); return; }
+  const zpeVivo = (typeof estadoInstrZpe === 'function') ? estadoInstrZpe() : null;
+  if (rojas.length === 16 || zpeVivo === false) {
+    mostrarRevisa('izu-aviso', rojas.length === 16 ? 'No contestó ninguna Izumi' : 'Izumis en rojo: ' + rojas.join(', '), [
+      '<b>Revisa el cable de ethernet al ZPE</b> (10.0.0.253).',
+      '<b>Revisa el ping del ZPE</b>: ' + (zpeVivo === false ? 'ahorita <b>no contesta</b> en Instrumentos.' : 'en Instrumentos debe estar en línea, o en terminal <code>ping 10.0.0.253</code>.'),
+      'Revisa el cable de red de las Izumis.'], true);
+    return;
+  }
+  mostrarRevisa('izu-aviso', (rojas.length === 1 ? 'Revisa la Izumi ' : 'Revisa las Izumis ') + rojas.join(', '), [
+    '<b>Revisa el cable de red</b> de ' + (rojas.length === 1 ? 'esa Izumi' : 'esas Izumis') + ' y que ' + (rojas.length === 1 ? 'esté encendida' : 'estén encendidas') + '.',
+    'Si siguen en rojo, <b>revisa el cable de ethernet al ZPE</b> y el <b>ping del ZPE</b> (10.0.0.253).']);
+}
 function setEstadoRect(el, valEl, ok, voltajeVal, tooltip) {
   if (!el) return;
   el.classList.remove('ok', 'bad');
@@ -2917,6 +3000,7 @@ function pintarIzumi(d) {
   if (clase) el.classList.add(clase);
   if (txt) txt.textContent = d.texto || '--';
   el.title = tituloIzumi(d.n, 'Izumi ' + d.n + ': ' + (d.texto || '') + (d.detalle ? '\n' + d.detalle : ''));
+  revisarIzumis();
 }
 function limpiarIzumis() {
   for (let i = 1; i <= 16; i++) {
@@ -2927,6 +3011,7 @@ function limpiarIzumis() {
     el.title = tituloIzumi(i, 'Izumi ' + i + ': sin resultado');
     if (izumiStatusEls[i]) izumiStatusEls[i].textContent = '--';
   }
+  revisarIzumis();
 }
 const fallasIzumis = () => Object.values(izumiRes).filter((r) => r.estado === 'bad').length;
 
@@ -3004,6 +3089,7 @@ function pintarProgresoValidacion(s) {
 
 function aplicarEstado(s) {
   if (!s) return;
+  setTimeout(() => revisarRectificadores(s), 0);
   mostrarIP();
   const ocupado = s.fase === 'buscando' || s.fase === 'ejecutando';
   if ($('test-btn'))$('test-btn').disabled = ocupado;
@@ -3016,10 +3102,10 @@ function aplicarEstado(s) {
     mostrarBarra('busy', 'Leyendo rectificadores…', s.ruta || '');
     $('console-body').textContent = '';
   } else if (s.fase === 'no-encontrado') {
-    limpiarColores();
+    pintarResultados({ rects: {} });   // todos en rojo
     mostrarBarra('offline', 'No se encontró vrmu_util', s.error || '');
   } else if (s.fase === 'error') {
-    limpiarColores();
+    pintarResultados({ rects: {} });   // todos en rojo
     mostrarBarra('offline', 'Error en ejecución', s.error || '');
   } else if (s.fase === 'listo') {
     const fallas = pintarResultados({ rects: s.rects || {}, detalle: s.detalle || {} }) + fallasIzumis();

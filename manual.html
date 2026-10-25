@@ -91,6 +91,8 @@
   <p>Abajo, en <b>Instrumentos</b>, la app hace ping cada 5 segundos al DAQ970A (10.0.0.100), al Juniper (10.0.0.254), al ZPE (10.0.0.253) y al controlador de rectificadores (10.254.128.3). Esto funciona aunque no presiones nada.</p>
   <p>Arriba se ve el resumen: <b>Todo en orden</b> o <b>Con N incidencias</b>. Cuentan como incidencia los rectificadores sin lectura y las Izumis en rojo.</p>
 
+  <div class="ojo">Si algo sale en rojo, abajo de los rectificadores o de las Izumis aparece un aviso con un foco que se prende y te dice qué revisar: la conexión del Tross si no contestó ningún rectificador, el rectificador que falta (que no esté alarmado), el cable de red de la Izumi, o el cable de ethernet y el ping del ZPE si no contestó ninguna.</div>
+
   <h2 id="izumis">Colores de las Izumis</h2>
   <p>Para cada Izumi la app se conecta a <code>telnet 10.0.0.253 7000+N</code> (la Izumi 1 es el puerto 7001, la 2 el 7002…). Escucha 2 segundos, manda dos Enter y ve qué contesta. No inicia sesión: solo mira la respuesta y cierra.</p>
   <table>
