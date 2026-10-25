@@ -58,6 +58,8 @@
   <a href="#dhcp">Files DHCP</a>
   <a href="#testcase">Generar Test case</a>
   <a href="#configuracion">Configuración</a>
+  <a href="#server">Configurar servidor</a>
+  <a href="#tross">MAC del Tross</a>
   <a href="#plc">Configurar PLC</a>
   <a href="#consolas">Consolas de Izumi</a>
   <a href="#logs">Carpeta de logs</a>
@@ -169,6 +171,45 @@ echo listo</pre>
     <li><b>Chiller monitor (con OMRON y con termopar):</b> la app ya trae el script de configuración por dentro, el mismo para los dos. Sube el switch cola de rata y presiona <b>Configurar</b>: corre en segundo plano y la barra muestra sus 5 pasos. Solo queda <b>Configurado</b> (en verde) si el script termina sin errores. Si falla o lo detienes, queda <b>Sin configurar</b> y en la consola ves en qué paso se quedó. Al terminar, el switch se apaga solo.</li>
   </ul>
 
+  <h2 id="server">Configurar servidor</h2>
+  <p>Está en <b>Configuración → SERVER</b>. La app trae por dentro el script <code>gf_provisioning.py</code> y lo corre en segundo plano. Antes de la primera vez instala pexpect en el servidor: <code>sudo apt install python3-pexpect</code>.</p>
+  <h3>Pasos con palomita</h3>
+  <p>Son 20 pasos. Cada paso que termina bien queda con palomita (se guarda en <code>~/provisioning_state.json</code>). Si se corta o falla, al volver a correr <b>retoma desde el primer paso sin palomita</b>.</p>
+  <ul>
+    <li><b>Configurar / Continuar:</b> escribe el número de rack, sube el switch y presiona el botón. Corre todos los pasos que faltan. El botón cambia a <b>Detener</b> mientras corre.</li>
+    <li><b>Correr</b> (en cada paso): corre solo ese paso. Si ya tenía palomita, se le quita y se vuelve a hacer.</li>
+    <li><b>Desmarcar:</b> le quita la palomita para que el flujo completo lo repita.</li>
+  </ul>
+  <h3>Contraseñas</h3>
+  <p>Al correr, una ventana pide solo las contraseñas que necesitan los pasos que faltan (sudo, vault de Ansible, mirror, root del Juniper, admin del ZPE). <b>No se guardan</b>: se usan en esa corrida y se borran. No están escritas en el script.</p>
+  <h3>Lo que te va pidiendo</h3>
+  <ul>
+    <li><b>Cable del Juniper y del ZPE:</b> sale un dibujo con el puerto que parpadea (CON en el Juniper, CONSOLE en el ZPE). Conecta el cable, presiona <b>Listo</b>. Si no lo detecta, te lo vuelve a pedir.</li>
+    <li><b>Versión del Juniper incorrecta:</b> te dice qué versión tiene y cuál necesita. Haz el downgrade y vuelve a correr el paso Juniper.</li>
+    <li><b>Reinicio:</b> al terminar la configuración pregunta si reiniciar el servidor ahora o después.</li>
+  </ul>
+  <h3>Si falla un paso</h3>
+  <p>Arriba de la lista sale un cuadro rojo con el error y <b>pistas de cómo arreglarlo</b> (cable, red, contraseña, apt trabado, Ansible…). Arréglalo y presiona <b>Reintentar este paso</b>. "Ver log" abre el log de la corrida.</p>
+  <h3>Consola</h3>
+  <p>Muestra toda la salida del script con colores: rojo error, amarillo aviso, verde bien, azul títulos. Las líneas nuevas se iluminan un momento. Aguanta corridas de miles de líneas; en pantalla se ven las últimas 4000 y el log guarda todo en <code>~/Ghostfish-Logs/server/</code>.</p>
+  <h3>Valores y Script</h3>
+  <ul>
+    <li><b>Valores:</b> IPs, nombres de tarjetas, versión de JUNOS, ligas, etc. Lo que cambias queda marcado en naranja. "Valores de fábrica" regresa todo.</li>
+    <li><b>Script:</b> el código completo para modificarlo. Al guardar se revisa que no tenga errores de Python; si tiene, no se guarda. <b>Regresar al original</b> pone la versión que viene con la app. Si está modificado, la pestaña dice "modificado".</li>
+  </ul>
+
+  <h3>Llave USB</h3>
+  <p>Para no escribir las contraseñas cada vez, guárdalas en una USB. Presiona <b>🔑 Llave USB</b> (arriba en SERVER), elige la USB, ponle un nombre (ej. Línea 3), escribe las contraseñas y presiona <b>Crear llave</b>. Se guarda en la USB el archivo <code>ghostfish-llave.json</code>. Es texto normal: también lo puedes copiar a otra USB o editarlo con cualquier editor. Un campo vacío (<code>""</code>) la app lo pide.</p>
+  <ul>
+    <li>Cuando la USB está conectada, el botón se pone verde y la ventana de contraseñas se llena sola. Solo presionas <b>Correr</b>. Si a la llave le falta alguna, esa la escribes.</li>
+    <li>En TROSS, si dejas vacía la contraseña de sudo, la toma de la llave.</li>
+    <li>Las contraseñas no se copian al servidor: se leen de la USB cuando se necesitan. En <code>actividad/</code> queda cuándo se conectó, se usó y se quitó.</li>
+    <li class="ojo">No lleva PIN: quien tenga la USB puede usarla en la app. Cuídala como una llave.</li>
+  </ul>
+
+  <h2 id="tross">MAC del Tross</h2>
+  <p>Está en <b>Configuración → TROSS</b>. Escribe la MAC del Tross y tu contraseña de sudo y presiona <b>Aplicar</b>: la pone en <code>/etc/dhcp/dhcpd.conf</code> con su IP fija (10.0.0.251, se cambia en Valores) y reinicia el DHCP. Si el Tross ya estaba, cambia su MAC.</p>
+
   <h2 id="plc">Configurar PLC</h2>
   <p>Está en <b>Configuración → CONFIGURAR PLC</b>. Es una lista de pasos que vas marcando al terminar cada uno.</p>
   <ol class="pasos">
@@ -194,6 +235,7 @@ echo listo</pre>
     <tr><td><code>testcase/</code></td><td>Escaneos, generación y ejecuciones del Test case.</td></tr>
     <tr><td><code>configuracion/</code></td><td>Scripts corridos desde Configuración.</td></tr>
     <tr><td><code>chiller/</code></td><td>Scripts del chiller monitor.</td></tr>
+    <tr><td><code>server/</code></td><td>Cada configuración del servidor (todo el flujo, pasos sueltos y MAC del Tross).</td></tr>
     <tr><td><code>consolas-izumi/</code></td><td>Todo lo que mandó cada Izumi por su consola.</td></tr>
     <tr><td><code>remplazo-izumi/</code></td><td>Cada cambio de MAC en el DHCP (antes y después).</td></tr>
   </table>
@@ -218,6 +260,8 @@ echo listo</pre>
     <tr><td>Una Izumi "Sin conexión" y las demás bien</td><td>Puede que otra sesión esté usando su puerto del ZPE. Ciérrala y vuelve a probar.</td></tr>
     <tr><td>El Test case se detuvo en un slot</td><td>Ese slot falló o estaba vacío (<code>CORRIJA_*</code>). Revisa la consola para ver cuál fue.</td></tr>
     <tr><td>La app dice que ya tienes la última versión, pero no es así</td><td>La versión nueva debe tener un número mayor que la instalada.</td></tr>
+    <tr><td>SERVER: "Falta pexpect"</td><td><code>sudo apt install python3-pexpect</code> y vuelve a correr.</td></tr>
+    <tr><td>SERVER: no detecta el cable de consola</td><td>Desconecta y conecta el USB, revisa <code>ls /dev/ttyUSB*</code> y cierra minicom si está abierto.</td></tr>
   </table>
 
   <p class="pie">Connection Validation · Manual de usuario</p>

@@ -29,6 +29,9 @@ const consolasIzumi = require('./izumi_main.js');
 const remplazoIzumi = require('./remplazo_main.js');
 // Chiller monitor: scripts bash en segundo plano con salida en la app
 const chillerMonitor = require('./chiller_main.js');
+// Configuración del servidor: gf_provisioning.py parchado, con pasos y preguntas en la app
+const servidor = require('./server_main.js');
+require('./llave_main.js');   // llave USB con las contraseñas
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)
 const revisionIzumis = require('./izumi_check.js');
 revisionIzumis.configurar({
@@ -960,6 +963,12 @@ remplazoIzumi.configurar({
   guardarSudo: (p) => { guardadas.set('sudo', p); emitirCmds({ guardadas: guardadas.size }); },
   olvidarSudo: () => { guardadas.delete('sudo'); emitirCmds({ guardadas: guardadas.size }); },
   systemdRun: async () => ((await probarSystemdRun()) ? SYSTEMD_RUN : null)
+});
+
+// La configuración del servidor también usa sudo: misma ruta para "no new privileges"
+servidor.configurar({
+  systemdRun: async () => ((await probarSystemdRun()) ? SYSTEMD_RUN : null),
+  varsSesion: VARS_SESION
 });
 
 // El chiller usa la misma ruta para "no new privileges" (sudo dentro del script)

@@ -22,7 +22,7 @@ const os = require('os');
 const path = require('path');
 
 const BASE = process.env.CV_LOGS_DIR || path.join(os.homedir(), 'Ghostfish-Logs');
-const CARPETAS = ['actividad', 'validacion', 'izumis', 'rectificadores', 'testcase', 'configuracion', 'chiller', 'consolas-izumi', 'remplazo-izumi'];
+const CARPETAS = ['actividad', 'validacion', 'izumis', 'rectificadores', 'testcase', 'configuracion', 'chiller', 'server', 'consolas-izumi', 'remplazo-izumi'];
 
 const dos = (n) => String(n).padStart(2, '0');
 const fecha = (d = new Date()) => d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate());
@@ -53,6 +53,7 @@ function preparar() {
         'testcase/         Escaneos, generación y ejecuciones del Test case.',
         'configuracion/    Scripts corridos desde Configuración (SERVER, JUNIPER, DAQ...).',
         'chiller/          Scripts del chiller monitor.',
+        'server/           Cada configuración del servidor (todo el flujo o pasos sueltos).',
         'consolas-izumi/   Todo lo que mandó cada Izumi por su consola.',
         'remplazo-izumi/   Cada cambio de MAC en dhcpd.conf / dhcpd6.conf (antes y después).',
         ''
