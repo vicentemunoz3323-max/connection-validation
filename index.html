@@ -1497,6 +1497,8 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .ip-num { font-family: var(--mono); font-size: 12.5px; color: var(--muted); padding-left: 10px; border-left: 1px solid var(--line); }
 
 /* ===================== SERVER: configuración del servidor ===================== */
+/* Lo que tiene "hidden" no se ve, aunque su clase le ponga display */
+[hidden] { display: none !important; }
 .srv-guia { display: flex; flex-direction: column; gap: 12px; }
 .srv-cab { padding-bottom: 0; }
 .srv-tabs { display: flex; gap: 2px; margin-top: 14px; border-bottom: 1px solid var(--line); }
