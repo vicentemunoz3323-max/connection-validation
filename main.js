@@ -59,11 +59,12 @@ if (!esInstanciaPrincipal) {
   });
 }
 
-const NOMBRES_SCRIPT = new Set(['connection_validation.py', 'connection_vaidation.py']);
-const TIMEOUT_SCRIPT_MS = 3 * 60 * 1000;
-
-const RUTAS_OMITIDAS = ['/proc', '/sys', '/dev', '/run', '/snap', '/boot', '/lost+found', '/var/lib/docker'];
-const CARPETAS_OMITIDAS = new Set(['node_modules', '.git', '.cache', '.npm', '__pycache__', 'site-packages']);
+/* Probar conexión de rectificadores: se le pregunta al controlador con vrmu_util
+   (ya no se usa connection_validation.py) */
+const VRMU_HOST = process.env.CV_VRMU_HOST || '10.254.128.3';
+const VRMU_BIN = process.env.CV_VRMU_BIN || path.join(os.homedir(), 'vrmu_util');
+const NUM_RECTIFICADORES = 24;
+const TIMEOUT_VRMU_MS = 2 * 60 * 1000;
 
 /* ============================================================
    PING EN SEGUNDO PLANO (instrumentos)
@@ -164,161 +165,49 @@ ipcMain.handle('ping-host', (_e, ip) => hacerPing(ip));
 ipcMain.handle('get-instrumentos', () => estadoInstrumentos);
 
 /* ============================================================
-   BÚSQUEDA Y EJECUCIÓN DEL SCRIPT DE VALIDACIÓN
+   LECTURA DE RECTIFICADORES CON VRMU_UTIL
+     ~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 dc-voltage
+   Cada bloque "/rectifier/dc-voltage" trae el device_name con "Rectifier N" (N desde 0)
+   y su float_value (voltaje). Rectifier 0 = R1 … Rectifier 23 = R24.
+   El que no sale en la lectura queda como "no detectado".
    ============================================================ */
-async function buscarEn(raiz, yaRevisadas) {
-  const pila = [raiz];
-  while (pila.length) {
-    const dir = pila.pop();
-    if (RUTAS_OMITIDAS.some((p) => dir === p || dir.startsWith(p + path.sep))) continue;
-    if (yaRevisadas.some((p) => dir === p || dir.startsWith(p + path.sep))) continue;
-    let entradas;
-    try {
-      entradas = await fs.promises.readdir(dir, { withFileTypes: true });
-    } catch (e) {
-      continue;
-    }
-    for (const e of entradas) {
-      if (e.isFile() && NOMBRES_SCRIPT.has(e.name.toLowerCase())) return path.join(dir, e.name);
-    }
-    for (const e of entradas) {
-      if (e.isDirectory() && !CARPETAS_OMITIDAS.has(e.name)) {
-        pila.push(path.join(dir, e.name));
-      }
-    }
+function comandoVrmu() {
+  const q = (t) => "'" + String(t).replace(/'/g, "'\\''") + "'";
+  return q(VRMU_BIN) + ' --hostname=' + q(VRMU_HOST) + ' --envelope_enabled=false | grep -a4 dc-voltage';
+}
+
+// Saca { n (1-24): voltaje } de la salida
+function leerRectificadores(texto) {
+  const rects = {}, detalle = {};
+  const bloques = String(texto || '').split(/streamz\s*\{/);
+  for (const b of bloques) {
+    if (!/streamz_name:\s*"[^"]*dc-voltage"/.test(b)) continue;
+    const dev = b.match(/device_name:\s*"([^"]*)"/);
+    const num = dev && dev[1].match(/Rectifier\s*(\d+)/i);
+    const val = b.match(/float_value:\s*(-?[0-9]+(?:\.[0-9]+)?(?:[eE][-+]?\d+)?)/);
+    if (!num || !val) continue;
+    const n = parseInt(num[1], 10) + 1;
+    if (n < 1 || n > NUM_RECTIFICADORES) continue;
+    rects[n] = parseFloat(val[1]);
+    detalle[n] = dev[1];
   }
-  return null;
+  return { rects, detalle };
 }
 
-// Recuerda dónde se encontró el script para no recorrer el disco en cada validación
-const rutaCacheScript = () => path.join(app.getPath('userData'), 'script-validacion.json');
-function leerCacheScript() {
-  try {
-    const r = JSON.parse(fs.readFileSync(rutaCacheScript(), 'utf8')).ruta;
-    if (r && fs.existsSync(r) && NOMBRES_SCRIPT.has(path.basename(r).toLowerCase())) return r;
-  } catch (e) {}
-  return null;
-}
-function guardarCacheScript(r) {
-  try { fs.writeFileSync(rutaCacheScript(), JSON.stringify({ ruta: r })); } catch (e) {}
-}
-
-async function buscarScriptCompleto() {
-  const enCache = leerCacheScript();
-  if (enCache) return enCache;
-  const encontrado = await buscarScriptEnDisco();
-  if (encontrado) guardarCacheScript(encontrado);
-  return encontrado;
-}
-
-async function buscarScriptEnDisco() {
-  const homedir = os.homedir();
-  // Instalada desde el menú, la carpeta actual suele ser "/" o la carpeta personal:
-  // en ese caso no se usa (si no, se recorría todo el disco antes que el Escritorio)
-  const cwd = process.cwd();
-  const cwdUtil = cwd !== path.parse(cwd).root && cwd !== homedir;
-  const raicesPrioritarias = [
-    __dirname,
-    ...(cwdUtil ? [cwd] : []),
-    path.join(homedir, 'Desktop'),
-    path.join(homedir, 'Escritorio'),
-    path.join(homedir, 'Documents'),
-    path.join(homedir, 'Documentos'),
-    path.join(homedir, 'Downloads'),
-    path.join(homedir, 'Descargas'),
-    homedir
-  ];
-
-  const revisadas = [];
-  for (const raiz of raicesPrioritarias) {
-    if (fs.existsSync(raiz)) {
-      if (revisadas.some((p) => raiz === p || raiz.startsWith(p + path.sep))) continue;
-      const encontrado = await buscarEn(raiz, revisadas);
-      if (encontrado) return encontrado;
-      revisadas.push(raiz);
-    }
-  }
-
-  const raicesGlobales = process.platform === 'win32'
-    ? 'CDEFGHIJKLMNOPQRSTUVWXYZ'.split('').map((l) => l + ':\\').filter((l) => fs.existsSync(l))
-    : ['/'];
-
-  for (const raiz of raicesGlobales) {
-    if (revisadas.some((p) => raiz === p || raiz.startsWith(p + path.sep))) continue;
-    const encontrado = await buscarEn(raiz, revisadas);
-    if (encontrado) return encontrado;
-    revisadas.push(raiz);
-  }
-
-  return null;
-}
-
-function ejecutarScript(ruta) {
+function correrVrmu() {
   return new Promise((resolve) => {
-    const comandos = process.platform === 'win32' ? ['python', 'py'] : ['python3', 'python'];
-    let index = 0;
-
-    const intentarEjecucion = () => {
-      if (index >= comandos.length) {
-        return resolve({ ok: false, salida: '', error: 'No se encontró un intérprete de Python válido.' });
-      }
-
-      let terminado = false;
-      let salida = '';
-      let err = '';
-      const proc = spawn(comandos[index], ['-u', ruta], {
-        cwd: path.dirname(ruta),
-        env: { ...process.env, PYTHONIOENCODING: 'utf-8' },
-        windowsHide: true
-      });
-
-      const timer = setTimeout(() => {
-        if (!terminado) {
-          terminado = true;
-          try { proc.kill('SIGKILL'); } catch (e) {}
-          resolve({ ok: false, salida, error: 'Tiempo de espera agotado (' + Math.round(TIMEOUT_SCRIPT_MS / 60000) + ' min).' });
-        }
-      }, TIMEOUT_SCRIPT_MS);
-
-      proc.stdout.on('data', (d) => {
-        const texto = d.toString('utf8');
-        salida += texto;
-        escribirLogValidacion(texto);
-        for (const w of BrowserWindow.getAllWindows()) {
-          if (!w.isDestroyed()) w.webContents.send('console-log', texto);
-        }
-      });
-
-      proc.stderr.on('data', (d) => {
-        const texto = d.toString('utf8');
-        err += texto;
-        escribirLogValidacion('[ERR] ' + texto);
-        for (const w of BrowserWindow.getAllWindows()) {
-          if (!w.isDestroyed()) w.webContents.send('console-log', '[ERR] ' + texto);
-        }
-      });
-
-      proc.on('error', (e) => {
-        if (terminado) return;
-        terminado = true;
-        clearTimeout(timer);
-        if (e.code === 'ENOENT') {
-          index++;
-          intentarEjecucion();
-        } else {
-          resolve({ ok: false, salida, error: 'Error al ejecutar: ' + e.message });
-        }
-      });
-
-      proc.on('close', (code) => {
-        if (terminado) return;
-        terminado = true;
-        clearTimeout(timer);
-        resolve({ ok: code === 0 || salida.trim().length > 0, salida, error: err, codigo: code });
-      });
-    };
-
-    intentarEjecucion();
+    let salida = '', err = '', terminado = false;
+    const p = spawn('bash', ['-c', comandoVrmu()], { cwd: os.homedir(), env: { ...process.env, LC_ALL: 'C' } });
+    const timer = setTimeout(() => {
+      if (terminado) return;
+      terminado = true;
+      try { p.kill('SIGKILL'); } catch (e) {}
+      resolve({ salida, error: 'vrmu_util no terminó en ' + Math.round(TIMEOUT_VRMU_MS / 60000) + ' min', codigo: null });
+    }, TIMEOUT_VRMU_MS);
+    p.stdout.on('data', (d) => { const t = d.toString('utf8'); salida += t; emitirConsola(t); });
+    p.stderr.on('data', (d) => { const t = d.toString('utf8'); err += t; emitirConsola('[ERR] ' + t); });
+    p.on('error', (e) => { if (terminado) return; terminado = true; clearTimeout(timer); resolve({ salida, error: e.message, codigo: -1 }); });
+    p.on('close', (c) => { if (terminado) return; terminado = true; clearTimeout(timer); resolve({ salida, error: err.trim(), codigo: c }); });
   });
 }
 
@@ -355,47 +244,46 @@ function emitirEstado(parcial) {
   }
 }
 
-const PASADAS_VALIDACION = 5;   // el script se corre varias veces seguidas: los rectificadores tardan en dejar de detectarse
-
 async function iniciarProcesoValidacion() {
-  if (estadoActual.fase === 'buscando' || estadoActual.fase === 'ejecutando') return;   // ya hay una validación en curso
-  // Las Izumis se revisan por su cuenta, en paralelo (telnet al ZPE); no esperan al script
+  if (estadoActual.fase === 'buscando' || estadoActual.fase === 'ejecutando') return;   // ya hay una en curso
+  // Las Izumis se revisan por su cuenta, en paralelo (telnet al ZPE)
   revisionIzumis.revisarTodas((t) => emitirConsola('[Izumis] ' + t)).catch((e) => emitirConsola('[Izumis] Error: ' + e.message + '\n'));
   abrirLogValidacion();
-  bitacora.registrar('Validación', 'Probar conexión', PASADAS_VALIDACION + ' pasadas del script + revisión de Izumis');
-  emitirEstado({ fase: 'buscando', error: null, salida: '', pasada: 0, pasadas: PASADAS_VALIDACION });
+  const cmd = '~/vrmu_util --hostname=' + VRMU_HOST + ' --envelope_enabled=false | grep -a4 dc-voltage';
+  bitacora.registrar('Validación', 'Probar conexión', 'vrmu_util ' + VRMU_HOST + ' + revisión de Izumis');
+  emitirEstado({ fase: 'buscando', error: null, salida: '', rects: null, detalle: null, ruta: cmd, encontrados: 0, total: NUM_RECTIFICADORES });
   try {
-    const ruta = await buscarScriptCompleto();
-    if (ruta) emitirConsola('Script: ' + ruta + '\n');
-    if (!ruta) {
-      emitirEstado({ fase: 'no-encontrado', error: 'No se encontró el archivo connection_validation.py' });
-      bitacora.registrar('Validación', 'Script no encontrado', 'connection_validation.py');
-      cerrarLogValidacion('Script no encontrado');
+    if (!fs.existsSync(VRMU_BIN)) {
+      const msg = 'No se encontró ' + VRMU_BIN + ' (se descarga en el paso "VRMU util" de la configuración del servidor)';
+      emitirConsola(msg + '\n');
+      emitirEstado({ fase: 'no-encontrado', error: msg, hora: Date.now() });
+      bitacora.registrar('Validación', 'vrmu_util no encontrado', VRMU_BIN);
+      cerrarLogValidacion('vrmu_util no encontrado');
       return;
     }
-
-    let resultado = null;
-    for (let i = 1; i <= PASADAS_VALIDACION; i++) {
-      emitirEstado({ fase: 'ejecutando', ruta, pasada: i, pasadas: PASADAS_VALIDACION });
-      for (const w of BrowserWindow.getAllWindows()) {
-        if (!w.isDestroyed()) w.webContents.send('console-log', (i > 1 ? '\n' : '') + '===== Pasada ' + i + ' de ' + PASADAS_VALIDACION + ' =====\n');
-      }
-      resultado = await ejecutarScript(ruta);
-      if (resultado.codigo !== undefined && resultado.codigo !== 0) {
-        emitirConsola('[AVISO] La pasada ' + i + ' terminó con código ' + resultado.codigo + '\n');
-      }
-      if (!resultado.ok) {
-        emitirEstado({ fase: 'error', ruta, salida: resultado.salida, error: 'Pasada ' + i + ' de ' + PASADAS_VALIDACION + ': ' + (resultado.error || 'falló la ejecución'), hora: Date.now() });
-        bitacora.registrar('Validación', 'Falló', 'Pasada ' + i + ': ' + String(resultado.error || '').slice(0, 300));
-        cerrarLogValidacion('Falló en la pasada ' + i);
-        return;
-      }
+    emitirEstado({ fase: 'ejecutando' });
+    emitirConsola('$ ' + cmd + '\n');
+    const r = await correrVrmu();
+    const { rects, detalle } = leerRectificadores(r.salida);
+    const encontrados = Object.keys(rects).length;
+    // grep sale con 1 si no encontró nada: eso no es error, es que no se detectó ningún rectificador.
+    // Error de verdad: vrmu_util no corrió o se pasó del tiempo y no hay ninguna lectura.
+    if (!encontrados && (r.codigo === null || r.codigo === -1 || (r.error && r.codigo !== 0))) {
+      const motivo = r.error || ('código ' + r.codigo);
+      emitirEstado({ fase: 'error', salida: r.salida, error: 'vrmu_util: ' + motivo.split('\n').pop(), hora: Date.now(), rects: {}, encontrados: 0 });
+      bitacora.registrar('Validación', 'Falló', motivo.slice(0, 300));
+      cerrarLogValidacion('Falló: ' + motivo.split('\n').pop());
+      return;
     }
-
-    // El estado final es el de la última pasada (la más reciente)
-    emitirEstado({ fase: 'listo', ruta, salida: resultado.salida, error: resultado.error, hora: Date.now(), pasada: PASADAS_VALIDACION });
-    bitacora.registrar('Validación', 'Terminó', PASADAS_VALIDACION + ' pasadas · ' + ruta);
-    cerrarLogValidacion('Terminó');
+    const faltan = [];
+    for (let n = 1; n <= NUM_RECTIFICADORES; n++) if (rects[n] === undefined) faltan.push('R' + n);
+    emitirConsola('\n' + encontrados + ' de ' + NUM_RECTIFICADORES + ' rectificadores detectados' + (faltan.length ? ' · faltan: ' + faltan.join(', ') : '') + '\n');
+    emitirEstado({ fase: 'listo', salida: r.salida, error: r.error, hora: Date.now(), rects, detalle, encontrados });
+    bitacora.registrar('Validación', 'Terminó', encontrados + ' de ' + NUM_RECTIFICADORES + ' rectificadores' + (faltan.length ? ' · faltan ' + faltan.join(', ') : ''));
+    bitacora.guardar('validacion', 'rectificadores_' + bitacora.sello() + '.txt',
+      '# Rectificadores · ' + bitacora.fecha() + ' ' + bitacora.hora() + ' · ' + encontrados + ' de ' + NUM_RECTIFICADORES + '\n\n' +
+      Array.from({ length: NUM_RECTIFICADORES }, (_, k) => k + 1).map((n) => 'R' + String(n).padStart(2, ' ') + ' | ' + (rects[n] !== undefined ? rects[n].toFixed(2) + ' V | ' + detalle[n] : 'no detectado')).join('\n') + '\n');
+    cerrarLogValidacion('Terminó · ' + encontrados + ' de ' + NUM_RECTIFICADORES);
   } catch (e) {
     emitirEstado({ fase: 'error', error: 'Error inesperado: ' + e.message, hora: Date.now() });
     bitacora.registrar('Validación', 'Error inesperado', e.message);

@@ -2885,40 +2885,8 @@ function tituloIzumi(i, extra) {
   return (extra ? extra + '\n' : '') + 'Clic para abrir la consola · telnet ' + ZPE_IZUMI.ip + ' ' + (ZPE_IZUMI.base + i);
 }
 
-const limpiar = (t) => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-const NEG = /\b(no|not|sin|without|never|fall|fail|error|unreach|inaccesib|timeout|timed out|perdid|lost|desconect|disconnect)\b/;
-
-function analizar(texto) {
-  const r = { izumis: {}, rects: {} };
-  const lineas = String(texto || '').split(/\r?\n/);
-  
-  for (const crudo of lineas) {
-    const linea = crudo.trim();
-    if (!linea) continue;
-    const t = limpiar(linea);
-
-    const matchIp = linea.match(/(\d{1,3}\.\d{1,3}\.\d{1,3}\.(\d{1,3}))/);
-    if (matchIp) {
-      const ip = matchIp[1];
-      const ultimoOcteto = +matchIp[2];
-      if (ultimoOcteto >= 1 && ultimoOcteto <= 16) {
-        const tieneError = NEG.test(t);
-        r.izumis[ultimoOcteto] = { ip, ok: !tieneError };
-      }
-    }
-
-    const matchRect = t.match(/(?:rectificador|rectifier|rect|\br)\s*(\d+)\s*[:=\-]?\s*([0-9.,]+)/i);
-    if (matchRect) {
-      const num = +matchRect[1];
-      const val = parseFloat(matchRect[2].replace(',', '.'));
-      if (num >= 1 && num <= 24) {
-        r.rects[num] = isNaN(val) ? 55.92 : val;
-      }
-    }
-  }
-  return r;
-}
-
+/* Los rectificadores se leen en main.js con vrmu_util (ya no con connection_validation.py):
+   el estado trae rects = { 1..24: voltaje }. */
 function setEstadoRect(el, valEl, ok, voltajeVal, tooltip) {
   if (!el) return;
   el.classList.remove('ok', 'bad');
@@ -2996,7 +2964,8 @@ function pintarResultados(parsed) {
     const ok = typeof val === 'number' && !isNaN(val) && val > 0;
     if (!ok) fallas++;
     const voltajeMostrar = (typeof val === 'number' && !isNaN(val)) ? val : 55.92;
-    setEstadoRect(rectEls[n], rectValEls[n], ok, voltajeMostrar, ok ? `R${n}: ${voltajeMostrar.toFixed(2)} V` : `R${n}: Sin lectura / Error`);
+    const dev = parsed.detalle && parsed.detalle[n];
+    setEstadoRect(rectEls[n], rectValEls[n], ok, voltajeMostrar, ok ? `R${n}: ${voltajeMostrar.toFixed(2)} V` + (dev ? '\n' + dev : '') : `R${n}: no detectado (no salió en vrmu_util)`);
   }
 
   return fallas;
@@ -3014,8 +2983,8 @@ function pintarProgresoValidacion(s) {
   const cont = $('cv-prog');
   if (!cont) return;
   const f = s.fase;
-  const total = s.pasadas || 1;
-  const hechas = f === 'listo' ? total : Math.max(0, (s.pasada || 1) - 1);
+  const total = 1;
+  const hechas = f === 'listo' ? 1 : 0;
   const visible = f === 'buscando' || f === 'ejecutando' || f === 'listo' || f === 'error';
   cont.hidden = !visible;
   if (!visible) return;
@@ -3026,10 +2995,10 @@ function pintarProgresoValidacion(s) {
   cont.classList.toggle('ok', f === 'listo');
   cont.classList.toggle('err', f === 'error');
   $('cv-prog-state').textContent =
-    f === 'buscando' ? 'Buscando el script…' :
-    f === 'ejecutando' ? 'Pasada ' + (s.pasada || 1) + ' de ' + total :
-    f === 'listo' ? 'Completado · ' + total + ' pasadas' :
-    'Se detuvo en la pasada ' + (s.pasada || 1);
+    f === 'buscando' ? 'Preparando…' :
+    f === 'ejecutando' ? 'Leyendo rectificadores con vrmu_util…' :
+    f === 'listo' ? 'Completado · ' + (s.encontrados || 0) + ' de ' + (s.total || 24) + ' rectificadores' :
+    'No se pudo leer';
   $('cv-prog-pct').textContent = pct + '%';
 }
 
@@ -3041,20 +3010,19 @@ function aplicarEstado(s) {
   pintarProgresoValidacion(s);
 
   if (s.fase === 'buscando') {
-    mostrarBarra('busy', 'Buscando connection_validation.py…', '');
+    mostrarBarra('busy', 'Preparando lectura…', '');
     limpiarColores();
   } else if (s.fase === 'ejecutando') {
-    mostrarBarra('busy', 'Ejecutando validación ' + (s.pasada || 1) + '/' + (s.pasadas || 1) + '…', s.ruta || '');
-    if ((s.pasada || 1) <= 1) $('console-body').textContent = `Iniciando script en: ${s.ruta}\n----------------------------------------\n`;
+    mostrarBarra('busy', 'Leyendo rectificadores…', s.ruta || '');
+    $('console-body').textContent = '';
   } else if (s.fase === 'no-encontrado') {
     limpiarColores();
-    mostrarBarra('offline', 'Script no encontrado', s.error || '');
+    mostrarBarra('offline', 'No se encontró vrmu_util', s.error || '');
   } else if (s.fase === 'error') {
     limpiarColores();
     mostrarBarra('offline', 'Error en ejecución', s.error || '');
   } else if (s.fase === 'listo') {
-    const parsed = analizar(s.salida);
-    const fallas = pintarResultados(parsed) + fallasIzumis();
+    const fallas = pintarResultados({ rects: s.rects || {}, detalle: s.detalle || {} }) + fallasIzumis();
     const hora = new Date(s.hora).toLocaleTimeString('es');
     mostrarBarra(fallas ? 'offline' : 'online', (fallas ? `Con ${fallas} incidencias` : 'Todo en orden') + ' · ' + hora, s.ruta || '');
   }
