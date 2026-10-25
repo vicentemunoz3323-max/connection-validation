@@ -1848,7 +1848,7 @@ def tross_aplicar_mac(mac_input):
     run_interactive(f"sudo grep -q '{tross_mac}' /etc/dhcp/dhcpd.conf")
     print("[*] Reiniciando el DHCP para que el Tross tome su IP...")
     run_interactive("sudo systemctl restart isc-dhcp-server")
-    state = load_state(); state.setdefault("config", {})["tross_mac"] = tross_mac; save_state(state)
+    mark_step_completed("tross_capture_mac", {"tross_mac": tross_mac})   # misma bandera que el script original
     print(f"[✓] MAC del Tross aplicada: {tross_mac} -> {CFG['tross_ip']}")
 
 def download_python_tools():

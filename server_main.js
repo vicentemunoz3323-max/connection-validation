@@ -91,8 +91,15 @@ function leerValores() {
 }
 function rutaEstado() { return path.join(os.homedir(), leerValores().state_file || 'provisioning_state.json'); }
 function leerEstado() {
-  try { const j = JSON.parse(fs.readFileSync(rutaEstado(), 'utf8')); return { flags: j.flags || {}, config: j.config || {} }; }
-  catch (e) { return { flags: {}, config: {} }; }
+  try {
+    const j = JSON.parse(fs.readFileSync(rutaEstado(), 'utf8'));
+    const config = { ...(j.config || {}) };
+    // Versiones viejas del script guardaban contraseñas aquí: no se mandan a la ventana
+    const credViejas = config._credentials ? Object.keys(config._credentials) : [];
+    delete config._credentials;
+    const archivo = { ...j, config };
+    return { flags: j.flags || {}, config, interfaces: j.interfaces || {}, credViejas, archivo, existe: true };
+  } catch (e) { return { flags: {}, config: {}, interfaces: {}, credViejas: [], archivo: null, existe: fs.existsSync(rutaEstado()) }; }
 }
 function editado() {
   try { return fs.existsSync(rutaScript()) && !fs.readFileSync(rutaScript()).equals(fs.readFileSync(ORIGINAL)); } catch (e) { return false; }
@@ -136,7 +143,8 @@ let ultimo = null;
 function estadoPublico() {
   const st = leerEstado();
   return {
-    pasos: PASOS, flags: st.flags, config: st.config, valores: leerValores(), defecto: VALORES_DEFECTO,
+    pasos: PASOS, flags: st.flags, config: st.config, interfaces: st.interfaces, credViejas: st.credViejas, archivo: st.archivo, existeEstado: st.existe,
+    valores: leerValores(), defecto: VALORES_DEFECTO,
     editado: editado(), estadoRuta: rutaEstado(),
     corriendo: run ? { modo: run.modo, paso: run.paso, inicio: run.inicio, actual: run.actual, estados: run.estados, pide: run.pide, log: run.logPath } : null,
     ultimo
@@ -341,6 +349,23 @@ ipcMain.handle('srv-script-restaurar', () => {
     emitirEstado();
     return { ok: true, texto: fs.readFileSync(rutaScript(), 'utf8') };
   } catch (e) { return { ok: false, error: e.message }; }
+});
+// Quita las contraseñas que dejaron versiones viejas del script en provisioning_state.json
+ipcMain.handle('srv-quitar-cred', () => {
+  try {
+    const ruta = rutaEstado();
+    const j = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+    if (j.config && j.config._credentials) { delete j.config._credentials; fs.writeFileSync(ruta, JSON.stringify(j, null, 4)); }
+    bitacora.registrar('Server', 'Quitó contraseñas guardadas del archivo de banderas', ruta);
+    emitirEstado();
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+ipcMain.handle('srv-abrir-estado', () => {
+  const { shell } = require('electron');
+  const ruta = rutaEstado();
+  if (fs.existsSync(ruta)) shell.showItemInFolder(ruta);
+  return { ok: fs.existsSync(ruta), ruta };
 });
 ipcMain.handle('srv-abrir-log', () => {
   const { shell } = require('electron');

@@ -192,6 +192,8 @@ echo listo</pre>
   <p>Arriba de la lista sale un cuadro rojo con el error y <b>pistas de cómo arreglarlo</b> (cable, red, contraseña, apt trabado, Ansible…). Arréglalo y presiona <b>Reintentar este paso</b>. "Ver log" abre el log de la corrida.</p>
   <h3>Consola</h3>
   <p>Muestra toda la salida del script con colores: rojo error, amarillo aviso, verde bien, azul títulos. Las líneas nuevas se iluminan un momento. Aguanta corridas de miles de líneas; en pantalla se ven las últimas 4000 y el log guarda todo en <code>~/Ghostfish-Logs/server/</code>.</p>
+  <h3>Resultados</h3>
+  <p>La pestaña <b>Resultados</b> muestra cómo quedó el servidor, sacado de <code>~/provisioning_state.json</code>: rack, IP, hostname, MAC de las tarjetas de prueba, consola y estado del Juniper, MAC y consola del ZPE y MAC del Tross. Abajo están todas las banderas (incluidas las de versiones anteriores del script) y el archivo completo. "Copiar resumen" copia todo en texto para pegarlo donde quieras. Si el archivo trae contraseñas guardadas por una versión vieja del script, sale un aviso con un botón para quitarlas.</p>
   <h3>Valores y Script</h3>
   <ul>
     <li><b>Valores:</b> IPs, nombres de tarjetas, versión de JUNOS, ligas, etc. Lo que cambias queda marcado en naranja. "Valores de fábrica" regresa todo.</li>

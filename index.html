@@ -1592,6 +1592,35 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .llave-ojo { font-size: 12px; color: #b45300; margin: 12px 0 0; }
 #llave-usb { padding: 8px 10px; font: 14px var(--font); }
 .srv-pass-nota { font-size: 12.5px; color: var(--green); font-weight: 600; margin-top: 10px; }
+/* Resultados del servidor */
+.srv-res { padding: 18px 20px; }
+.srv-res-cab { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.srv-res-tit { font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.srv-res-tit.ok { color: var(--green); }
+.srv-res-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.srv-res-barra { flex: 0 1 260px; height: 8px; border-radius: 99px; background: var(--bg-soft); overflow: hidden; }
+.srv-res-barra span { display: block; height: 100%; background: var(--blue); border-radius: 99px; transition: width .4s; }
+.srv-res-barra span.ok { background: var(--green); }
+.srv-res-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 10px; margin-top: 16px; }
+.srv-res-item { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: #fff; }
+.srv-res-item .k { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--muted); text-transform: uppercase; }
+.srv-res-item .v { font: 600 14px var(--mono); margin-top: 3px; word-break: break-all; }
+.srv-res-item .v.nada { color: #a0a8b4; font-family: var(--font); font-weight: 500; }
+.srv-res-item .s { font-size: 11.5px; color: var(--muted); margin-top: 2px; }
+.srv-res-item.grupo .fila { display: flex; justify-content: space-between; gap: 8px; font-size: 12.5px; margin-top: 4px; }
+.srv-res-item.grupo .fila b { font: 600 12.5px var(--mono); }
+.srv-res-2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 12px; margin-top: 12px; }
+@media (max-width: 1000px) { .srv-res-2 { grid-template-columns: 1fr; } }
+.srv-res-flags { list-style: none; margin: 0; padding: 0; columns: 2; column-gap: 16px; font-size: 12.5px; }
+@media (max-width: 700px) { .srv-res-flags { columns: 1; } }
+.srv-res-flags li { break-inside: avoid; display: flex; gap: 8px; align-items: baseline; padding: 3px 0; }
+.srv-res-flags li .m { width: 16px; flex: none; text-align: center; font-weight: 700; color: #b8c0cb; }
+.srv-res-flags li.si .m { color: var(--green); }
+.srv-res-flags li code { font-size: 11.5px; color: var(--muted); }
+.srv-res-flags li.extra { color: var(--muted); font-style: italic; }
+.srv-res-json { margin: 0; max-height: 420px; overflow: auto; padding: 12px; background: #11161d; color: #d3dbe5; border-radius: 8px; font: 12px/1.5 var(--mono); }
+.srv-res-json .jk { color: #7fb6ff; } .srv-res-json .js { color: #7ee2a0; } .srv-res-json .jb { color: #ff9d7a; } .srv-res-json .jn { color: #f5c06b; }
+.srv-cred { margin-top: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 12px; border: 1px solid rgba(224,106,0,.4); background: rgba(224,106,0,.07); border-radius: 8px; font-size: 13px; color: #8a4300; }
 </style>
 </head>
 <body>
@@ -2115,6 +2144,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 <button type="button" class="srv-tab sel" data-tab="pasos" role="tab">Pasos</button>
                 <button type="button" class="srv-tab" data-tab="valores" role="tab">Valores</button>
                 <button type="button" class="srv-tab" data-tab="script" role="tab">Script <span class="srv-mod" id="srv-mod" hidden>modificado</span></button>
+                <button type="button" class="srv-tab" data-tab="resultados" role="tab">Resultados</button>
               </div>
             </div>
 
@@ -2177,6 +2207,39 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 <span class="srv-sc-msg" id="srv-sc-msg"></span>
                 <button type="button" class="btn btn-secundario" id="srv-sc-orig">Regresar al original</button>
                 <button type="button" class="btn" id="srv-sc-guardar">Guardar script</button>
+              </div>
+            </div>
+
+            <!-- Resultados: cómo quedó el servidor (sale de provisioning_state.json) -->
+            <div class="srv-panel" data-panel="resultados" hidden>
+              <div class="card srv-res">
+                <div class="srv-res-cab">
+                  <div>
+                    <div class="srv-res-tit" id="res-tit">—</div>
+                    <div class="srv-res-sub" id="res-sub">—</div>
+                  </div>
+                  <div class="srv-res-barra"><span id="res-barra"></span></div>
+                </div>
+                <div class="srv-cred" id="res-cred" hidden>
+                  <span id="res-cred-txt"></span>
+                  <button type="button" class="btn btn-secundario btn-mini" id="res-cred-quitar">Quitar contraseñas del archivo</button>
+                </div>
+                <div class="srv-res-grid" id="res-grid"></div>
+              </div>
+              <div class="srv-res-2">
+                <div class="card">
+                  <div class="card-head"><span class="card-title">Banderas</span><span class="card-count" id="res-flags-n">—</span></div>
+                  <ul class="srv-res-flags" id="res-flags"></ul>
+                </div>
+                <div class="card">
+                  <div class="card-head"><span class="card-title">provisioning_state.json</span>
+                    <div class="uc-actions">
+                      <button type="button" class="btn btn-secundario btn-mini" id="res-copiar">Copiar resumen</button>
+                      <button type="button" class="btn btn-secundario btn-mini" id="res-abrir">Abrir carpeta</button>
+                    </div>
+                  </div>
+                  <pre class="srv-res-json" id="res-json">—</pre>
+                </div>
               </div>
             </div>
 
@@ -5118,6 +5181,7 @@ function pintarSeleccionIzumi() {
     document.querySelectorAll('#srv-guia .srv-panel').forEach((p) => { p.hidden = p.dataset.panel !== t; });
     if (t === 'valores') srvPintarValores();
     if (t === 'script') srvCargarScript();
+    if (t === 'resultados') resPintar();
   }
   document.querySelectorAll('#srv-guia .srv-tab').forEach((b) => b.addEventListener('click', () => srvTabSel(b.dataset.tab)));
 
@@ -5322,13 +5386,79 @@ function pintarSeleccionIzumi() {
     window.sistema.llaveEstado().then((e) => { llave = e || { hay: false }; llavePintar(); }).catch(() => {});
     window.sistema.onLlaveEstado((e) => { llave = e || { hay: false }; llavePintar(); });
   }
+
+  /* ---------- Resultados: cómo quedó el servidor ---------- */
+  const RES_EXTRA = { ensure_dhcp: 'DHCP (versión anterior del script)', tross_capture_mac: 'MAC del Tross' };
+  const siNo = (v) => (v === true ? 'Sí' : v === false ? 'No' : '—');
+  function resItem(k, v, sub) {
+    return '<div class="srv-res-item"><div class="k">' + esc(k) + '</div><div class="v' + (v == null || v === '' ? ' nada' : '') + '">' + (v == null || v === '' ? 'Pendiente' : esc(v)) + '</div>' + (sub ? '<div class="s">' + esc(sub) + '</div>' : '') + '</div>';
+  }
+  function resGrupo(k, filas) {
+    return '<div class="srv-res-item grupo"><div class="k">' + esc(k) + '</div>' + filas.map(([a, b]) => '<div class="fila"><span>' + esc(a) + '</span><b>' + esc(b == null || b === '' ? '—' : b) + '</b></div>').join('') + '</div>';
+  }
+  function resJson(o) {
+    const t = esc(JSON.stringify(o, null, 4));
+    return t.replace(/(&quot;[^&]*?&quot;)(\s*:)/g, '<span class="jk">$1</span>$2')
+      .replace(/:\s(&quot;.*?&quot;)/g, ': <span class="js">$1</span>')
+      .replace(/:\s(true|false|null)/g, ': <span class="jb">$1</span>')
+      .replace(/:\s(-?\d+(?:\.\d+)?)/g, ': <span class="jn">$1</span>');
+  }
+  function resResumen() {
+    const c = srv.config || {}, i = srv.interfaces || {};
+    const hechos = srv.pasos.filter((p) => srv.flags[p.id]).length;
+    return ['Servidor ' + (c.hostname || '—') + ' · rack ' + (c.rack_number || '—') + ' · ' + (c.ip_address || '—'),
+      'Pasos: ' + hechos + ' de ' + srv.pasos.length + (hechos === srv.pasos.length ? ' (configurado)' : ''),
+      ...Object.entries(i).map(([k, v]) => 'Interfaz ' + k + ': ' + v),
+      'Juniper: consola ' + (c.juniper_console_device || '—') + ' · ya estaba configurado: ' + siNo(c.juniper_already_configured),
+      'ZPE: MAC ' + (c.zpe_mac || '—') + ' · consola ' + (c.zpe_console_device || '—') + ' · ya estaba configurado: ' + siNo(c.zpe_already_configured),
+      'Tross: MAC ' + (c.tross_mac || '—'),
+      ...srv.pasos.filter((p) => !srv.flags[p.id]).map((p) => 'Falta: ' + p.titulo)].join('\n');
+  }
+  function resPintar() {
+    if (srvTab !== 'resultados' || sel !== 'server') return;
+    const c = srv.config || {}, i = srv.interfaces || {}, v = srv.valores || {};
+    const total = srv.pasos.length, hechos = srv.pasos.filter((p) => srv.flags[p.id]).length, listo = total && hechos === total;
+    q('res-tit').textContent = !srv.existeEstado ? 'Sin configurar' : listo ? 'Servidor configurado ✓' : hechos + ' de ' + total + ' pasos';
+    q('res-tit').classList.toggle('ok', !!listo);
+    q('res-sub').textContent = !srv.existeEstado ? 'Todavía no existe ' + (srv.estadoRuta || '~/provisioning_state.json') + '. Se crea al correr el primer paso.'
+      : (c.hostname || 'Sin nombre') + ' · ' + (srv.estadoRuta || '');
+    const b = q('res-barra'); b.style.width = (total ? Math.round(hechos / total * 100) : 0) + '%'; b.classList.toggle('ok', !!listo);
+    const ifs = Object.entries(i);
+    q('res-grid').innerHTML =
+      resItem('Rack', c.rack_number) + resItem('IP del servidor', c.ip_address, (v.iface_sfc || 'eno1') + ' · conexión SFC') + resItem('Hostname', c.hostname) +
+      resGrupo('Tarjetas de prueba', ifs.length ? ifs : [[v.iface_test || 'ens4f0', null], [v.iface_test2 || 'ens4f1', null]]) +
+      resGrupo('Juniper', [['Consola', c.juniper_console_device], ['Ya estaba configurado', siNo(c.juniper_already_configured)], ['Paso', srv.flags.juniper_config ? '✓' : 'pendiente']]) +
+      resGrupo('ZPE', [['MAC', c.zpe_mac], ['Consola', c.zpe_console_device], ['Ya estaba configurado', siNo(c.zpe_already_configured)]]) +
+      resItem('MAC del Tross', c.tross_mac, c.tross_mac ? '→ ' + (v.tross_ip || '10.0.0.251') : 'Se pone en TROSS');
+    // Banderas: las del flujo y las que haya de otras versiones del script
+    const conocidas = new Set(srv.pasos.map((p) => p.id));
+    const lis = srv.pasos.map((p, k) => '<li class="' + (srv.flags[p.id] ? 'si' : '') + '"><span class="m">' + (srv.flags[p.id] ? '✓' : '·') + '</span><span>' + (k + 1) + '. ' + esc(p.titulo) + ' <code>' + esc(p.id) + '</code></span></li>');
+    for (const [k, val] of Object.entries(srv.flags || {})) if (!conocidas.has(k)) lis.push('<li class="extra' + (val ? ' si' : '') + '"><span class="m">' + (val ? '✓' : '·') + '</span><span>' + esc(RES_EXTRA[k] || 'Otra bandera') + ' <code>' + esc(k) + '</code></span></li>');
+    q('res-flags').innerHTML = lis.join('');
+    q('res-flags-n').textContent = hechos + ' de ' + total;
+    q('res-json').innerHTML = srv.archivo ? resJson(srv.archivo) : 'Aún no existe el archivo.';
+    const cv = srv.credViejas || [];
+    q('res-cred').hidden = !cv.length;
+    if (cv.length) q('res-cred-txt').textContent = '⚠ El archivo tiene contraseñas guardadas (' + cv.join(', ') + ') de una versión anterior del script. Esta versión ya no las guarda.';
+  }
+  q('res-copiar').addEventListener('click', async () => {
+    const t = resResumen();
+    try { await navigator.clipboard.writeText(t); } catch (e) { const a = document.createElement('textarea'); a.value = t; document.body.appendChild(a); a.select(); document.execCommand('copy'); a.remove(); }
+    q('res-copiar').textContent = 'Copiado ✓'; setTimeout(() => { q('res-copiar').textContent = 'Copiar resumen'; }, 1500);
+  });
+  q('res-abrir').addEventListener('click', () => { if (srvApi() && window.sistema.srvAbrirEstado) window.sistema.srvAbrirEstado(); });
+  q('res-cred-quitar').addEventListener('click', async () => {
+    if (!confirm('¿Quitar las contraseñas guardadas de provisioning_state.json?\n\nLas banderas y los valores no se tocan.')) return;
+    const r = await window.sistema.srvQuitarCred().catch((e) => ({ ok: false, error: e.message }));
+    if (r && !r.ok) alert(r.error);
+  });
   function srvAplicar(s) {
     if (!s) return;
     const antes = srv.corriendo;
     srv = { ...srv, ...s };
     if (!s.corriendo) srv.corriendo = null;
     if (!antes !== !srv.corriendo) renderDevs();
-    srvPintar(); trPintar();
+    srvPintar(); trPintar(); resPintar();
   }
   if (srvApi()) {
     window.sistema.srvObtener().then((s) => {
