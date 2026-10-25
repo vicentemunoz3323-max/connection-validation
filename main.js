@@ -32,6 +32,7 @@ const chillerMonitor = require('./chiller_main.js');
 // Configuración del servidor: gf_provisioning.py parchado, con pasos y preguntas en la app
 const servidor = require('./server_main.js');
 require('./llave_main.js');   // llave USB con las contraseñas
+require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)
 const revisionIzumis = require('./izumi_check.js');
 revisionIzumis.configurar({

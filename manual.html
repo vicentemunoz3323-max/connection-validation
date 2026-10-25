@@ -61,6 +61,7 @@
   <a href="#server">Configurar servidor</a>
   <a href="#tross">MAC del Tross</a>
   <a href="#plc">Configurar PLC</a>
+  <a href="#recursos">Recursos</a>
   <a href="#consolas">Consolas de Izumi</a>
   <a href="#logs">Carpeta de logs</a>
   <a href="#actualizaciones">Actualizaciones de la app</a>
@@ -222,6 +223,11 @@ echo listo</pre>
     <li>Gira la <b>perilla roja</b> hasta que la <b>torreta quede en verde</b>.</li>
   </ol>
   <p>Al terminar, presiona <b>Listo, PLC configurado</b>: se guarda la fecha y el equipo se pone en verde en la lista. "Ver archivos de este equipo" sirve para guardar ahí los archivos del programa del PLC.</p>
+
+  <h2 id="recursos">Recursos</h2>
+  <p>Muestra en tres barras cuánto se está usando el <b>CPU</b>, la <b>RAM</b> y el <b>disco</b> (<code>/</code>) del servidor. El agua sube o baja con el porcentaje: azul es normal, naranja alto (70% o más) y rojo crítico (90% o más).</p>
+  <p>Se mide cada 2 segundos solo mientras estás en esa ventana; al salir deja de medir. <b>Pausar</b> congela los valores. Abajo se ve la salida tal cual del comando:</p>
+  <pre>echo -e "CPU: $(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\([0-9.]*\)%* id.*/\1/" | awk '{print 100 - $1"%"}') | RAM: $(free | grep Mem | awk '{print int($3/$2 * 100)"%"}') | DISCO: $(df -h / | awk 'NR==2 {print $5}')"</pre>
 
   <h2 id="consolas">Consolas de Izumi</h2>
   <p>Da clic en una Izumi de la pantalla principal y se abre su consola en una ventana aparte (<code>telnet 10.0.0.253 7000+N</code>). Ahí puedes escribirle comandos. Si se cae la conexión, la consola reintenta sola cada 3 segundos. Todo lo que manda la Izumi se guarda en su log, aunque limpies la pantalla. Al cerrar la ventana principal se cierran también las consolas.</p>

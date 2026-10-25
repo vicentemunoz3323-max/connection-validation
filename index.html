@@ -1623,6 +1623,38 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .srv-res-json { margin: 0; max-height: 420px; overflow: auto; padding: 12px; background: #11161d; color: #d3dbe5; border-radius: 8px; font: 12px/1.5 var(--mono); }
 .srv-res-json .jk { color: #7fb6ff; } .srv-res-json .js { color: #7ee2a0; } .srv-res-json .jb { color: #ff9d7a; } .srv-res-json .jn { color: #f5c06b; }
 .srv-cred { margin-top: 14px; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; padding: 10px 12px; border: 1px solid rgba(224,106,0,.4); background: rgba(224,106,0,.07); border-radius: 8px; font-size: 13px; color: #8a4300; }
+/* ===================== RECURSOS: barras con agua ===================== */
+.rec-card { padding: 18px 20px 16px; }
+.rec-vivo { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); font-family: var(--mono); }
+.rec-led { width: 8px; height: 8px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 3px rgba(18,137,74,.16); animation: pulso-suave 1.6s ease-in-out infinite; }
+.rec-vivo.pausa .rec-led { background: #a0a8b4; box-shadow: none; animation: none; }
+.rec-vivo.err .rec-led { background: var(--red); animation: none; }
+.rec-graf { display: grid; grid-template-columns: 44px 1fr; gap: 12px; margin-top: 18px; }
+.rec-eje { height: 300px; display: flex; flex-direction: column; justify-content: space-between; font: 11px var(--mono); color: var(--muted); text-align: right; transform: translateY(-6px); }
+.rec-barras { position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(16px, 5vw, 64px); padding: 0 clamp(8px, 3vw, 40px);
+  background: repeating-linear-gradient(to top, var(--line) 0 1px, transparent 1px 75px); background-size: 100% 300px; background-repeat: no-repeat; }
+.rec-col { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.rec-tanque { position: relative; width: min(120px, 100%); height: 300px; border-radius: 14px 14px 10px 10px; overflow: hidden;
+  background: linear-gradient(180deg, #f7f9fc, #eef2f7); border: 2px solid #cfd6df; box-shadow: inset 0 2px 8px rgba(16,24,40,.06); isolation: isolate; }
+.rec-tanque::after { content: ""; position: absolute; top: 0; left: 10%; width: 12%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,.55), rgba(255,255,255,0)); pointer-events: none; z-index: 3; }
+.rec-agua { --c1: #2f7cf6; --c2: #1d5ccf; position: absolute; left: 0; right: 0; bottom: 0; height: 0%; background: linear-gradient(180deg, var(--c1), var(--c2)); transition: height 1.2s cubic-bezier(.22,.9,.3,1), background .6s; z-index: 1; }
+.rec-ola { position: absolute; left: 0; width: 200%; height: 18px; top: -16px; background-repeat: repeat-x; background-size: 50% 100%; }
+.rec-ola { background: var(--c1); -webkit-mask-repeat: repeat-x; mask-repeat: repeat-x; -webkit-mask-size: 50% 100%; mask-size: 50% 100%; }
+.rec-ola.o1 { -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q15 0 30 9 T60 9 T90 9 T120 9 V18 H0Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q15 0 30 9 T60 9 T90 9 T120 9 V18 H0Z'/%3E%3C/svg%3E"); animation: recOla 2.4s linear infinite; }
+.rec-ola.o2 { top: -12px; opacity: .45; background: #fff; -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q15 18 30 9 T60 9 T90 9 T120 9 V18 H0Z'/%3E%3C/svg%3E"); mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 18' preserveAspectRatio='none'%3E%3Cpath d='M0 9 Q15 18 30 9 T60 9 T90 9 T120 9 V18 H0Z'/%3E%3C/svg%3E"); animation: recOla 3.8s linear infinite reverse; }
+@keyframes recOla { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+.rec-col.alto .rec-agua { --c1: #f2a33a; --c2: #d97706; }
+.rec-col.crit .rec-agua { --c1: #ef5b4c; --c2: #c8261d; }
+.rec-pct { position: absolute; inset: 0; display: grid; place-items: center; z-index: 2; font: 700 clamp(22px, 3vw, 32px) var(--font); letter-spacing: -.02em; color: #1b2430; text-shadow: 0 1px 0 rgba(255,255,255,.8); font-variant-numeric: tabular-nums; }
+.rec-col.lleno .rec-pct { color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.35); }
+.rec-nom { margin-top: 10px; font-size: 14px; font-weight: 700; letter-spacing: .06em; }
+.rec-sub { font-size: 11.5px; color: var(--muted); }
+.rec-leyenda { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; margin-top: 14px; font-size: 12px; color: var(--muted); }
+.rec-leyenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.l-ok { background: #2f7cf6; } .l-alto { background: #f2a33a; } .l-crit { background: #ef5b4c; }
+.rec-salida { margin: 14px 0 0; padding: 9px 12px; background: #11161d; color: #c9d4e0; border-radius: 8px; font: 12.5px var(--mono); white-space: pre-wrap; word-break: break-word; }
+@media (max-width: 640px) { .rec-eje, .rec-tanque { height: 220px; } .rec-barras { background-size: 100% 220px; background-image: repeating-linear-gradient(to top, var(--line) 0 1px, transparent 1px 55px); } }
+@media (prefers-reduced-motion: reduce) { .rec-ola { animation: none !important; } }
 </style>
 </head>
 <body>
@@ -1659,6 +1691,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
         <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
         <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
+        <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
 
       </nav>
     </div>
@@ -2474,6 +2507,48 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       </div>
     </section>
 <!-- CFG-FIN -->
+    <section id="recursos" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Sistema</span>
+            <h1>Recursos</h1>
+            <p class="lead">CPU, RAM y disco de este servidor. Se mide cada 2 segundos mientras estás en esta ventana.</p>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card rec-card">
+        <div class="card-head">
+          <span class="card-title">Uso del servidor</span>
+          <div class="uc-actions">
+            <span class="rec-vivo" id="rec-vivo"><span class="rec-led"></span><span id="rec-hora">Midiendo…</span></span>
+            <button type="button" class="btn btn-secundario btn-mini" id="rec-pausa">Pausar</button>
+          </div>
+        </div>
+        <div class="rec-graf">
+          <div class="rec-eje" aria-hidden="true"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div>
+          <div class="rec-barras" id="rec-barras">
+            <div class="rec-col" data-k="cpu">
+              <div class="rec-tanque"><div class="rec-agua"><div class="rec-ola o1"></div><div class="rec-ola o2"></div></div><div class="rec-pct">—</div></div>
+              <div class="rec-nom">CPU</div><div class="rec-sub">en uso</div>
+            </div>
+            <div class="rec-col" data-k="ram">
+              <div class="rec-tanque"><div class="rec-agua"><div class="rec-ola o1"></div><div class="rec-ola o2"></div></div><div class="rec-pct">—</div></div>
+              <div class="rec-nom">RAM</div><div class="rec-sub">en uso</div>
+            </div>
+            <div class="rec-col" data-k="disco">
+              <div class="rec-tanque"><div class="rec-agua"><div class="rec-ola o1"></div><div class="rec-ola o2"></div></div><div class="rec-pct">—</div></div>
+              <div class="rec-nom">DISCO</div><div class="rec-sub">de / ocupado</div>
+            </div>
+          </div>
+        </div>
+        <div class="rec-leyenda"><span><i class="l-ok"></i>Normal</span><span><i class="l-alto"></i>Alto (70% o más)</span><span><i class="l-crit"></i>Crítico (90% o más)</span></div>
+        <pre class="rec-salida" id="rec-salida" title="Salida del comando">—</pre>
+      </div>
+    </section>
+
   </main>
 
   <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión 1.0 beta</span><span class="familia">An app from the Ort Engine software family</span></footer>
@@ -5808,6 +5883,67 @@ function pintarSeleccionIzumi() {
 })();
 
 // CFG-FIN
+
+/* ===================== RECURSOS: CPU / RAM / DISCO ===================== */
+(function () {
+  'use strict';
+  const sec = document.getElementById('recursos');
+  if (!sec) return;
+  const $r = (id) => document.getElementById(id);
+  const api = () => !!(window.sistema && typeof window.sistema.recMedir === 'function');
+  let timer = null, pausa = false, midiendo = false;
+  const dos = (n) => String(n).padStart(2, '0');
+  const hora = (ms) => { const d = new Date(ms); return dos(d.getHours()) + ':' + dos(d.getMinutes()) + ':' + dos(d.getSeconds()); };
+  // El número sube o baja poco a poco hasta el valor nuevo
+  function contar(el, a, b) {
+    const t0 = performance.now(), dur = 900;
+    const paso = (t) => {
+      const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3), v = a + (b - a) * e;
+      el.textContent = (b % 1 ? v.toFixed(1) : Math.round(v)) + '%';
+      if (k < 1) requestAnimationFrame(paso);
+    };
+    requestAnimationFrame(paso);
+  }
+  function pintar(k, v) {
+    const col = sec.querySelector('.rec-col[data-k="' + k + '"]');
+    if (!col) return;
+    const pct = col.querySelector('.rec-pct'), agua = col.querySelector('.rec-agua');
+    if (v == null) { pct.textContent = '—'; agua.style.height = '0%'; return; }
+    const antes = parseFloat(col.dataset.v || '0');
+    col.dataset.v = v;
+    agua.style.height = Math.max(v, 1.5) + '%';
+    col.classList.toggle('alto', v >= 70 && v < 90);
+    col.classList.toggle('crit', v >= 90);
+    col.classList.toggle('lleno', v >= 55);
+    contar(pct, antes, v);
+  }
+  async function medir() {
+    if (midiendo || pausa || !sec.classList.contains('active') || document.hidden) return;
+    if (!api()) { $r('rec-hora').textContent = 'Abre la app con Electron'; $r('rec-vivo').classList.add('err'); return; }
+    midiendo = true;
+    let r;
+    try { r = await window.sistema.recMedir(); } catch (e) { r = { ok: false, error: e.message }; }
+    midiendo = false;
+    $r('rec-vivo').classList.toggle('err', !r || !r.ok);
+    if (!r || !r.ok) { $r('rec-hora').textContent = 'Error al medir'; $r('rec-salida').textContent = (r && (r.error || r.texto)) || 'Sin respuesta'; return; }
+    pintar('cpu', r.cpu); pintar('ram', r.ram); pintar('disco', r.disco);
+    $r('rec-hora').textContent = 'Actualizado ' + hora(r.hora);
+    $r('rec-salida').textContent = r.texto;
+  }
+  function arrancar() { if (timer) return; medir(); timer = setInterval(medir, 2000); }
+  function parar() { clearInterval(timer); timer = null; }
+  // Mide solo mientras la ventana Recursos está abierta
+  new MutationObserver(() => { if (sec.classList.contains('active')) arrancar(); else parar(); }).observe(sec, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && sec.classList.contains('active')) medir(); });
+  $r('rec-pausa').addEventListener('click', () => {
+    pausa = !pausa;
+    $r('rec-pausa').textContent = pausa ? 'Reanudar' : 'Pausar';
+    $r('rec-vivo').classList.toggle('pausa', pausa);
+    if (pausa) $r('rec-hora').textContent = 'En pausa'; else medir();
+  });
+  if (sec.classList.contains('active')) arrancar();
+})();
+
 
 // TC-INICIO
 (function () {

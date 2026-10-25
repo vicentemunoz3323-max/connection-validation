@@ -67,6 +67,8 @@ contextBridge.exposeInMainWorld('sistema', {
   onSrvSalida: (cb) => ipcRenderer.on('srv-salida', (_e, d) => cb(d)),
   onSrvPide: (cb) => ipcRenderer.on('srv-pide', (_e, d) => cb(d)),
   onSrvLimpiar: (cb) => ipcRenderer.on('srv-limpiar', () => cb()),
+  // Recursos (CPU / RAM / DISCO)
+  recMedir: () => ipcRenderer.invoke('rec-medir'),
   // Llave USB con las contraseñas
   llaveEstado: () => ipcRenderer.invoke('llave-estado'),
   llaveLeer: () => ipcRenderer.invoke('llave-leer'),
