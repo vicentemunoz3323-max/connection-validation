@@ -62,6 +62,7 @@ contextBridge.exposeInMainWorld('sistema', {
   srvScriptRestaurar: () => ipcRenderer.invoke('srv-script-restaurar'),
   srvAbrirLog: () => ipcRenderer.invoke('srv-abrir-log'),
   srvQuitarCred: () => ipcRenderer.invoke('srv-quitar-cred'),
+  srvVerificar: () => ipcRenderer.invoke('srv-verificar'),
   srvAbrirEstado: () => ipcRenderer.invoke('srv-abrir-estado'),
   onSrvEstado: (cb) => ipcRenderer.on('srv-estado', (_e, d) => cb(d)),
   onSrvSalida: (cb) => ipcRenderer.on('srv-salida', (_e, d) => cb(d)),

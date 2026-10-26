@@ -27,7 +27,7 @@ const rutaValores = () => path.join(dirDatos(), 'valores.json');
 /* Pasos (mismo orden que PASOS en el script). pass = contraseñas que necesita. */
 const PASOS = [
   { id: 'set_ID', titulo: 'Número de rack', desc: 'Calcula la IP y el nombre del servidor', pass: [] },
-  { id: 'set_network', titulo: 'Red SFC y paquetes base', desc: 'Conexión SFC con IP fija, SSH, git, sssd, pip y llaves SSH', pass: ['sudo'] },
+  { id: 'set_network', titulo: 'Red SFC y paquetes base', desc: 'Conexión SFC con IP fija; instala pexpect y minicom (lo que necesita la app), SSH, git, sssd, pip y llaves SSH', pass: ['sudo'] },
   { id: 'gitconfig_cookie', titulo: 'Credenciales de git', desc: 'Copia .gitconfig y .gitcookies del mirror y descarga security-hardened-image', pass: ['mirror'] },
   { id: 'flex_tag', titulo: 'Etiqueta de CrowdStrike', desc: 'Ajusta setup-patch.sh y agrega la llave de apt', pass: ['sudo'] },
   { id: 'run_security_patch', titulo: 'Parche de seguridad', desc: 'Corre setup-patch.sh (puede tardar hasta 1 hora)', pass: ['sudo'] },
@@ -155,7 +155,8 @@ function emitirEstado() { enviar('srv-estado', estadoPublico()); }
 function evento(ev) {
   if (ev.pide) { run.pide = ev; enviar('srv-pide', ev); emitirEstado(); return; }
   if (ev.paso && ev.estado) {
-    run.estados[ev.paso] = { estado: ev.estado, error: ev.error || null, seg: ev.seg || null };
+    const previo = run.estados[ev.paso] || {};
+    run.estados[ev.paso] = { estado: ev.estado, error: ev.error || null, seg: ev.seg || null, t: ev.estado === 'inicio' ? Date.now() : (previo.t || null) };
     if (ev.estado === 'inicio') run.actual = ev.paso;
     if (ev.estado === 'fallo') run.fallo = { paso: ev.paso, error: ev.error || '' };
     if (ev.estado === 'ok' || ev.estado === 'fallo') bitacora.registrar('Server', ev.estado === 'ok' ? 'Paso terminado' : 'Paso falló', ev.paso + (ev.error ? ' · ' + ev.error : '') + (ev.seg ? ' · ' + ev.seg + ' s' : ''));
@@ -281,6 +282,78 @@ function detener() {
   setTimeout(() => { try { process.kill(-p.pid, 'SIGKILL'); } catch (e) {} }, 4000);
   return true;
 }
+
+
+/* ---------- Verificar: comprueba que todo quedó instalado como debe ----------
+   Solo lee (no cambia nada ni pide contraseña). Cada revisión dice qué paso la deja bien. */
+function sh(cmd, timeout = 15000) {
+  return new Promise((resolve) => {
+    execFile('bash', ['-c', cmd], { timeout, env: { ...process.env, LC_ALL: 'C', LANG: 'C' }, maxBuffer: 4 * 1024 * 1024 }, (err, out, errOut) => {
+      resolve({ code: err ? (typeof err.code === 'number' ? err.code : 1) : 0, out: String(out || '').trim(), err: String(errOut || '').trim() });
+    });
+  });
+}
+const qq = (t) => "'" + String(t).replace(/'/g, "'\\''") + "'";
+const ping = (ip) => sh('ping -c 1 -W 2 ' + qq(ip) + ' >/dev/null 2>&1', 6000).then((r) => r.code === 0);
+const activo = (svc) => sh('systemctl is-active ' + qq(svc)).then((r) => r.out === 'active');
+const instalado = (pkg) => sh("dpkg-query -W -f='${Status}' " + qq(pkg) + ' 2>/dev/null').then((r) => /install ok installed/.test(r.out));
+const existe = (ruta) => fs.existsSync(ruta.replace(/^~/, os.homedir()));
+const leer = (ruta) => { try { return fs.readFileSync(ruta, 'utf8'); } catch (e) { return null; } };
+
+async function verificar() {
+  const v = leerValores(), st = leerEstado(), c = st.config || {}, home = os.homedir();
+  const ip = c.ip_address, sfc = v.iface_sfc || 'eno1', t1 = v.iface_test || 'ens4f0', t2 = v.iface_test2 || 'ens4f1';
+  const dhcpd = leer('/etc/dhcp/dhcpd.conf');
+  const R = (grupo, nombre, paso, estado, detalle) => ({ grupo, nombre, paso, estado, detalle });
+  const ok = (b) => (b ? 'ok' : 'mal');
+  const revisiones = [
+    // Red
+    async () => { const h = (await sh('hostname')).out; return R('Red', 'Nombre del servidor', c.hostname ? 'run_ansible_playbook' : 'set_ID', !c.hostname ? 'aviso' : ok(h === c.hostname), 'Es ' + (h || '—') + (c.hostname ? ' · debe ser ' + c.hostname + ' (lo pone el Ansible)' : ' · falta correr el paso 1')); },
+    async () => { const r = await sh('ip -4 -o addr show dev ' + qq(sfc)); const tiene = ip && r.out.includes(ip + '/'); return R('Red', 'IP del servidor en ' + sfc, 'set_network', !ip ? 'aviso' : ok(tiene), tiene ? ip : 'Tiene: ' + ((r.out.match(/inet (\S+)/) || [])[1] || 'sin IP') + (ip ? ' · debe ser ' + ip : '')); },
+    async () => { const r = await sh('nmcli -t -f NAME,DEVICE connection show --active'); const a = r.out.split('\n').some((l) => l.startsWith('SFC:')); return R('Red', 'Conexión SFC activa', 'set_network', ok(a), a ? 'SFC activa' : 'No está activa la conexión "SFC"'); },
+    async () => { const b = await ping(v.gateway || '172.24.125.1'); return R('Red', 'Gateway', 'set_network', ok(b), (v.gateway || '172.24.125.1') + (b ? ' contesta' : ' no contesta')); },
+    async () => { const b = await ping(v.mirror_ip || '172.24.125.2'); return R('Red', 'Mirror', 'gitconfig_cookie', ok(b), (v.mirror_ip || '172.24.125.2') + (b ? ' contesta' : ' no contesta')); },
+    async () => { const b = await ping('8.8.8.8'); return R('Red', 'Salida a internet', 'set_network', b ? 'ok' : 'aviso', b ? '8.8.8.8 contesta' : 'No contesta 8.8.8.8 (apt y descargas van a fallar)'); },
+    async () => { const b = await activo('ssh'); return R('Red', 'Servicio SSH', 'set_network', ok(b), b ? 'Activo' : 'No está activo (sudo systemctl enable --now ssh)'); },
+    // Paquetes base
+    async () => { const pk = ['python3-pexpect', 'minicom', 'git', 'openssh-server', 'sssd', 'python3-pip']; const f = []; for (const k of pk) if (!(await instalado(k))) f.push(k); return R('Paquetes', 'Paquetes base', 'set_network', ok(!f.length), f.length ? 'Faltan: ' + f.join(', ') : pk.join(', ')); },
+    async () => { const pk = ['libsss-sudo', 'gnome-control-center']; const f = []; for (const k of pk) if (!(await instalado(k))) f.push(k); return R('Paquetes', 'libsss-sudo y gnome-control-center', 'create_networkmanager_symlink', ok(!f.length), f.length ? 'Faltan: ' + f.join(', ') : 'Instalados'); },
+    async () => { const b = ['/lib/systemd/system/network-manager.service', '/usr/lib/systemd/system/network-manager.service', '/etc/systemd/system/network-manager.service'].some((r) => existe(r)); return R('Paquetes', 'Enlace network-manager.service', 'create_networkmanager_symlink', ok(b), b ? 'Existe' : 'No existe el enlace'); },
+    // Seguridad
+    async () => { const b = existe(path.join(home, 'security-hardened-image')); return R('Seguridad', 'Repo security-hardened-image', 'gitconfig_cookie', ok(b), b ? '~/security-hardened-image' : 'No está en tu carpeta personal'); },
+    async () => { const b = existe(path.join(home, '.gitcookies')) && existe(path.join(home, '.gitconfig')); return R('Seguridad', 'Credenciales de git', 'gitconfig_cookie', ok(b), b ? '.gitconfig y .gitcookies' : 'Falta .gitconfig o .gitcookies'); },
+    async () => { const a = await activo('falcon-sensor'); const i = a || (await instalado('falcon-sensor')); return R('Seguridad', 'Agente CrowdStrike (falcon-sensor)', 'run_security_patch', a ? 'ok' : i ? 'aviso' : 'mal', a ? 'Corriendo' : i ? 'Instalado pero no está corriendo' : 'No está instalado'); },
+    // Estación
+    async () => { const b = existe(path.join(home, 'lego-infra')); return R('Estación', 'Repo lego-infra', 'validate_and_lego_setup', ok(b), b ? '~/lego-infra' : 'No está en tu carpeta personal'); },
+    async () => { const r = await sh('ansible --version 2>/dev/null | head -1'); return R('Estación', 'Ansible', 'validate_and_lego_setup', ok(r.code === 0 && r.out), r.out || 'No está instalado'); },
+    async () => { const b = existe('/usr/NX/bin/nxserver') || (await instalado('nomachine')); return R('Estación', 'NoMachine', 'run_ansible_playbook', ok(b), b ? 'Instalado' : 'No está instalado'); },
+    async () => { const r = await sh('goss --version 2>/dev/null'); return R('Estación', 'Goss', 'reinstall_goss', ok(r.code === 0 && r.out), r.out || 'No está instalado'); },
+    async () => { const r = await sh('google-chrome --version 2>/dev/null'); return R('Estación', 'Google Chrome', 'fix_chrome', ok(r.code === 0 && r.out), r.out || 'No está instalado'); },
+    // DHCP y tarjetas
+    async () => { const a = await activo('isc-dhcp-server'), b = await activo('isc-dhcp-server6'); return R('DHCP y tarjetas', 'Servicio DHCP (IPv4 / IPv6)', 'provisional_dhcp', a && b ? 'ok' : a ? 'aviso' : 'mal', 'IPv4 ' + (a ? 'activo' : 'apagado') + ' · IPv6 ' + (b ? 'activo' : 'apagado')); },
+    async () => { const n = dhcpd ? (dhcpd.match(/host\s+izumi-\d+/g) || []).length : 0; return R('DHCP y tarjetas', 'Izumis en dhcpd.conf', 'provisional_dhcp', dhcpd == null ? 'mal' : n >= 16 ? 'ok' : 'aviso', dhcpd == null ? 'No existe /etc/dhcp/dhcpd.conf' : n + ' de 16 Izumis'); },
+    async () => { const f = []; for (const t of [t1, t2]) { const mac = ((await sh('cat /sys/class/net/' + qq(t) + '/address 2>/dev/null')).out || '').toLowerCase(); const esp = String((st.interfaces || {})[t] || '').toLowerCase(); if (!mac) f.push(t + ' no existe'); else if (esp && esp !== mac) f.push(t + ' tiene ' + mac + ' (esperada ' + esp + ')'); } return R('DHCP y tarjetas', 'Tarjetas de prueba ' + t1 + ' / ' + t2, 'network_plan', ok(!f.length), f.length ? f.join(' · ') : 'Existen con su MAC'); },
+    async () => { const b = existe('/etc/netplan/01-network-manager-all.yaml'); return R('DHCP y tarjetas', 'Netplan de las tarjetas', 'network_plan', ok(b), b ? '/etc/netplan/01-network-manager-all.yaml' : 'No existe el archivo de netplan'); },
+    async () => { const r = await sh('nmcli -t -f NAME,DEVICE connection show --active'); const l = r.out.split('\n').find((x) => x.startsWith('Test Network:')); return R('DHCP y tarjetas', '"Test Network" activa', 'force_test_network_selection', ok(l && l.endsWith(':' + t1)), l ? 'En ' + l.split(':').pop() + (l.endsWith(':' + t1) ? '' : ' · debe estar en ' + t1) : 'No está activa'); },
+    // Equipos del rack
+    async () => { const zip = v.zpe_ip || '10.0.0.253'; const host = dhcpd && new RegExp('host\\s+zpe\\s*\\{[^}]*' + zip.replace(/\./g, '\\.')).test(dhcpd); const b = await ping(zip); return R('Equipos del rack', 'ZPE', 'zpe_config', host && b ? 'ok' : host || b ? 'aviso' : 'mal', (host ? 'En dhcpd.conf' : 'No está en dhcpd.conf') + ' · ' + zip + (b ? ' contesta' : ' no contesta')); },
+    async () => { const b = !!st.flags.juniper_config; return R('Equipos del rack', 'Juniper', 'juniper_config', b ? 'ok' : 'mal', b ? 'Configurado' + (c.juniper_already_configured ? ' (ya estaba)' : '') + ' por ' + (c.juniper_console_device || 'consola') : 'No se ha configurado (se revisa solo por consola)'); },
+    async () => { const tip = v.tross_ip || '10.0.0.251'; const host = dhcpd && /host\s+tross\s*\{/.test(dhcpd); const img = existe('/tftpboot/tross'); return R('Equipos del rack', 'Tross', 'vrmu_util_config', host && img ? 'ok' : 'aviso', (host ? 'MAC en dhcpd.conf' : 'Sin MAC en dhcpd.conf (ponla en TROSS)') + ' · imagen ' + (img ? 'en /tftpboot/tross' : 'no está en /tftpboot')); },
+    async () => { const r = path.join(home, 'vrmu_util'); let x = false; try { fs.accessSync(r, fs.constants.X_OK); x = true; } catch (e) {} return R('Equipos del rack', 'vrmu_util', 'vrmu_util_config', ok(x), x ? '~/vrmu_util listo' : existe(r) ? 'Existe pero no se puede ejecutar' : 'No está en tu carpeta personal'); },
+    async () => { const b = await ping('10.254.128.3'); return R('Equipos del rack', 'Controlador de rectificadores', 'vrmu_util_config', b ? 'ok' : 'aviso', '10.254.128.3' + (b ? ' contesta' : ' no contesta')); },
+    async () => { const b = existe(path.join(home, 'U22-Configurationserver')); return R('Equipos del rack', 'U22-Configurationserver', 'download_python_tools', ok(b), b ? '~/U22-Configurationserver' : 'No está en tu carpeta personal'); },
+    // Cierre
+    async () => { const b = existe('/var/run/reboot-required'); return R('Cierre', 'Reinicio pendiente', 'end_config_reboot', b ? 'aviso' : 'ok', b ? 'Hay cambios que se aplican hasta reiniciar' : 'No hace falta reiniciar'); }
+  ];
+  const resultados = await Promise.all(revisiones.map((f) => f().catch((e) => R('Otros', 'Revisión', null, 'aviso', e.message))));
+  const cuenta = { ok: 0, aviso: 0, mal: 0 };
+  for (const r of resultados) cuenta[r.estado] = (cuenta[r.estado] || 0) + 1;
+  bitacora.registrar('Server', 'Verificó instalación', cuenta.ok + ' bien · ' + cuenta.aviso + ' avisos · ' + cuenta.mal + ' mal');
+  bitacora.guardar('server', 'verificacion_' + bitacora.sello() + '.txt', '# Verificación · ' + bitacora.fecha() + ' ' + bitacora.hora() + '\n\n' +
+    resultados.map((r) => (r.estado === 'ok' ? '[OK]   ' : r.estado === 'aviso' ? '[AVISO]' : '[MAL]  ') + ' ' + r.grupo + ' · ' + r.nombre + ' — ' + r.detalle).join('\n') + '\n');
+  return { ok: true, resultados, cuenta, hora: Date.now() };
+}
+ipcMain.handle('srv-verificar', () => verificar());
 
 /* ---------- Canales ---------- */
 ipcMain.handle('srv-get', () => { try { asegurarScript(); } catch (e) {} return { ...estadoPublico(), hist: hist.slice(-5000) }; });

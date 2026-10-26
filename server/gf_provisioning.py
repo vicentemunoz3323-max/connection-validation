@@ -414,6 +414,56 @@ def run_command(cmd, check=True):
         raise RuntimeError(f"Error ejecutando comando: {cmd}")
     return res.returncode
 
+def sudo_simple(cmd, timeout=1800):
+    """Corre 'cmd' con sudo SIN pexpect (la contraseña va por stdin a 'sudo -S').
+    Se usa en el paso 2, antes de que esté instalado pexpect en un servidor nuevo."""
+    print(f"[CMD sudo] {cmd}")
+    p = subprocess.Popen(["sudo", "-S", "-p", "", "bash", "-c", cmd], stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+    try:
+        p.stdin.write((SUDO_PASSWORD or "") + "\n"); p.stdin.close()
+    except (BrokenPipeError, OSError):
+        pass
+    fin = time.time() + timeout
+    for linea in p.stdout:
+        sys.stdout.write(linea); sys.stdout.flush()
+        if time.time() > fin:
+            p.kill()
+            raise RuntimeError(f"Timeout en comando: {cmd}")
+    p.wait()
+    if p.returncode != 0:
+        raise RuntimeError(f"Error ejecutando: {cmd} (Exit code: {p.returncode})")
+    return 0
+
+def _cargar_pexpect():
+    """Después de instalar python3-pexpect con apt, lo carga sin reiniciar el script."""
+    global pexpect
+    if pexpect:
+        return True
+    import importlib, site
+    importlib.invalidate_caches()
+    for d in ("/usr/lib/python3/dist-packages", "/usr/local/lib/python3/dist-packages"):
+        if os.path.isdir(d) and d not in sys.path:
+            sys.path.append(d)
+    try:
+        pexpect = importlib.import_module("pexpect")
+        return True
+    except ImportError:
+        return False
+
+def _esperar_red(destinos=None, segundos=40):
+    """Espera a que la red SFC responda (ping al gateway / mirror) antes de usar apt."""
+    destinos = destinos or [CFG["gateway"], CFG["mirror_ip"]]
+    fin = time.time() + segundos
+    while time.time() < fin:
+        for d in destinos:
+            if subprocess.run(["ping", "-c", "1", "-W", "2", d], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0:
+                print(f"[✓] La red responde ({d}).")
+                return True
+        time.sleep(2)
+    print(f"[AVISO] La red no respondió en {segundos} s ({', '.join(destinos)}). Se intenta seguir...")
+    return False
+
 def run_interactive(cmd, timeout=3600):
     print(f"[CMD Interactive] {cmd}")
     child = pexpect.spawn("bash", ["-c", cmd], encoding="utf-8", timeout=timeout)
@@ -490,12 +540,26 @@ def set_network():
     existe = subprocess.run(["nmcli", "-t", "-f", "NAME", "connection", "show"], capture_output=True, text=True)
     if "SFC" in (existe.stdout or "").splitlines():
         print("[=] Ya existe la conexion 'SFC'. Se recrea con la IP de este rack...")
-        run_interactive('sudo nmcli con delete "SFC"')
+        sudo_simple('nmcli con delete "SFC"')
     nmcli_cmd = (
-        f'sudo nmcli con add con-name "SFC" ifname {CFG["iface_sfc"]} type ethernet '
+        f'nmcli con add con-name "SFC" ifname {CFG["iface_sfc"]} type ethernet '
         f'ipv4.method manual ipv4.addresses {ip_address}/24 gw4 {CFG["gateway"]} ipv4.dns {CFG["dns"]}'
     )
-    run_interactive(nmcli_cmd)
+    sudo_simple(nmcli_cmd)
+    sudo_simple('nmcli con up "SFC"')
+    _esperar_red()
+
+    # Ubuntu recién instalado corre actualizaciones automáticas en segundo plano y bloquea apt.
+    # Con esto, todo apt / apt-get de aquí en adelante espera hasta 10 min a que se libere en vez de fallar.
+    print("[*] Configurando apt para que espere si otra instalacion lo esta usando...")
+    sudo_simple("echo 'DPkg::Lock::Timeout \"600\";' > /etc/apt/apt.conf.d/99ghostfish-espera")
+
+    # Lo que necesita la app desde el inicio (en un servidor nuevo todavía no existe)
+    print("[*] Instalando lo que necesita la app: python3-pexpect y minicom...")
+    sudo_simple("apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pexpect minicom", timeout=1800)
+    if not _cargar_pexpect():
+        raise RuntimeError("Se instalo python3-pexpect pero Python no lo pudo cargar. Vuelve a correr este paso.")
+    print("[✓] pexpect y minicom listos.")
 
     print("[*] Verificando e importando llaves GPG faltantes para apt...")
     run_interactive(
@@ -2093,8 +2157,8 @@ def correr_paso(nombre, fn, passes):
     aviso(paso=nombre, estado="inicio")
     t0 = time.time()
     try:
-        if not pexpect and nombre not in ("set_ID", "setup_nomachine_yaml"):
-            raise RuntimeError("Falta el modulo pexpect de Python. Instalalo con: sudo apt install python3-pexpect")
+        if not pexpect and nombre not in ("set_ID", "set_network", "setup_nomachine_yaml"):
+            raise RuntimeError("Falta el modulo pexpect de Python. Corre el paso 2 (Red SFC y paquetes base), que lo instala, o a mano: sudo apt install python3-pexpect")
         requiere(*passes)
         fn()
     except BaseException as e:   # incluye sys.exit del downgrade del Juniper

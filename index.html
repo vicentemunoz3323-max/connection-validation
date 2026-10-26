@@ -1675,6 +1675,40 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 @keyframes focoPrende { 0% { filter: grayscale(1) brightness(1.15); } 20% { filter: none; } 35% { filter: grayscale(1) brightness(1.15); } 50% { filter: none; } 62% { filter: grayscale(1) brightness(1.15); } 75%, 100% { filter: drop-shadow(0 0 6px rgba(255,190,40,.9)); } }
 @keyframes focoHalo { 0%, 100% { opacity: .18; transform: scale(.9); } 50% { opacity: .5; transform: scale(1.18); } }
 @media (prefers-reduced-motion: reduce) { .foco-halo, .foco-vidrio { animation: none; filter: none; } }
+/* Cronómetro y barras de avance mientras corre */
+.srv-vivo { grid-column: 2 / -1; display: flex; justify-content: space-between; gap: 10px; align-items: center; margin-top: 6px; font: 600 11.5px var(--mono); color: var(--blue); }
+.srv-vivo .srv-ult { color: var(--muted); font-weight: 500; }
+.srv-vivo .srv-ult.calla { color: #b45300; }
+.srv-barra-ind { grid-column: 2 / -1; height: 4px; margin-top: 5px; border-radius: 99px; background: rgba(29,92,207,.12); overflow: hidden; position: relative; }
+.srv-barra-ind::after { content: ""; position: absolute; top: 0; bottom: 0; width: 35%; border-radius: 99px; background: linear-gradient(90deg, rgba(29,92,207,0), var(--blue), rgba(29,92,207,0)); animation: srvInd 1.4s ease-in-out infinite; }
+@keyframes srvInd { from { left: -35%; } to { left: 100%; } }
+.srv-prog { align-self: stretch; width: 100%; box-sizing: border-box; text-align: left; margin-top: 14px; padding-top: 12px; border-top: 1px solid #2b3440; }
+.srv-prog-top { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: #c7d2df; font-weight: 600; }
+.srv-crono-tot { font: 700 15px var(--mono); color: #fff; letter-spacing: .03em; }
+.srv-prog-barra { position: relative; height: 8px; margin-top: 8px; border-radius: 99px; background: #0e1319; border: 1px solid #2b3440; overflow: hidden; }
+.srv-prog-barra span { position: absolute; left: 0; top: 0; bottom: 0; background: linear-gradient(90deg, #12894a, #2ecc71); border-radius: 99px; transition: width .6s ease; }
+.srv-prog-barra i { position: absolute; top: 0; bottom: 0; width: 18%; background: linear-gradient(90deg, rgba(127,182,255,0), rgba(127,182,255,.9), rgba(127,182,255,0)); animation: srvInd 1.6s ease-in-out infinite; }
+.srv-prog-ult { margin-top: 6px; font: 11px var(--mono); color: #8fa0b3; min-height: 14px; }
+.srv-prog-ult.calla { color: #ffcc66; }
+@media (prefers-reduced-motion: reduce) { .srv-barra-ind::after, .srv-prog-barra i { animation: none; } }
+/* Verificar instalación */
+.ver-card { padding: 18px 20px; }
+.ver-cab { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+.ver-cuenta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-top: 14px; font-size: 13px; }
+.ver-cuenta .vc b { font-size: 18px; margin-right: 4px; }
+.vc.ok { color: var(--green); } .vc.aviso { color: #b45300; } .vc.mal { color: var(--red); }
+.ver-barra { flex: 1 1 200px; display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--bg-soft); }
+.ver-barra span { transition: width .5s ease; } .ver-barra .ok { background: var(--green); } .ver-barra .aviso { background: #f2a33a; } .ver-barra .mal { background: var(--red); }
+.ver-lista { margin-top: 12px; }
+.ver-grupo { margin-top: 14px; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.ver-item { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 10px; margin-top: 4px; border: 1px solid var(--line); border-left: 3px solid var(--line); border-radius: 8px; background: #fff; animation: revisaEntra .3s ease-out both; }
+.ver-item .ic { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; font-weight: 700; color: #fff; }
+.ver-item.ok { border-left-color: var(--green); } .ver-item.ok .ic { background: var(--green); }
+.ver-item.aviso { border-left-color: #f2a33a; background: rgba(242,163,58,.05); } .ver-item.aviso .ic { background: #f2a33a; }
+.ver-item.mal { border-left-color: var(--red); background: rgba(200,38,29,.04); } .ver-item.mal .ic { background: var(--red); }
+.ver-item b { display: block; font-size: 13px; font-weight: 600; }
+.ver-item small { display: block; font: 11.5px var(--mono); color: var(--muted); margin-top: 1px; overflow-wrap: anywhere; }
+.ver-item.cargando .ic { background: var(--bg-soft); color: var(--muted); animation: pulso-suave 1s ease-in-out infinite; }
 </style>
 </head>
 <body>
@@ -2202,6 +2236,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 <button type="button" class="srv-tab" data-tab="valores" role="tab">Valores</button>
                 <button type="button" class="srv-tab" data-tab="script" role="tab">Script <span class="srv-mod" id="srv-mod" hidden>modificado</span></button>
                 <button type="button" class="srv-tab" data-tab="resultados" role="tab">Resultados</button>
+                <button type="button" class="srv-tab" data-tab="verificar" role="tab">Verificar</button>
               </div>
             </div>
 
@@ -2241,6 +2276,11 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                   </div>
                   <button type="button" class="ctrl-go" id="srv-go" disabled>Configurar</button>
                   <div class="lever-hint" id="srv-hint">Sube el switch y presiona Configurar</div>
+                  <div class="srv-prog" id="srv-prog" hidden>
+                    <div class="srv-prog-top"><span id="srv-prog-txt">—</span><span class="srv-crono-tot" id="srv-prog-t">00:00</span></div>
+                    <div class="srv-prog-barra"><span id="srv-prog-hecho"></span><i></i></div>
+                    <div class="srv-prog-ult" id="srv-prog-ult"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2298,6 +2338,22 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                   <pre class="srv-res-json" id="res-json">—</pre>
                 </div>
               </div>
+            </div>
+
+            <!-- Verificar: comprueba que todo quedó instalado como debe -->
+            <div class="srv-panel card ver-card" data-panel="verificar" hidden>
+              <div class="ver-cab">
+                <div>
+                  <div class="srv-res-tit" id="ver-tit">Comprobar instalación</div>
+                  <div class="srv-res-sub" id="ver-sub">Revisa red, paquetes, seguridad, la estación, DHCP, tarjetas y equipos del rack. Solo lee: no cambia nada ni pide contraseña.</div>
+                </div>
+                <button type="button" class="btn" id="ver-correr">Comprobar ahora</button>
+              </div>
+              <div class="ver-cuenta" id="ver-cuenta" hidden>
+                <span class="vc ok"><b id="ver-n-ok">0</b> bien</span><span class="vc aviso"><b id="ver-n-aviso">0</b> avisos</span><span class="vc mal"><b id="ver-n-mal">0</b> mal</span>
+                <div class="ver-barra"><span class="ok" id="ver-b-ok"></span><span class="aviso" id="ver-b-aviso"></span><span class="mal" id="ver-b-mal"></span></div>
+              </div>
+              <div id="ver-lista" class="ver-lista"></div>
             </div>
 
             <div class="upd-console srv-console">
@@ -4976,7 +5032,7 @@ function pintarSeleccionIzumi() {
   /* ---------- Pistas cuando falla un paso ---------- */
   const PISTAS_PASO = {
     set_ID: ['Escribe solo el número del rack (ej. 54). La IP sale de 172.24.125.(rack + 99) y no puede pasar de 254.'],
-    set_network: ['Revisa que el cable SFC esté conectado en <code>eno1</code> y que <code>ip link</code> la muestre como UP.', 'Si el nombre de la tarjeta es otro, cámbialo en Valores → Tarjeta SFC.', 'Si apt falla: <code>sudo dpkg --configure -a</code> y vuelve a correr el paso.'],
+    set_network: ['Revisa que el cable SFC esté conectado en <code>eno1</code> y que <code>ip link</code> la muestre como UP.', 'Si falló al instalar pexpect o minicom, revisa la salida a internet (<code>ping google.com</code>): apt los baja de los repositorios.', 'Si el nombre de la tarjeta es otro, cámbialo en Valores → Tarjeta SFC.', 'Si apt falla: <code>sudo dpkg --configure -a</code> y vuelve a correr el paso.'],
     gitconfig_cookie: ['Haz <code>ping 172.24.125.2</code>: si no contesta, revisa el cable SFC y la IP del servidor.', 'Revisa la contraseña del mirror (usuario testusr).', 'Si el repo no se clonó, la cookie puede estar vencida en el mirror.'],
     flex_tag: ['Corre antes "Credenciales de git": este paso usa la carpeta security-hardened-image.'],
     run_security_patch: ['Es largo: si se cortó por tiempo, vuelve a correrlo, retoma.', 'Revisa en el log la última línea antes del error (apt o descarga).', 'Si apt quedó a medias: <code>sudo dpkg --configure -a</code>.'],
@@ -4997,7 +5053,7 @@ function pintarSeleccionIzumi() {
     end_config_reboot: ['Revisa el resumen en la consola: lista los pasos que faltan.']
   };
   const PISTAS_TEXTO = [
-    [/No module named ['"]?pexpect|pexpect no est|modulo pexpect/i, 'Falta pexpect: <code>sudo apt install python3-pexpect</code>.'],
+    [/No module named ['"]?pexpect|pexpect no est|modulo pexpect/i, 'Falta pexpect: corre primero el <b>paso 2</b>, que lo instala (o a mano <code>sudo apt install python3-pexpect</code>).'],
     [/Falta la contrase|password.*(vac|missing)|contraseña .*falta/i, 'Falta una contraseña: vuelve a correr y escríbela en la ventana.'],
     [/incorrect password|Sorry, try again|sudo: .*password/i, 'La contraseña de sudo está mal.'],
     [/Decryption failed|vault/i, 'Revisa la contraseña del vault de Ansible.'],
@@ -5052,6 +5108,9 @@ function pintarSeleccionIzumi() {
       const dur = e && e.seg ? '<span class="srv-dur">' + durTxt(Math.round(e.seg)) + '</span>' : '';
       li.innerHTML = '<span class="om-num">' + (i + 1) + '</span><div><b>' + esc(p.titulo) + dur + '</b><small>' + esc(p.desc) +
         (p.cable ? ' · necesita cable de consola' : '') + '</small></div><div class="srv-paso-acc"></div>';
+      if (est === 'corre') {
+        li.insertAdjacentHTML('beforeend', '<div class="srv-vivo"><span>⏱ <span class="srv-crono" data-desde="' + ((e && e.t) || Date.now()) + '">00:00</span></span><span class="srv-ult"></span></div><div class="srv-barra-ind"></div>');
+      }
       const acc = li.querySelector('.srv-paso-acc');
       const bc = document.createElement('button');
       bc.type = 'button'; bc.className = 'btn btn-secundario btn-mini'; bc.textContent = est === 'corre' ? 'Corriendo…' : 'Correr';
@@ -5070,6 +5129,15 @@ function pintarSeleccionIzumi() {
     });
     const total = srv.pasos.length;
     q('srv-avance').textContent = hechos === total && total ? 'Todos listos ✓' : hechos + ' de ' + total;
+    const pr = q('srv-prog');
+    pr.hidden = !(c && c.modo !== 'tross');
+    if (!pr.hidden) {
+      const idx = c.actual ? srv.pasos.findIndex((p) => p.id === c.actual) + 1 : 0;
+      q('srv-prog-txt').textContent = c.modo === 'paso' ? 'Paso suelto: ' + srvTitulo(c.paso) : (idx ? 'Paso ' + idx + ' de ' + total : 'Iniciando…');
+      q('srv-prog-hecho').style.width = (total ? Math.round(hechos / total * 100) : 0) + '%';
+      q('srv-prog-t').dataset.desde = c.inicio || Date.now();
+    }
+    srvTic();
     const corriendoLi = ol.querySelector('.srv-paso.corre');
     if (corriendoLi && srvSeguir) corriendoLi.scrollIntoView({ block: 'nearest' });
 
@@ -5121,6 +5189,22 @@ function pintarSeleccionIzumi() {
     if ((!c || !c.pide) && srvPideActual) srvCerrarPide();
   }
 
+
+  /* ---------- Cronómetro: avanza cada segundo mientras corre ---------- */
+  let srvUltLinea = 0;
+  const reloj = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), x = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(x).padStart(2, '0'); };
+  const hace = (ms) => { const t = Math.floor(ms / 1000); return t < 60 ? t + ' s' : Math.floor(t / 60) + ' min'; };
+  function srvTic() {
+    if (!srv.corriendo || srv.corriendo.modo === 'tross') return;
+    const ahora = Date.now();
+    document.querySelectorAll('#srv-pasos .srv-crono').forEach((el) => { el.textContent = reloj(ahora - +el.dataset.desde); });
+    const tt = q('srv-prog-t'); if (tt.dataset.desde) tt.textContent = reloj(ahora - +tt.dataset.desde);
+    const calla = srvUltLinea ? ahora - srvUltLinea : 0;
+    const txt = !srvUltLinea ? 'Esperando salida…' : calla < 4000 ? 'Escribiendo en la consola…' : 'Última línea hace ' + hace(calla) + (calla > 180000 ? ' · normal en Ansible, apt o descargas' : '');
+    document.querySelectorAll('#srv-pasos .srv-ult').forEach((el) => { el.textContent = txt; el.classList.toggle('calla', calla > 180000); });
+    q('srv-prog-ult').textContent = txt; q('srv-prog-ult').classList.toggle('calla', calla > 180000);
+  }
+  setInterval(srvTic, 1000);
   function srvRackCalc() {
     const v = srv.valores || {}, n = parseInt(q('srv-rack').value, 10);
     const el = q('srv-rack-calc');
@@ -5379,6 +5463,7 @@ function pintarSeleccionIzumi() {
 
   /* ---------- Consola rápida (miles de líneas; las nuevas se iluminan) ---------- */
   function srvRecibir(lineas) {
+    if (lineas && lineas.length) srvUltLinea = Date.now();
     for (const l of lineas) { srvRecientes.push(l.s); }
     if (srvRecientes.length > 400) srvRecientes.splice(0, srvRecientes.length - 300);
     srvCola.push(...lineas);
@@ -5585,6 +5670,54 @@ function pintarSeleccionIzumi() {
     const r = await window.sistema.srvQuitarCred().catch((e) => ({ ok: false, error: e.message }));
     if (r && !r.ok) alert(r.error);
   });
+
+  /* ---------- Verificar instalación ---------- */
+  let verCorriendo = false;
+  async function verCorrer() {
+    if (verCorriendo) return;
+    if (!srvApi() || typeof window.sistema.srvVerificar !== 'function') { q('ver-sub').textContent = 'Reinicia la app: faltan main.js / preload.js actualizados.'; return; }
+    verCorriendo = true;
+    const b = q('ver-correr'); b.disabled = true; b.textContent = 'Comprobando…';
+    q('ver-lista').innerHTML = '<div class="ver-item cargando"><span class="ic">…</span><div><b>Revisando el servidor…</b><small>ping, servicios, paquetes y archivos</small></div></div>';
+    let r;
+    try { r = await window.sistema.srvVerificar(); } catch (e) { r = { ok: false, error: e.message }; }
+    verCorriendo = false; b.disabled = false; b.textContent = 'Comprobar otra vez';
+    if (!r || !r.ok) { q('ver-lista').innerHTML = ''; q('ver-sub').textContent = 'No se pudo comprobar: ' + ((r && r.error) || 'sin respuesta'); return; }
+    verPintar(r);
+  }
+  function verPintar(r) {
+    const n = r.resultados.length, k = r.cuenta;
+    q('ver-cuenta').hidden = false;
+    q('ver-n-ok').textContent = k.ok || 0; q('ver-n-aviso').textContent = k.aviso || 0; q('ver-n-mal').textContent = k.mal || 0;
+    q('ver-b-ok').style.width = ((k.ok || 0) / n * 100) + '%'; q('ver-b-aviso').style.width = ((k.aviso || 0) / n * 100) + '%'; q('ver-b-mal').style.width = ((k.mal || 0) / n * 100) + '%';
+    const tit = q('ver-tit');
+    tit.textContent = !k.mal && !k.aviso ? 'Todo quedó instalado como debe ✓' : k.mal ? k.mal + (k.mal === 1 ? ' cosa no quedó bien' : ' cosas no quedaron bien') : 'Quedó bien, con ' + k.aviso + (k.aviso === 1 ? ' aviso' : ' avisos');
+    tit.classList.toggle('ok', !k.mal && !k.aviso);
+    q('ver-sub').textContent = 'Comprobado a las ' + new Date(r.hora).toLocaleTimeString('es') + ' · el resultado queda en ~/Ghostfish-Logs/server/';
+    const orden = { mal: 0, aviso: 1, ok: 2 };
+    const grupos = [];
+    for (const x of r.resultados) { let g = grupos.find((y) => y.n === x.grupo); if (!g) grupos.push(g = { n: x.grupo, l: [] }); g.l.push(x); }
+    const cont = q('ver-lista'); cont.textContent = '';
+    let i = 0;
+    for (const g of grupos) {
+      g.l.sort((a, b) => orden[a.estado] - orden[b.estado]);
+      const h = document.createElement('div'); h.className = 'ver-grupo'; h.textContent = g.n; cont.appendChild(h);
+      for (const x of g.l) {
+        const d = document.createElement('div');
+        d.className = 'ver-item ' + x.estado; d.style.animationDelay = (i++ * 25) + 'ms';
+        const idx = x.paso ? srv.pasos.findIndex((p) => p.id === x.paso) + 1 : 0;
+        d.innerHTML = '<span class="ic">' + (x.estado === 'ok' ? '✓' : x.estado === 'aviso' ? '!' : '✕') + '</span><div><b>' + esc(x.nombre) + '</b><small>' + esc(x.detalle) + (x.estado !== 'ok' && idx ? ' · lo deja bien el paso ' + idx + ' (' + esc(srvTitulo(x.paso)) + ')' : '') + '</small></div><div></div>';
+        if (x.estado !== 'ok' && idx) {
+          const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn btn-secundario btn-mini';
+          bt.textContent = 'Correr paso ' + idx; bt.disabled = srvCorre();
+          bt.addEventListener('click', () => { srvTabSel('pasos'); srvCorrerPaso(x.paso); });
+          d.lastElementChild.appendChild(bt);
+        }
+        cont.appendChild(d);
+      }
+    }
+  }
+  q('ver-correr').addEventListener('click', verCorrer);
   function srvAplicar(s) {
     if (!s) return;
     const antes = srv.corriendo;
