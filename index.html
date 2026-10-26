@@ -4992,7 +4992,7 @@ function pintarSeleccionIzumi() {
     juniper_config: ['Revisa el cable de consola: USB en el servidor y RJ45 en el puerto CON del Juniper. Debe salir <code>/dev/ttyUSB0</code> (<code>ls /dev/ttyUSB*</code>).', 'Si el Juniper está arrancando, espera ~5 min a que salga "login:" y reintenta.', 'Cierra minicom o cualquier consola que use el cable.'],
     zpe_config: ['Revisa el cable de consola en el puerto CONSOLE del ZPE y que salga <code>/dev/ttyUSB0</code>.', 'Revisa la contraseña de admin del ZPE.', 'Si no lee la MAC de ETH1, revisa que el ZPE ya haya terminado de arrancar.'],
     vrmu_util_config: ['Haz <code>ping 172.24.125.172</code>: es de donde descarga.', 'Revisa la red SFC.'],
-    download_python_tools: ['Haz <code>ping 172.24.125.174</code>: es de donde descarga.'],
+    download_python_tools: ['Haz <code>ping 172.24.125.174</code>: es de donde descarga.', 'Revisa que exista <code>/home/testusr/U22Tocinos</code> en ese servidor y que la contraseña de testusr sea la misma.'],
     fix_chrome: ['Si apt está trabado: <code>sudo dpkg --configure -a</code> y reintenta.'],
     end_config_reboot: ['Revisa el resumen en la consola: lista los pasos que faltan.']
   };

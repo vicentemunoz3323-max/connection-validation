@@ -1863,21 +1863,16 @@ def download_python_tools():
     sudo_user = usuario()
     remote_user = sudo_user
     
+    # Solo se copia U22Tocinos y se deja con el nombre U22-Configurationserver
     files_to_download = [
-        "dhcpd.py",
-        "UUT_test_case.py",
-        "share.py",
-        "reboot.py",
-        "U22Tocinos"
+        ("U22Tocinos", "U22-Configurationserver"),
     ]
-    
-    destination_dir = "."
-    
-    for filename in files_to_download:
+
+    for filename, local_name in files_to_download:
         remote_path = f"{remote_user}@{remote_host}:/home/{remote_user}/{filename}"
-        cmd = f"scp {remote_path} {destination_dir}/"
+        cmd = f"scp -r {remote_path} ./{local_name}"
         
-        print(f"[*] Descargando {filename} por SCP...")
+        print(f"[*] Descargando {filename} por SCP como {local_name}...")
         print(f"[CMD Interactive] {cmd}")
         
         child = pexpect.spawn("bash", ["-c", cmd], encoding="utf-8", timeout=1800)
@@ -1918,7 +1913,10 @@ def download_python_tools():
             print_ascii_fail()
             raise RuntimeError(f"Error descargando {filename} por SCP (Exit code: {child.exitstatus})")
 
-    print("[✓] Todas las herramientas fueron descargadas exitosamente.")
+    if not os.path.exists("U22-Configurationserver"):
+        print_ascii_fail()
+        raise RuntimeError("No quedo el archivo U22-Configurationserver en la carpeta personal.")
+    print("[✓] U22Tocinos copiado como ~/U22-Configurationserver.")
     mark_step_completed("download_python_tools")
 
 def fix_chrome():

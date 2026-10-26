@@ -43,7 +43,7 @@ const PASOS = [
   { id: 'juniper_config', titulo: 'Juniper', desc: 'Por cable de consola: versión, contraseña de root, puertos y reinicio', pass: ['sudo', 'juniper'], cable: 'juniper' },
   { id: 'zpe_config', titulo: 'ZPE', desc: 'Por cable de consola: lee la MAC, la pone en el DHCP y configura sus puertos', pass: ['sudo', 'zpe'], cable: 'zpe' },
   { id: 'vrmu_util_config', titulo: 'VRMU util', desc: 'Descarga viperfish-dvc, vrmu_util y firmware', pass: ['sudo'] },
-  { id: 'download_python_tools', titulo: 'Herramientas de prueba', desc: 'dhcpd.py, UUT_test_case.py, share.py, reboot.py…', pass: ['sudo'] },
+  { id: 'download_python_tools', titulo: 'Herramientas de prueba', desc: 'Copia U22Tocinos del servidor de herramientas como ~/U22-Configurationserver', pass: ['sudo'] },
   { id: 'fix_chrome', titulo: 'Google Chrome', desc: 'Reinstala Chrome limpio (borra su perfil)', pass: ['sudo'] },
   { id: 'end_config_reboot', titulo: 'Terminar y reiniciar', desc: 'Resumen y pregunta si reiniciar el servidor', pass: ['sudo'] }
 ];
