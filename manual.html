@@ -84,11 +84,11 @@
   <h2 id="validacion">Connection validation</h2>
   <p>Es la pantalla principal. Al presionar <b>Probar conexión</b> pasan dos cosas al mismo tiempo:</p>
   <ul>
-    <li><b>Rectificadores (Jolt, 24 unidades):</b> la app le pregunta al controlador con <code>~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 dc-voltage</code>. Cada rectificador que contesta se pinta en verde con su voltaje (<code>float_value</code>); el que no sale en la lectura queda en rojo como no detectado. El número viene del nombre: <code>Rectifier 0</code> es R1, <code>Rectifier 1</code> es R2 … <code>Rectifier 23</code> es R24. El resultado de cada lectura queda en <code>~/Ghostfish-Logs/validacion/</code>.</li>
+    <li><b>Rectificadores (Jolt, 24 unidades):</b> la app le pregunta al controlador con <code>~/vrmu_util --hostname=10.254.128.2 --envelope_enabled=false | grep -a4 dc-voltage</code>. Si en la .2 no salen los 24, también prueba 10.254.128.3 y usa la que traiga más. Cada rectificador que contesta se pinta en verde con su voltaje (<code>float_value</code>); el que no sale en la lectura queda en rojo como no detectado. El número viene del nombre: <code>Rectifier 0</code> es R1, <code>Rectifier 1</code> es R2 … <code>Rectifier 23</code> es R24. El resultado de cada lectura queda en <code>~/Ghostfish-Logs/validacion/</code>.</li>
     <li><b>Izumis (16):</b> se revisan aparte, cada una por telnet al ZPE. Tarda unos 5 segundos. Ver <a href="#izumis">Colores de las Izumis</a>.</li>
   </ul>
   <p>El botón <b>Consola</b> muestra lo que va imprimiendo el script. Los botones <b>OpenTest</b> y <b>ChillerMonitor</b> abren esas páginas en Chrome (<code>127.0.0.1:8090</code> y <code>127.0.0.1:5000</code>).</p>
-  <p>Abajo, en <b>Instrumentos</b>, la app hace ping cada 5 segundos al DAQ970A (10.0.0.100), al Juniper (10.0.0.254), al ZPE (10.0.0.253) y al controlador de rectificadores (10.254.128.3). Esto funciona aunque no presiones nada.</p>
+  <p>Abajo, en <b>Instrumentos</b>, la app hace ping cada 5 segundos al DAQ970A (10.0.0.100), al Juniper (10.0.0.254), al ZPE (10.0.0.253) y al controlador de rectificadores (10.254.128.2). Esto funciona aunque no presiones nada.</p>
   <p>Arriba se ve el resumen: <b>Todo en orden</b> o <b>Con N incidencias</b>. Cuentan como incidencia los rectificadores sin lectura y las Izumis en rojo.</p>
 
   <div class="ojo">Si algo sale en rojo, abajo de los rectificadores o de las Izumis aparece un aviso con un foco que se prende y te dice qué revisar: la conexión del Tross si no contestó ningún rectificador, el rectificador que falta (que no esté alarmado), el cable de red de la Izumi, o el cable de ethernet y el ping del ZPE si no contestó ninguna.</div>
@@ -267,7 +267,7 @@ echo listo</pre>
   <table>
     <tr><th>Qué pasa</th><th>Qué hacer</th></tr>
     <tr><td>"No se encontró vrmu_util" al probar conexión</td><td>Tiene que estar en tu carpeta personal (<code>~/vrmu_util</code>). Se descarga en el paso <b>VRMU util</b> de Configuración → SERVER.</td></tr>
-    <tr><td>Todos los rectificadores en rojo</td><td>Revisa que el controlador (10.254.128.3) responda en Instrumentos y córrelo a mano: <code>~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 dc-voltage</code>.</td></tr>
+    <tr><td>Todos los rectificadores en rojo</td><td>Revisa que el controlador (10.254.128.2) responda en Instrumentos y córrelo a mano: <code>~/vrmu_util --hostname=10.254.128.2 --envelope_enabled=false | grep -a4 dc-voltage</code>.</td></tr>
     <tr><td>sudo no funciona ("no new privileges")</td><td>Abre la app desde el menú de aplicaciones de Ubuntu, no desde la terminal de VS Code.</td></tr>
     <tr><td>Todas las Izumis en rojo "Sin conexión"</td><td>Revisa el cable y que el ZPE (10.0.0.253) responda en Instrumentos.</td></tr>
     <tr><td>Una Izumi "Sin conexión" y las demás bien</td><td>Puede que otra sesión esté usando su puerto del ZPE. Ciérrala y vuelve a probar.</td></tr>

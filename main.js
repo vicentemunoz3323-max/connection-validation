@@ -61,7 +61,8 @@ if (!esInstanciaPrincipal) {
 
 /* Probar conexión de rectificadores: se le pregunta al controlador con vrmu_util
    (ya no se usa connection_validation.py) */
-const VRMU_HOST = process.env.CV_VRMU_HOST || '10.254.128.3';
+const VRMU_HOST = process.env.CV_VRMU_HOST || '10.254.128.2';
+const VRMU_HOST_ALT = process.env.CV_VRMU_HOST_ALT || '10.254.128.3';   // en algunos racks el controlador quedó en la .3: se prueba si la .2 no trae rectificadores
 const VRMU_BIN = process.env.CV_VRMU_BIN || path.join(os.homedir(), 'vrmu_util');
 const NUM_RECTIFICADORES = 24;
 const TIMEOUT_VRMU_MS = 2 * 60 * 1000;
@@ -71,7 +72,7 @@ const TIMEOUT_VRMU_MS = 2 * 60 * 1000;
    Se hace en el proceso principal para que siga funcionando
    aunque la ventana esté minimizada o en otra pestaña.
    ============================================================ */
-const IPS_INSTRUMENTOS = ['10.0.0.100', '10.0.0.254', '10.0.0.253','10.254.128.3'];
+const IPS_INSTRUMENTOS = ['10.0.0.100', '10.0.0.254', '10.0.0.253','10.254.128.2'];
 const INTERVALO_PING_MS = 5000;   // cada cuántos segundos se revisan
 const TIMEOUT_PING_MS = 2000;     // espera máxima por respuesta
 const REGEX_IPV4 = /^(\d{1,3}\.){3}\d{1,3}$/;
@@ -166,14 +167,14 @@ ipcMain.handle('get-instrumentos', () => estadoInstrumentos);
 
 /* ============================================================
    LECTURA DE RECTIFICADORES CON VRMU_UTIL
-     ~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 dc-voltage
+     ~/vrmu_util --hostname=10.254.128.2 --envelope_enabled=false | grep -a4 dc-voltage
    Cada bloque "/rectifier/dc-voltage" trae el device_name con "Rectifier N" (N desde 0)
    y su float_value (voltaje). Rectifier 0 = R1 … Rectifier 23 = R24.
    El que no sale en la lectura queda como "no detectado".
    ============================================================ */
-function comandoVrmu() {
+function comandoVrmu(host) {
   const q = (t) => "'" + String(t).replace(/'/g, "'\\''") + "'";
-  return q(VRMU_BIN) + ' --hostname=' + q(VRMU_HOST) + ' --envelope_enabled=false | grep -a4 dc-voltage';
+  return q(VRMU_BIN) + ' --hostname=' + q(host || VRMU_HOST) + ' --envelope_enabled=false | grep -a4 dc-voltage';
 }
 
 // Saca { n (1-24): voltaje } de la salida
@@ -194,10 +195,10 @@ function leerRectificadores(texto) {
   return { rects, detalle };
 }
 
-function correrVrmu() {
+function correrVrmu(host) {
   return new Promise((resolve) => {
     let salida = '', err = '', terminado = false;
-    const p = spawn('bash', ['-c', comandoVrmu()], { cwd: os.homedir(), env: { ...process.env, LC_ALL: 'C' } });
+    const p = spawn('bash', ['-c', comandoVrmu(host)], { cwd: os.homedir(), env: { ...process.env, LC_ALL: 'C' } });
     const timer = setTimeout(() => {
       if (terminado) return;
       terminado = true;
@@ -263,8 +264,19 @@ async function iniciarProcesoValidacion() {
     }
     emitirEstado({ fase: 'ejecutando' });
     emitirConsola('$ ' + cmd + '\n');
-    const r = await correrVrmu();
-    const { rects, detalle } = leerRectificadores(r.salida);
+    let r = await correrVrmu(VRMU_HOST);
+    let { rects, detalle } = leerRectificadores(r.salida);
+    let hostUsado = VRMU_HOST;
+    // Si la .2 no trae los 24, se prueba también la .3 y se queda con la que traiga más
+    const n1 = Object.keys(rects).length;
+    if (n1 < NUM_RECTIFICADORES && VRMU_HOST_ALT && VRMU_HOST_ALT !== VRMU_HOST) {
+      emitirConsola('\n' + (n1 ? 'En ' + VRMU_HOST + ' salieron ' + n1 + ' de ' + NUM_RECTIFICADORES : 'No salió ningún rectificador en ' + VRMU_HOST) + '; se prueba también ' + VRMU_HOST_ALT + '\n$ ~/vrmu_util --hostname=' + VRMU_HOST_ALT + ' --envelope_enabled=false | grep -a4 dc-voltage\n');
+      const r2 = await correrVrmu(VRMU_HOST_ALT);
+      const l2 = leerRectificadores(r2.salida);
+      const n2 = Object.keys(l2.rects).length;
+      if (n2 > n1) { r = r2; rects = l2.rects; detalle = l2.detalle; hostUsado = VRMU_HOST_ALT; }
+      emitirConsola('Se usa ' + hostUsado + ' (' + Math.max(n1, n2) + ' de ' + NUM_RECTIFICADORES + ')\n');
+    }
     const encontrados = Object.keys(rects).length;
     // grep sale con 1 si no encontró nada: eso no es error, es que no se detectó ningún rectificador.
     // Error de verdad: vrmu_util no corrió o se pasó del tiempo y no hay ninguna lectura.

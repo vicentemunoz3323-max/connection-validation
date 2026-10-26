@@ -1881,7 +1881,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 <div class="instrument-top">
                   <div style="display:flex; align-items:center; gap:8px;">
                     <span class="instrument-name">TROSS</span>
-                    <span class="instrument-ip">10.254.128.3</span>
+                    <span class="instrument-ip">10.254.128.2</span>
                   </div>
                   <span class="instrument-type">Controlador de rectificadores</span>
                 </div>
@@ -2784,7 +2784,7 @@ const EQUIPOS_INSTR = [
   { id: 'dot-daq', ip: '10.0.0.100' },
   { id: 'dot-juniper', ip: '10.0.0.254' },
   { id: 'dot-zpe', ip: '10.0.0.253' },
-  { id: 'dot-tros', ip: '10.254.128.3'} 
+  { id: 'dot-tros', ip: '10.254.128.2'} 
 ];
 
 // Pinta el estado que el proceso principal calcula en segundo plano
@@ -2999,7 +2999,7 @@ function revisarRectificadores(s) {
   if (s.fase === 'error' || faltan.length === 24) {
     mostrarRevisa('rect-aviso', 'Ningún rectificador contestó', [
       '<b>Revisa la conexión del Tross</b>: cable de red y que esté encendido.',
-      'Revisa que el controlador de rectificadores (10.254.128.3) esté en línea en Instrumentos.'
+      'Revisa que el controlador de rectificadores (10.254.128.2, o 10.254.128.3 en algunos racks) esté en línea en Instrumentos.'
     ].concat(s.error ? ['Error: <code>' + String(s.error).replace(/[<>&]/g, '') + '</code>'] : []), true);
     return;
   }
