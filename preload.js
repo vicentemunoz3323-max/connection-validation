@@ -68,6 +68,8 @@ contextBridge.exposeInMainWorld('sistema', {
   onSrvSalida: (cb) => ipcRenderer.on('srv-salida', (_e, d) => cb(d)),
   onSrvPide: (cb) => ipcRenderer.on('srv-pide', (_e, d) => cb(d)),
   onSrvLimpiar: (cb) => ipcRenderer.on('srv-limpiar', () => cb()),
+  // Set valve: contraseña para habilitar el tablero
+  svVerificarPass: (p) => ipcRenderer.invoke('sv-verificar-pass', p),
   // Recursos (CPU / RAM / DISCO)
   recMedir: () => ipcRenderer.invoke('rec-medir'),
   // Llave USB con las contraseñas

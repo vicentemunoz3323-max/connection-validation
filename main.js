@@ -878,6 +878,32 @@ chillerMonitor.configurar({
   varsSesion: VARS_SESION
 });
 
+// Set valve: revisa la contraseña de sudo para habilitar el tablero (no la guarda)
+ipcMain.handle('sv-verificar-pass', async (_e, pass) => {
+  if (typeof pass !== 'string' || !pass || pass.length > 300) return { ok: false, error: 'Contraseña no válida' };
+  const base = ['sudo', '-k', '-S', '-p', '', '-v'];
+  const sr = (await probarSystemdRun()) ? SYSTEMD_RUN : null;
+  const cmd = sr ? [sr, '--user', '--pipe', '--wait', '--quiet', '--collect', '--', ...base] : base;
+  return new Promise((resolve) => {
+    let err = '', fin = false, p;
+    try { p = spawn(cmd[0], cmd.slice(1), { stdio: ['pipe', 'ignore', 'pipe'], env: { ...process.env, LC_ALL: 'C' } }); }
+    catch (e) { return resolve({ ok: false, error: e.message }); }
+    const t = setTimeout(() => { try { p.kill('SIGKILL'); } catch (e) {} }, 15000);
+    p.stderr.on('data', (d) => { err += d; });
+    p.stdin.on('error', () => {});
+    p.stdin.write(pass + '\n'); p.stdin.end();
+    const listo = (c) => {
+      if (fin) return; fin = true; clearTimeout(t);
+      if (c === 0) { bitacora.registrar('Set valve', 'Contraseña correcta'); return resolve({ ok: true }); }
+      if (/no new privileges/i.test(err)) return resolve({ ok: false, error: 'sudo está bloqueado ("no new privileges"). Abre la app desde el menú de aplicaciones.' });
+      if (/not in the sudoers|not allowed/i.test(err)) return resolve({ ok: false, error: 'Tu usuario no tiene permiso de sudo' });
+      resolve({ ok: false, error: 'Contraseña incorrecta' });
+    };
+    p.on('error', (e) => { err += e.message; listo(-1); });
+    p.on('close', (c) => listo(c === null ? -1 : c));
+  });
+});
+
 ipcMain.handle('cmds-sudo-olvidar', () => { guardadas.clear(); emitirCmds({ guardadas: 0 }); return true; });
 ipcMain.handle('cmds-sudo-hay', () => guardadas.size);
 

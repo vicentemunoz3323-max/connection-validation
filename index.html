@@ -1709,6 +1709,76 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .ver-item b { display: block; font-size: 13px; font-weight: 600; }
 .ver-item small { display: block; font: 11.5px var(--mono); color: var(--muted); margin-top: 1px; overflow-wrap: anywhere; }
 .ver-item.cargando .ic { background: var(--bg-soft); color: var(--muted); animation: pulso-suave 1s ease-in-out infinite; }
+/* ===================== SET VALVE ===================== */
+.sv-layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
+.sv-layout > .card { min-height: 520px; margin: 0; }
+.sv-ctrl { display: flex; flex-direction: column; justify-content: center; padding: 26px 30px; }
+.sv-ctrl > .card-head { margin-bottom: auto; }
+.sv-ctrl > .lever-hint { margin-bottom: auto; min-height: 18px; }
+.sv-layout > .card { min-height: 480px; }
+@media (max-width: 900px) { .sv-layout { grid-template-columns: 1fr; } }
+.sv-vista { padding: 18px; display: grid; place-items: center; background: radial-gradient(circle at 50% 40%, #f4f8fd, #e8eef6); }
+.sv-escena { position: relative; width: min(520px, 100%); aspect-ratio: 1; }
+.sv-img, .sv-svg { position: absolute; inset: 0; width: 100%; height: 100%; user-select: none; }
+.sv-img { filter: drop-shadow(0 10px 18px rgba(16, 24, 40, .18)); }
+.sv-agua { fill: #2f7cf6; opacity: calc(.12 + var(--v, .5) * .45); transition: opacity .6s; }
+.sv-linea { stroke: #e0f2ff; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 16 26; opacity: calc(.25 + var(--v, .5) * .6); animation: svFluye var(--dur, 1.6s) linear infinite; }
+@keyframes svFluye { to { stroke-dashoffset: -42; } }
+.sv-bisel { fill: none; stroke: #1b2027; stroke-width: 6; }
+.sv-pista { fill: none; stroke: #1e293b; stroke-width: 9; stroke-linecap: round; }
+.sv-anillo { fill: none; stroke: #334155; stroke-width: 1; }
+.sv-zona { fill: none; stroke-width: 4; stroke-linecap: butt; opacity: .9; } .sv-zona.z1 { stroke: #2f7cf6; } .sv-zona.z2 { stroke: #22d3ee; } .sv-zona.z3 { stroke: #34d399; }
+.sv-progreso { fill: none; stroke: url(#sv-arco-g); stroke-width: 9; stroke-linecap: round; transition: stroke-dasharray .9s cubic-bezier(.3,1.4,.5,1); filter: drop-shadow(0 0 5px rgba(56, 189, 248, .6)); }
+.t-may { stroke: #f8fafc; stroke-width: 2.6; } .t-med { stroke: #cbd5e1; stroke-width: 1.6; } .t-men { stroke: #64748b; stroke-width: 1; }
+.t-lbl { fill: #e2e8f0; font: 700 11.5px var(--font); text-anchor: middle; }
+.sv-aguja { transform-origin: 256px 352px; transition: transform .9s cubic-bezier(.3,1.5,.5,1); }
+.sv-aguja-p { fill: #ef4444; filter: drop-shadow(0 0 4px rgba(239, 68, 68, .7)); }
+.sv-eje { fill: #cbd5e1; stroke: #0b1220; stroke-width: 3; } .sv-eje-c { fill: #ef4444; }
+.sv-num { fill: #fff; font: 800 26px var(--font); text-anchor: middle; font-variant-numeric: tabular-nums; }
+.sv-uni { fill: #7fb6ff; font: 700 8.5px var(--font); text-anchor: middle; letter-spacing: .08em; text-transform: uppercase; }
+.sv-ctrl .sv-valor, .sv-ctrl .sv-rango, .sv-ctrl .sv-escala, .sv-ctrl .sv-rapidos { width: 100%; box-sizing: border-box; }
+.sv-ctrl .sv-valor input::-webkit-inner-spin-button, .sv-ctrl .sv-valor input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.sv-ctrl .sv-valor { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin: 4px 0 8px; color: #c7d2df; font-weight: 700; font-size: 22px; }
+.sv-ctrl .sv-valor input { width: 110px; padding: 6px 8px; font: 800 34px var(--mono); text-align: center; background: #0e1319; color: #fff; border: 1px solid #384251; border-radius: 10px; }
+.sv-rango { -webkit-appearance: none; appearance: none; width: 100%; height: 40px; margin: 6px 0 2px; background: transparent; cursor: pointer; --p: 50%; }
+.sv-rango::-webkit-slider-runnable-track { height: 16px; border-radius: 99px; background: linear-gradient(90deg, #38bdf8 0, #2f7cf6 var(--p), #0e1319 var(--p)); border: 1px solid #384251; }
+.sv-rango::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; margin-top: -10px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ffffff, #cbd5e1); border: 4px solid #2f7cf6; box-shadow: 0 2px 8px rgba(0,0,0,.45), 0 0 0 6px rgba(47,124,246,.18); }
+.sv-rango:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 8px rgba(47,124,246,.35); }
+.sv-rango::-moz-range-track { height: 16px; border-radius: 99px; background: #0e1319; border: 1px solid #384251; }
+.sv-rango::-moz-range-progress { height: 16px; border-radius: 99px; background: #2f7cf6; }
+.sv-rango::-moz-range-thumb { width: 30px; height: 30px; border-radius: 50%; background: #fff; border: 4px solid #2f7cf6; }
+.sv-ctrl .sv-escala { display: flex !important; justify-content: space-between; font: 11px var(--mono); color: #8fa0b3; margin-top: -2px; }
+.sv-ctrl .sv-rapidos { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 12px; }
+.sv-rapidos button { padding: 7px 0; border-radius: 8px; border: 1px solid #384251; background: #161c24; color: #c7d2df; font: 700 13px var(--mono); cursor: pointer; }
+.sv-rapidos button:hover { border-color: #2f7cf6; color: #fff; }
+.sv-rapidos button.sel { background: #1d5ccf; border-color: #1d5ccf; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .sv-linea { animation: none; } .sv-aguja, .sv-progreso { transition: none; } }
+.beta-tag { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 999px; background: #f59e0b; color: #1b1300; font: 800 9px var(--font); letter-spacing: .08em; vertical-align: 2px; }
+.beta-grande { font-size: 12px; padding: 3px 10px; vertical-align: 6px; }
+.beta-aviso { margin-top: 10px; display: inline-block; padding: 7px 12px; border: 1px solid rgba(245,158,11,.45); border-left: 4px solid #f59e0b; background: rgba(245,158,11,.1); border-radius: 8px; font-size: 13px; color: #7a4a00; }
+/* Set valve: slots, bloqueo y switch */
+.sv-arm-row { width: 100%; margin: 4px 0 6px; }
+.sv-sel-txt { width: 100%; text-align: center; font-size: 12.5px; color: #8fa0b3; margin-bottom: 2px; }
+.sv-sel-txt b { color: #fff; }
+.sv-slots-card { margin-top: 14px; padding: 16px 18px; }
+.sv-slots { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+@media (max-width: 1000px) { .sv-slots { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.sv-slot { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 10px 10px 9px; border: 1px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; text-align: left; transition: border-color .15s, box-shadow .15s, transform .1s; font-family: var(--font); }
+.sv-slot:hover:not(:disabled) { border-color: #93b4ea; }
+.sv-slot:active:not(:disabled) { transform: scale(.98); }
+.sv-slot-n { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: .03em; }
+.sv-slot-v { font: 800 18px var(--mono); color: var(--text); }
+.sv-slot-b { width: 100%; height: 6px; border-radius: 99px; background: var(--bg-soft); overflow: hidden; }
+.sv-slot-b i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #38bdf8, #2f7cf6); border-radius: 99px; transition: width .6s ease; }
+.sv-slot-ck { position: absolute; top: 7px; right: 7px; width: 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: transparent; border: 1.5px solid #c3cad4; }
+.sv-slot.sel { border-color: #2f7cf6; box-shadow: 0 0 0 2px rgba(47,124,246,.25); background: rgba(47,124,246,.04); }
+.sv-slot.sel .sv-slot-ck { background: #2f7cf6; border-color: #2f7cf6; color: #fff; }
+.sv-slot.pend .sv-slot-n::after { content: " · sin aplicar"; color: #b45300; font-weight: 600; }
+.sv-slot:disabled { cursor: not-allowed; opacity: .55; }
+.sv-slots-nota { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
+#set-valve.sv-bloq .sv-vista, #set-valve.sv-sinsel .sv-vista { filter: grayscale(.85); opacity: .7; }
+#set-valve.sv-bloq .sv-flujo, #set-valve.sv-sinsel .sv-flujo { visibility: hidden; }
+.sv-ctrl input:disabled, .sv-ctrl .sv-rapidos button:disabled { opacity: .45; cursor: not-allowed; }
 </style>
 </head>
 <body>
@@ -1741,6 +1811,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       </div>
       <nav aria-label="Principal">
         <a href="#connection-validation" class="nav-link active" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
+        <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve · beta: no modifica ningún parámetro del rack"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
         <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi" title="Remplazar Izumi"><span class="lbl-full">Remplazar Izumi</span><span class="lbl-corto">Izumi</span></a>
         <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
         <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
@@ -1898,6 +1969,93 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <button id="clear-console" class="btn btn-secundario" style="font-size:9px; padding:2px 6px;">Limpiar</button>
           </div>
           <div id="console-body" class="console-body">Esperando ejecución...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="set-valve" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Control</span>
+            <h1>Set valve <span class="beta-tag beta-grande">BETA</span></h1>
+            <p class="lead">Ajuste de la válvula.</p>
+            <div class="beta-aviso"><b>Apartado beta:</b> no modifica ningún parámetro en el rack. Solo muestra la apertura y la guarda en esta PC.</div>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="sv-layout">
+        <div class="card sv-vista">
+          <div class="sv-escena" id="sv-escena">
+            <img src="icons/valvula.png" alt="Válvula" class="sv-img" draggable="false">
+            <svg class="sv-svg" viewBox="0 0 512 512" aria-hidden="true">
+              <defs>
+                <clipPath id="sv-tubo"><rect x="22" y="288" width="42" height="183" rx="3"/><rect x="88" y="311" width="50" height="136"/><rect x="374" y="311" width="50" height="136"/><rect x="448" y="288" width="42" height="183" rx="3"/></clipPath>
+                <linearGradient id="sv-arco-g" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#38bdf8"/><stop offset=".6" stop-color="#2f7cf6"/><stop offset="1" stop-color="#22d3ee"/></linearGradient>
+                <radialGradient id="sv-cara" cx="50%" cy="38%" r="70%"><stop offset="0" stop-color="#1e293b"/><stop offset="1" stop-color="#0b1220"/></radialGradient>
+              </defs>
+              <g clip-path="url(#sv-tubo)" class="sv-flujo" id="sv-flujo">
+                <rect x="0" y="280" width="512" height="200" class="sv-agua"/>
+                <line x1="0" y1="300" x2="512" y2="300" class="sv-linea" style="animation-delay:-0.00s"/><line x1="0" y1="314" x2="512" y2="314" class="sv-linea" style="animation-delay:-0.37s"/><line x1="0" y1="328" x2="512" y2="328" class="sv-linea" style="animation-delay:-0.74s"/><line x1="0" y1="342" x2="512" y2="342" class="sv-linea" style="animation-delay:-1.11s"/><line x1="0" y1="356" x2="512" y2="356" class="sv-linea" style="animation-delay:-1.48s"/><line x1="0" y1="370" x2="512" y2="370" class="sv-linea" style="animation-delay:-0.35s"/><line x1="0" y1="384" x2="512" y2="384" class="sv-linea" style="animation-delay:-0.72s"/><line x1="0" y1="398" x2="512" y2="398" class="sv-linea" style="animation-delay:-1.09s"/><line x1="0" y1="412" x2="512" y2="412" class="sv-linea" style="animation-delay:-1.46s"/><line x1="0" y1="426" x2="512" y2="426" class="sv-linea" style="animation-delay:-0.33s"/><line x1="0" y1="440" x2="512" y2="440" class="sv-linea" style="animation-delay:-0.70s"/><line x1="0" y1="454" x2="512" y2="454" class="sv-linea" style="animation-delay:-1.07s"/>
+              </g>
+              <g class="sv-gauge" transform="translate(256 372) scale(1.05) translate(-256 -352)">
+                <circle cx="256" cy="352" r="104" fill="url(#sv-cara)"/>
+                <circle cx="256" cy="352" r="104" class="sv-bisel"/>
+                <circle cx="256" cy="352" r="99" class="sv-anillo"/>
+                <path d="M 185.3 422.7 A 100 100 0 0 1 301.4 262.9" class="sv-zona z1"/><path d="M 301.4 262.9 A 100 100 0 0 1 355.7 359.8" class="sv-zona z2"/><path d="M 355.7 359.8 A 100 100 0 0 1 326.7 422.7" class="sv-zona z3"/>
+                <path d="M 215.0 393.0 A 58 58 0 1 1 297.0 393.0" class="sv-pista"/>
+                <path d="M 215.0 393.0 A 58 58 0 1 1 297.0 393.0" class="sv-progreso" id="sv-progreso" pathLength="100" style="stroke-dasharray: 0 100"/>
+                <line x1="198.0" y1="410.0" x2="188.1" y2="419.9" class="t-may"/><line x1="188.7" y1="413.2" x2="185.0" y2="416.6" class="t-men"/><line x1="185.9" y1="410.0" x2="182.0" y2="413.2" class="t-men"/><line x1="183.2" y1="406.6" x2="179.2" y2="409.6" class="t-men"/><line x1="180.7" y1="403.1" x2="176.6" y2="406.0" class="t-men"/><line x1="181.8" y1="397.5" x2="174.1" y2="402.2" class="t-med"/><line x1="176.3" y1="395.8" x2="171.9" y2="398.2" class="t-men"/><line x1="174.3" y1="392.0" x2="169.8" y2="394.2" class="t-men"/><line x1="172.5" y1="388.1" x2="167.9" y2="390.1" class="t-men"/><line x1="170.9" y1="384.2" x2="166.2" y2="385.9" class="t-men"/><line x1="178.0" y1="377.3" x2="164.7" y2="381.7" class="t-may"/><line x1="168.2" y1="376.0" x2="163.4" y2="377.3" class="t-men"/><line x1="167.2" y1="371.9" x2="162.3" y2="372.9" class="t-men"/><line x1="166.4" y1="367.6" x2="161.4" y2="368.5" class="t-men"/><line x1="165.7" y1="363.4" x2="160.8" y2="364.0" class="t-men"/><line x1="169.3" y1="358.8" x2="160.3" y2="359.5" class="t-med"/><line x1="165.0" y1="354.9" x2="160.0" y2="355.0" class="t-men"/><line x1="165.0" y1="350.6" x2="160.0" y2="350.5" class="t-men"/><line x1="165.2" y1="346.3" x2="160.2" y2="346.0" class="t-men"/><line x1="165.5" y1="342.0" x2="160.6" y2="341.5" class="t-men"/><line x1="175.0" y1="339.2" x2="161.2" y2="337.0" class="t-may"/><line x1="166.9" y1="333.5" x2="162.0" y2="332.5" class="t-men"/><line x1="167.9" y1="329.4" x2="163.0" y2="328.1" class="t-men"/><line x1="169.0" y1="325.2" x2="164.2" y2="323.8" class="t-men"/><line x1="170.4" y1="321.2" x2="165.7" y2="319.5" class="t-men"/><line x1="175.6" y1="318.7" x2="167.3" y2="315.3" class="t-med"/><line x1="173.7" y1="313.3" x2="169.1" y2="311.1" class="t-men"/><line x1="175.6" y1="309.4" x2="171.2" y2="307.1" class="t-men"/><line x1="177.7" y1="305.7" x2="173.4" y2="303.1" class="t-men"/><line x1="179.9" y1="302.0" x2="175.8" y2="299.3" class="t-men"/><line x1="189.7" y1="303.8" x2="178.3" y2="295.6" class="t-may"/><line x1="185.0" y1="295.1" x2="181.1" y2="292.0" class="t-men"/><line x1="187.7" y1="291.8" x2="184.0" y2="288.5" class="t-men"/><line x1="190.7" y1="288.7" x2="187.1" y2="285.2" class="t-men"/><line x1="193.7" y1="285.7" x2="190.3" y2="282.0" class="t-men"/><line x1="199.5" y1="285.8" x2="193.7" y2="279.0" class="t-med"/><line x1="200.2" y1="280.1" x2="197.2" y2="276.1" class="t-men"/><line x1="203.7" y1="277.5" x2="200.8" y2="273.5" class="t-men"/><line x1="207.2" y1="275.2" x2="204.6" y2="270.9" class="t-men"/><line x1="210.9" y1="273.0" x2="208.4" y2="268.6" class="t-men"/><line x1="218.8" y1="278.9" x2="212.4" y2="266.5" class="t-may"/><line x1="218.6" y1="269.1" x2="216.5" y2="264.5" class="t-men"/><line x1="222.5" y1="267.4" x2="220.7" y2="262.7" class="t-men"/><line x1="226.5" y1="265.9" x2="224.9" y2="261.2" class="t-men"/><line x1="230.6" y1="264.6" x2="229.2" y2="259.8" class="t-men"/><line x1="235.7" y1="267.4" x2="233.6" y2="258.7" class="t-med"/><line x1="238.9" y1="262.6" x2="238.0" y2="257.7" class="t-men"/><line x1="243.2" y1="261.9" x2="242.5" y2="257.0" class="t-men"/><line x1="247.4" y1="261.4" x2="247.0" y2="256.4" class="t-men"/><line x1="251.7" y1="261.1" x2="251.5" y2="256.1" class="t-men"/><line x1="256.0" y1="270.0" x2="256.0" y2="256.0" class="t-may"/><line x1="260.3" y1="261.1" x2="260.5" y2="256.1" class="t-men"/><line x1="264.6" y1="261.4" x2="265.0" y2="256.4" class="t-men"/><line x1="268.8" y1="261.9" x2="269.5" y2="257.0" class="t-men"/><line x1="273.1" y1="262.6" x2="274.0" y2="257.7" class="t-men"/><line x1="276.3" y1="267.4" x2="278.4" y2="258.7" class="t-med"/><line x1="281.4" y1="264.6" x2="282.8" y2="259.8" class="t-men"/><line x1="285.5" y1="265.9" x2="287.1" y2="261.2" class="t-men"/><line x1="289.5" y1="267.4" x2="291.3" y2="262.7" class="t-men"/><line x1="293.4" y1="269.1" x2="295.5" y2="264.5" class="t-men"/><line x1="293.2" y1="278.9" x2="299.6" y2="266.5" class="t-may"/><line x1="301.1" y1="273.0" x2="303.6" y2="268.6" class="t-men"/><line x1="304.8" y1="275.2" x2="307.4" y2="270.9" class="t-men"/><line x1="308.3" y1="277.5" x2="311.2" y2="273.5" class="t-men"/><line x1="311.8" y1="280.1" x2="314.8" y2="276.1" class="t-men"/><line x1="312.5" y1="285.8" x2="318.3" y2="279.0" class="t-med"/><line x1="318.3" y1="285.7" x2="321.7" y2="282.0" class="t-men"/><line x1="321.3" y1="288.7" x2="324.9" y2="285.2" class="t-men"/><line x1="324.3" y1="291.8" x2="328.0" y2="288.5" class="t-men"/><line x1="327.0" y1="295.1" x2="330.9" y2="292.0" class="t-men"/><line x1="322.3" y1="303.8" x2="333.7" y2="295.6" class="t-may"/><line x1="332.1" y1="302.0" x2="336.2" y2="299.3" class="t-men"/><line x1="334.3" y1="305.7" x2="338.6" y2="303.1" class="t-men"/><line x1="336.4" y1="309.4" x2="340.8" y2="307.1" class="t-men"/><line x1="338.3" y1="313.3" x2="342.9" y2="311.1" class="t-men"/><line x1="336.4" y1="318.7" x2="344.7" y2="315.3" class="t-med"/><line x1="341.6" y1="321.2" x2="346.3" y2="319.5" class="t-men"/><line x1="343.0" y1="325.2" x2="347.8" y2="323.8" class="t-men"/><line x1="344.1" y1="329.4" x2="349.0" y2="328.1" class="t-men"/><line x1="345.1" y1="333.5" x2="350.0" y2="332.5" class="t-men"/><line x1="337.0" y1="339.2" x2="350.8" y2="337.0" class="t-may"/><line x1="346.5" y1="342.0" x2="351.4" y2="341.5" class="t-men"/><line x1="346.8" y1="346.3" x2="351.8" y2="346.0" class="t-men"/><line x1="347.0" y1="350.6" x2="352.0" y2="350.5" class="t-men"/><line x1="347.0" y1="354.9" x2="352.0" y2="355.0" class="t-men"/><line x1="342.7" y1="358.8" x2="351.7" y2="359.5" class="t-med"/><line x1="346.3" y1="363.4" x2="351.2" y2="364.0" class="t-men"/><line x1="345.6" y1="367.6" x2="350.6" y2="368.5" class="t-men"/><line x1="344.8" y1="371.9" x2="349.7" y2="372.9" class="t-men"/><line x1="343.8" y1="376.0" x2="348.6" y2="377.3" class="t-men"/><line x1="334.0" y1="377.3" x2="347.3" y2="381.7" class="t-may"/><line x1="341.1" y1="384.2" x2="345.8" y2="385.9" class="t-men"/><line x1="339.5" y1="388.1" x2="344.1" y2="390.1" class="t-men"/><line x1="337.7" y1="392.0" x2="342.2" y2="394.2" class="t-men"/><line x1="335.7" y1="395.8" x2="340.1" y2="398.2" class="t-men"/><line x1="330.2" y1="397.5" x2="337.9" y2="402.2" class="t-med"/><line x1="331.3" y1="403.1" x2="335.4" y2="406.0" class="t-men"/><line x1="328.8" y1="406.6" x2="332.8" y2="409.6" class="t-men"/><line x1="326.1" y1="410.0" x2="330.0" y2="413.2" class="t-men"/><line x1="323.3" y1="413.2" x2="327.0" y2="416.6" class="t-men"/><line x1="314.0" y1="410.0" x2="323.9" y2="419.9" class="t-may"/>
+                <text x="205.8" y="406.2" class="t-lbl">0</text><text x="188.5" y="377.9" class="t-lbl">10</text><text x="185.9" y="344.9" class="t-lbl">20</text><text x="198.6" y="314.3" class="t-lbl">30</text><text x="223.8" y="292.7" class="t-lbl">40</text><text x="256.0" y="285.0" class="t-lbl">50</text><text x="288.2" y="292.7" class="t-lbl">60</text><text x="313.4" y="314.3" class="t-lbl">70</text><text x="326.1" y="344.9" class="t-lbl">80</text><text x="323.5" y="377.9" class="t-lbl">90</text><text x="306.2" y="406.2" class="t-lbl">100</text>
+                <g class="sv-aguja" id="sv-aguja" style="transform: rotate(-225deg)"><path d="M 236 349.5 L 342 352 L 236 354.5 Z" class="sv-aguja-p"/><circle cx="256" cy="352" r="11" class="sv-eje"/><circle cx="256" cy="352" r="4" class="sv-eje-c"/></g>
+                <text x="256" y="400" class="sv-num" id="sv-num">0</text>
+                <text x="256" y="415" class="sv-uni">% apertura</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+        <div class="card lever-card ctrl-card sv-ctrl">
+          <div class="card-head"><span class="card-title">Apertura</span><span class="lever-status"><span class="lever-led"></span><span id="sv-estado">BLOQUEADO</span></span></div>
+          <div class="arm-row sv-arm-row" id="sv-arm-row">
+            <div class="rat-wrap">
+              <button type="button" class="rat" id="sv-arm" role="switch" aria-checked="false" aria-label="Habilitar el tablero">
+                <span class="rat-plate"></span><span class="rat-nut"></span><span class="rat-lever"></span>
+              </button>
+              <span class="rat-txt" id="sv-arm-txt">OFF</span>
+            </div>
+            <span class="arm-label" id="sv-arm-label">Sube el switch para habilitar el tablero</span>
+          </div>
+          <div class="sv-sel-txt" id="sv-sel-txt">Ningún slot seleccionado</div>
+          <div class="sv-valor"><input type="number" id="sv-in" min="1" max="100" step="1" value="50" inputmode="numeric"><span>%</span></div>
+          <input type="range" id="sv-rango" class="sv-rango" min="1" max="100" step="1" value="50" aria-label="Apertura de la válvula">
+          <div class="sv-escala"><span>1</span><span>25</span><span>50</span><span>75</span><span>100</span></div>
+          <div class="sv-rapidos"><button type="button" data-v="25">25</button><button type="button" data-v="50">50</button><button type="button" data-v="75">75</button><button type="button" data-v="100">100</button></div>
+          <button type="button" class="ctrl-go" id="sv-aplicar">Aplicar</button>
+          <div class="lever-hint" id="sv-hint">Mueve la barra o escribe un valor del 1 al 100</div>
+        </div>
+      </div>
+
+      <div class="card sv-slots-card" id="sv-slots-card">
+        <div class="card-head">
+          <span class="card-title">Slots</span>
+          <div class="uc-actions">
+            <span class="card-count" id="sv-cuenta">0 de 16 seleccionados</span>
+            <button type="button" class="btn btn-secundario btn-mini" id="sv-todos">Seleccionar todos</button>
+            <button type="button" class="btn btn-secundario btn-mini" id="sv-ninguno">Quitar selección</button>
+          </div>
+        </div>
+        <div class="sv-slots" id="sv-slots"><button type="button" class="sv-slot" data-n="1" aria-pressed="false"><span class="sv-slot-n">Slot 1</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="2" aria-pressed="false"><span class="sv-slot-n">Slot 2</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="3" aria-pressed="false"><span class="sv-slot-n">Slot 3</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="4" aria-pressed="false"><span class="sv-slot-n">Slot 4</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="5" aria-pressed="false"><span class="sv-slot-n">Slot 5</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="6" aria-pressed="false"><span class="sv-slot-n">Slot 6</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="7" aria-pressed="false"><span class="sv-slot-n">Slot 7</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="8" aria-pressed="false"><span class="sv-slot-n">Slot 8</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="9" aria-pressed="false"><span class="sv-slot-n">Slot 9</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="10" aria-pressed="false"><span class="sv-slot-n">Slot 10</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="11" aria-pressed="false"><span class="sv-slot-n">Slot 11</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="12" aria-pressed="false"><span class="sv-slot-n">Slot 12</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="13" aria-pressed="false"><span class="sv-slot-n">Slot 13</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="14" aria-pressed="false"><span class="sv-slot-n">Slot 14</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="15" aria-pressed="false"><span class="sv-slot-n">Slot 15</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="16" aria-pressed="false"><span class="sv-slot-n">Slot 16</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button></div>
+        <p class="sv-slots-nota">Toca los slots para elegirlos. La apertura se aplica solo a los slots seleccionados; cada uno guarda su propio valor.</p>
+      </div>
+
+      <!-- Contraseña para habilitar el tablero -->
+      <div class="manual-modal srv-modal" id="sv-pass" hidden>
+        <div class="srv-dlg" role="dialog" aria-label="Contraseña">
+          <div class="srv-dlg-tit">Habilitar Set valve</div>
+          <p class="srv-dlg-sub">Escribe tu contraseña de sudo para manipular el tablero.</p>
+          <div class="srv-pass-campos"><label>Contraseña <input type="password" id="sv-pass-in" autocomplete="off"></label></div>
+          <div class="srv-acc"><span class="srv-sc-msg err" id="sv-pass-err"></span><button type="button" class="btn btn-secundario" id="sv-pass-cancelar">Cancelar</button><button type="button" class="btn" id="sv-pass-ok">Habilitar</button></div>
         </div>
       </div>
     </section>
@@ -6072,6 +6230,146 @@ function pintarSeleccionIzumi() {
 })();
 
 // CFG-FIN
+
+/* ===================== SET VALVE: velocímetro, flujo, slots y bloqueo ===================== */
+(function () {
+  'use strict';
+  const $v = (id) => document.getElementById(id);
+  if (!$v('sv-escena')) return;
+  const sec = $v('set-valve');
+  const KEY = 'set_valve_v2';
+  // slots[n] = { v: valor aplicado, t: hora }  ·  pendiente[n] = valor elegido sin aplicar
+  let datos = { slots: {} };
+  try { datos = JSON.parse(localStorage.getItem(KEY) || 'null') || datos; } catch (e) {}
+  if (!datos.slots) datos.slots = {};
+  const sel = new Set();
+  let habil = false, actual = 50, raf = 0, mostrado = 0;
+  const clamp = (v) => Math.max(1, Math.min(100, Math.round(Number(v) || 1)));
+  const guardar = () => { try { localStorage.setItem(KEY, JSON.stringify(datos)); } catch (e) {} };
+  const reg = (a, d) => { if (typeof registrarAccion === 'function') registrarAccion('Set valve', a, d || ''); };
+  const lista = () => [...sel].sort((a, b) => a - b);
+
+  function contar(a, b) {
+    cancelAnimationFrame(raf);
+    const t0 = performance.now();
+    const paso = (t) => { const k = Math.min(1, (t - t0) / 700), e = 1 - Math.pow(1 - k, 3); $v('sv-num').textContent = Math.round(a + (b - a) * e); if (k < 1) raf = requestAnimationFrame(paso); };
+    raf = requestAnimationFrame(paso);
+  }
+  // Dibuja el velocímetro y el agua con el valor v
+  function dibujar(v) {
+    $v('sv-aguja').style.transform = 'rotate(' + (-225 + v * 2.7) + 'deg)';
+    $v('sv-progreso').style.strokeDasharray = v + ' 100';
+    const f = $v('sv-flujo');
+    f.style.setProperty('--v', (v / 100).toFixed(2));
+    f.style.setProperty('--dur', (2.6 - v * 0.022).toFixed(2) + 's');
+    contar(mostrado, v); mostrado = v;
+  }
+  function pintarSlots() {
+    document.querySelectorAll('#sv-slots .sv-slot').forEach((b) => {
+      const n = +b.dataset.n, d = datos.slots[n];
+      b.classList.toggle('sel', sel.has(n));
+      b.setAttribute('aria-pressed', sel.has(n) ? 'true' : 'false');
+      b.disabled = !habil;
+      b.querySelector('.sv-slot-v').textContent = d ? d.v + '%' : '—';
+      b.querySelector('.sv-slot-b i').style.width = (d ? d.v : 0) + '%';
+      b.classList.toggle('pend', sel.has(n) && (!d || d.v !== actual));
+      b.title = 'Slot ' + n + (d ? ' · ' + d.v + '% aplicado ' + new Date(d.t).toLocaleString('es', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : ' · sin valor');
+    });
+    $v('sv-cuenta').textContent = sel.size + ' de 16 seleccionados';
+    $v('sv-todos').disabled = !habil; $v('sv-ninguno').disabled = !habil || !sel.size;
+  }
+  function pintar() {
+    const ls = lista(), activo = habil && ls.length > 0;
+    sec.classList.toggle('sv-bloq', !habil);
+    sec.classList.toggle('sv-sinsel', habil && !ls.length);
+    ['sv-in', 'sv-rango'].forEach((id) => { $v(id).disabled = !activo; });
+    document.querySelectorAll('.sv-rapidos button').forEach((b) => { b.disabled = !activo; b.classList.toggle('sel', +b.dataset.v === actual); });
+    $v('sv-in').value = actual; $v('sv-rango').value = actual;
+    $v('sv-rango').style.setProperty('--p', ((actual - 1) / 99 * 100).toFixed(1) + '%');
+    const pend = ls.filter((n) => !datos.slots[n] || datos.slots[n].v !== actual);
+    $v('sv-aplicar').disabled = !activo || !pend.length;
+    $v('sv-estado').textContent = !habil ? 'BLOQUEADO' : !ls.length ? 'SIN SLOTS' : pend.length ? 'SIN APLICAR' : 'APLICADO';
+    document.querySelector('.sv-ctrl').classList.toggle('on', activo && !pend.length);
+    $v('sv-sel-txt').innerHTML = !ls.length ? 'Ningún slot seleccionado' : 'Slots: <b>' + (ls.length === 16 ? 'todos (1–16)' : ls.join(', ')) + '</b>';
+    $v('sv-hint').textContent = !habil ? 'Sube el switch e ingresa tu contraseña para habilitar el tablero'
+      : !ls.length ? 'Selecciona al menos un slot abajo para activar la válvula'
+      : pend.length ? 'Presiona Aplicar para dejar ' + actual + '% en ' + pend.length + (pend.length === 1 ? ' slot' : ' slots') + ' (beta: no cambia nada en el rack)'
+      : 'Aplicado en ' + (ls.length === 1 ? 'el slot ' + ls[0] : 'los ' + ls.length + ' slots');
+    pintarSlots();
+  }
+  function elegirValor(v) { actual = clamp(v); dibujar(actual); pintar(); }
+  // Al cambiar la selección, el velocímetro muestra el valor del primer slot elegido
+  function alSeleccionar() {
+    const ls = lista();
+    const d = ls.length ? datos.slots[ls[0]] : null;
+    if (d) actual = d.v;
+    dibujar(habil && ls.length ? actual : 0);
+    pintar();
+  }
+
+  // Slots
+  document.querySelectorAll('#sv-slots .sv-slot').forEach((b) => b.addEventListener('click', () => {
+    if (!habil) return;
+    const n = +b.dataset.n; if (sel.has(n)) sel.delete(n); else sel.add(n);
+    alSeleccionar();
+  }));
+  $v('sv-todos').addEventListener('click', () => { if (!habil) return; for (let n = 1; n <= 16; n++) sel.add(n); alSeleccionar(); });
+  $v('sv-ninguno').addEventListener('click', () => { sel.clear(); alSeleccionar(); });
+
+  // Valor
+  $v('sv-rango').addEventListener('input', (e) => elegirValor(e.target.value));
+  $v('sv-in').addEventListener('change', (e) => elegirValor(e.target.value));
+  $v('sv-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') { elegirValor(e.target.value); $v('sv-aplicar').click(); } });
+  document.querySelectorAll('.sv-rapidos button').forEach((b) => b.addEventListener('click', () => elegirValor(b.dataset.v)));
+  $v('sv-aplicar').addEventListener('click', () => {
+    const ls = lista();
+    if (!habil || !ls.length) return;
+    const t = Date.now();
+    for (const n of ls) datos.slots[n] = { v: actual, t };
+    guardar();
+    reg('Aplicó apertura', actual + '% · slots ' + (ls.length === 16 ? '1-16' : ls.join(', ')));
+    pintar();
+  });
+
+  // Switch cola de rata + contraseña
+  function armar(v) {
+    habil = !!v;
+    $v('sv-arm').setAttribute('aria-checked', habil ? 'true' : 'false');
+    $v('sv-arm-txt').textContent = habil ? 'ON' : 'OFF';
+    $v('sv-arm-txt').classList.toggle('on', habil);
+    $v('sv-arm-row').classList.toggle('on', habil);
+    $v('sv-arm-label').textContent = habil ? 'Tablero habilitado' : 'Sube el switch para habilitar el tablero';
+    if (!habil) sel.clear();
+    alSeleccionar();
+  }
+  function pedirPass() {
+    $v('sv-pass-in').value = ''; $v('sv-pass-err').textContent = '';
+    $v('sv-pass').hidden = false;
+    setTimeout(() => $v('sv-pass-in').focus(), 30);
+  }
+  function cerrarPass() { $v('sv-pass').hidden = true; $v('sv-pass-in').value = ''; }
+  $v('sv-arm').addEventListener('click', () => {
+    if (habil) { armar(false); reg('Bloqueó el tablero'); return; }
+    pedirPass();
+  });
+  $v('sv-pass-cancelar').addEventListener('click', cerrarPass);
+  $v('sv-pass-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') $v('sv-pass-ok').click(); if (e.key === 'Escape') cerrarPass(); });
+  $v('sv-pass-ok').addEventListener('click', async () => {
+    const pass = $v('sv-pass-in').value;
+    if (!pass) { $v('sv-pass-err').textContent = 'Escribe la contraseña'; return; }
+    if (!window.sistema || typeof window.sistema.svVerificarPass !== 'function') { $v('sv-pass-err').textContent = 'Abre la app con Electron'; return; }
+    const b = $v('sv-pass-ok'); b.disabled = true; b.textContent = 'Revisando…';
+    let r; try { r = await window.sistema.svVerificarPass(pass); } catch (e) { r = { ok: false, error: e.message }; }
+    b.disabled = false; b.textContent = 'Habilitar';
+    if (!r || !r.ok) { $v('sv-pass-err').textContent = (r && r.error) || 'Contraseña incorrecta'; $v('sv-pass-in').select(); reg('Contraseña incorrecta al habilitar'); return; }
+    cerrarPass(); armar(true); reg('Habilitó el tablero');
+  });
+  // Al salir de la sección se vuelve a bloquear
+  new MutationObserver(() => { if (!sec.classList.contains('active') && habil) armar(false); }).observe(sec, { attributes: true, attributeFilter: ['class'] });
+
+  actual = 50; armar(false);
+})();
+
 
 /* ===================== RECURSOS: CPU / RAM / DISCO ===================== */
 (function () {
