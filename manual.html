@@ -271,6 +271,7 @@ echo listo</pre>
     <tr><td>sudo no funciona ("no new privileges")</td><td>Abre la app desde el menú de aplicaciones de Ubuntu, no desde la terminal de VS Code.</td></tr>
     <tr><td>Todas las Izumis en rojo "Sin conexión"</td><td>Revisa el cable y que el ZPE (10.0.0.253) responda en Instrumentos.</td></tr>
     <tr><td>Una Izumi "Sin conexión" y las demás bien</td><td>Puede que otra sesión esté usando su puerto del ZPE. Ciérrala y vuelve a probar.</td></tr>
+    <tr><td>Escaneo: un slot sale "Sin datos"</td><td>Junto al slot sale el motivo: el BMC rechazó la contraseña, no se llegó al BMC, la EEPROM no trae serial, o el ZPE no abrió la consola (¿la tienes abierta en la app?). En <code>~/Ghostfish-Logs/testcase/</code> queda lo que respondió la EEPROM de cada slot.</td></tr>
     <tr><td>El Test case se detuvo en un slot</td><td>Ese slot falló o estaba vacío (<code>CORRIJA_*</code>). Revisa la consola para ver cuál fue.</td></tr>
     <tr><td>La app dice que ya tienes la última versión, pero no es así</td><td>La versión nueva debe tener un número mayor que la instalada.</td></tr>
     <tr><td>SERVER: "Falta pexpect"</td><td>Corre primero el paso 2, que lo instala. A mano: <code>sudo apt install python3-pexpect</code>.</td></tr>

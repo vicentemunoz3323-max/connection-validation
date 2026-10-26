@@ -32,6 +32,9 @@ const CONFIG = {
   PING_VENTANA_MS: 60000,                      // cuánto se insiste con el ping por slot
   SCAN_CONCURRENCIA: 4                         // slots que se escanean a la vez (1 = uno por uno, como el original)
 };
+// Para pruebas en otra PC:  CV_ZPE_IP=127.0.0.1 CV_ZPE_PUERTO_BASE=17000
+if (process.env.CV_ZPE_IP) CONFIG.ZPE_IP = process.env.CV_ZPE_IP;
+if (process.env.CV_ZPE_PUERTO_BASE) CONFIG.ZPE_PUERTO_BASE = Number(process.env.CV_ZPE_PUERTO_BASE);
 module.exports = { CONFIG };
 
 const NUM_SLOTS = 16;
@@ -334,6 +337,21 @@ function abrirTelnet(host, puerto, timeoutMs) {
     });
     s.escribir = (t) => { try { sock.write(t); } catch (e) {} };
     s.cerrar = () => { try { sock.destroy(); } catch (e) {} };
+    // Espera a que lo último que llegó coincida con alguna de las expresiones; devuelve { i, texto } (i = -1 si se acabó el tiempo)
+    s.esperarRx = (rxs, ms) => new Promise((res) => {
+      let hecho = false;
+      const fin = (r) => { if (hecho) return; hecho = true; clearTimeout(t); s.espera = null; res(r); };
+      const revisar = () => {
+        const limpio = s.buf.replace(/\x1b\[[0-9;?]*[ -\/]*[@-~]/g, '').replace(/\r/g, '');
+        for (let k = 0; k < rxs.length; k++) {
+          if (rxs[k].test(limpio)) { s.buf = ''; return fin({ i: k, texto: limpio }); }
+        }
+        if (s.cerrado) { s.buf = ''; fin({ i: -2, texto: limpio }); }
+      };
+      const t = setTimeout(() => { const r = s.buf; s.buf = ''; fin({ i: -1, texto: r }); }, ms);
+      s.espera = { revisar };
+      revisar();
+    });
     // Igual que telnetlib.read_until: devuelve lo leído hasta el texto esperado, o todo lo disponible al agotar el tiempo
     s.leerHasta = (texto, ms) => new Promise((res) => {
       let hecho = false;
@@ -350,34 +368,87 @@ function abrirTelnet(host, puerto, timeoutMs) {
   });
 }
 
+/* Lee la EEPROM de la unidad: entra a la consola de la Izumi (telnet al ZPE), de ahí por ssh al BMC
+   y corre hexdump. Ya no depende de textos exactos ni de tiempos fijos: reacciona a lo que va saliendo
+   (login, shell, "yes/no" de la huella SSH, password, prompt del BMC) y aguanta que la sesión ya esté abierta. */
+const RX = {
+  login: /login:\s*$/i,
+  pass: /password:\s*$/i,
+  yesno: /\(yes\/no(\/\[fingerprint\])?\)\?\s*$/i,
+  bmc: /root@ghostlite[^\n]*[#$]\s*$/,
+  shell: /(^|\n)[^\n]*[#$]\s*$/,
+  negado: /permission denied|connection refused|no route to host|could not resolve|connection timed out|network is unreachable/i
+};
+const MARCA_INI = '__GF_INI__', MARCA_FIN = '__GF_FIN__';
+
+// hexdump -C parte el texto en renglones de 16 bytes (el serial puede quedar cortado entre dos renglones):
+// se reconstruyen los bytes desde las columnas en hexadecimal y se lee todo como un solo texto
+function textoDeHexdump(salida) {
+  const bytes = [];
+  for (const l of String(salida).split(/\r?\n/)) {
+    const m = l.match(/^\s*[0-9a-f]{6,8}\s+((?:[0-9a-f]{2}\s+){1,16})/i);
+    if (!m) continue;
+    for (const h of m[1].trim().split(/\s+/)) if (/^[0-9a-f]{2}$/i.test(h)) bytes.push(parseInt(h, 16));
+  }
+  return bytes.map((b) => (b >= 32 && b < 127 ? String.fromCharCode(b) : ' ')).join('');
+}
+function extraerParteSerial(salida) {
+  const texto = textoDeHexdump(salida) + '\n' + String(salida);
+  const serialM = texto.match(/FLG\d{4}-?\d{5}/);
+  const parteM = texto.match(/\b(1227014|1231778)\b/) || textoDeHexdump(salida).match(/(?:^|[^0-9])(\d{7})(?![0-9])/);
+  return { serial: serialM ? serialM[0] : '', parte: parteM ? (parteM[1] || parteM[0]) : '' };
+}
+
 async function obtenerDatosHardware(n) {
   let tn = null;
+  const pasos = [];
+  const fallo = (motivo) => ({ parte: '', serial: '', motivo, pasos });
   try {
-    tn = await abrirTelnet(CONFIG.ZPE_IP, CONFIG.ZPE_PUERTO_BASE + n, 5000);
-    tn.escribir('\n');
-    await tn.leerHasta('(none) login: ', 3000);
-    tn.escribir(CONFIG.LOGIN_ZPE + '\n');
-    await tn.leerHasta('(none):~# ', 3000);
-    tn.escribir(CONFIG.BMC_SSH + '\n');
-    await tn.leerHasta(CONFIG.BMC_PROMPT_PASSWORD, 5000);
-    tn.escribir(CONFIG.BMC_PASSWORD + '\n');
-    await tn.leerHasta('root@ghostlite:~# ', 5000);
-    tn.escribir(CONFIG.COMANDO_EEPROM + '\n');
-    const respuesta = await tn.leerHasta('root@ghostlite:~# ', 5000);
-    tn.escribir('exit\n');
-    await tn.leerHasta('(none):~# ', 2000);
-    tn.escribir('exit\n');
-    const serialM = respuesta.match(/\bFLG\d{4}-\d{5}\b/);
-    const parteM = respuesta.match(/\b(1227014|1231778)\b/) || respuesta.match(/\b\d{7}\b/);
-    const serial = serialM ? serialM[0] : '';
-    const parte = parteM ? parteM[0] : '';
-    if (serial || parte) return { parte, serial };
+    try { tn = await abrirTelnet(CONFIG.ZPE_IP, CONFIG.ZPE_PUERTO_BASE + n, 5000); }
+    catch (e) { return fallo('No se pudo abrir la consola en el ZPE (' + CONFIG.ZPE_IP + ':' + (CONFIG.ZPE_PUERTO_BASE + n) + '): ' + e.message); }
+    tn.escribir('\r');
+    let enBmc = false, intentos = 0, mandoSsh = false, mandoPassBmc = false;
+    const limite = Date.now() + 45000;
+    while (!enBmc) {
+      if (Date.now() > limite || ++intentos > 14) return fallo('No se llegó al BMC (último paso: ' + (pasos[pasos.length - 1] || 'sin respuesta') + ')');
+      if (trabajo && trabajo.abort) return fallo('Detenido');
+      const r = await tn.esperarRx([RX.bmc, RX.yesno, RX.pass, RX.login, RX.negado, RX.shell], mandoSsh ? 12000 : 4000);
+      if (r.i === 0) { enBmc = true; pasos.push('prompt del BMC'); break; }
+      if (r.i === 1) { pasos.push('huella SSH → yes'); tn.escribir('yes\r'); continue; }
+      if (r.i === 2) {
+        if (!mandoSsh) { pasos.push('password de la Izumi'); tn.escribir(CONFIG.LOGIN_ZPE + '\r'); continue; }   // por si pidiera password al entrar
+        if (mandoPassBmc) return fallo('El BMC rechazó la contraseña');
+        pasos.push('password del BMC'); mandoPassBmc = true; tn.escribir(CONFIG.BMC_PASSWORD + '\r'); continue;
+      }
+      if (r.i === 3) { pasos.push('login de la Izumi'); tn.escribir(CONFIG.LOGIN_ZPE + '\r'); continue; }
+      if (r.i === 4) return fallo('La conexión al BMC falló: ' + (r.texto.match(RX.negado) || [''])[0]);
+      if (r.i === 5) {
+        if (mandoSsh && mandoPassBmc) return fallo('Después del ssh no salió el prompt del BMC (root@ghostlite)');
+        pasos.push('shell de la Izumi → ssh al BMC'); mandoSsh = true; tn.escribir(CONFIG.BMC_SSH + '\r'); continue;
+      }
+      if (r.i === -2) return fallo('El ZPE cerró la conexión (¿otra sesión usa ese puerto?)');
+      pasos.push('sin respuesta, Enter'); tn.escribir('\r');
+    }
+    // En el BMC: se corre el hexdump entre marcas para saber exactamente dónde empieza y termina
+    tn.escribir("echo " + MARCA_INI.slice(0, 4) + "''" + MARCA_INI.slice(4) + "; " + CONFIG.COMANDO_EEPROM + "; echo " + MARCA_FIN.slice(0, 4) + "''" + MARCA_FIN.slice(4) + "\r");
+    const r = await tn.esperarRx([new RegExp(MARCA_FIN + '\\s*\\n[^\\n]*[#$]\\s*$'), new RegExp(MARCA_FIN)], 10000);
+    let salida = r.texto;
+    const ini = salida.lastIndexOf(MARCA_INI);
+    if (ini >= 0) salida = salida.slice(ini + MARCA_INI.length);
+    const finI = salida.indexOf(MARCA_FIN);
+    if (finI >= 0) salida = salida.slice(0, finI);
+    tn.escribir('exit\r');
+    await tn.esperarRx([RX.shell], 2000);
+    tn.escribir('exit\r');
+    const d = extraerParteSerial(salida);
+    if (d.serial || d.parte) return { ...d, pasos, crudo: salida };
+    if (/No such file|cannot open|Permission denied/i.test(salida)) return { ...fallo('No se pudo leer la EEPROM: ' + salida.trim().split('\n').pop()), crudo: salida };
+    return { ...fallo('La EEPROM no trae un serial FLG…'), crudo: salida };
   } catch (e) {
-    /* sin conexión: se reporta como sin datos */
+    return fallo('Error: ' + e.message);
   } finally {
     if (tn) tn.cerrar();
   }
-  return { parte: '', serial: '' };
 }
 
 /* ---------- Escaneo automático ---------- */
@@ -396,13 +467,14 @@ async function escanear() {
       if (await pingUnidad(n)) {
         if (t.abort) return detenido();
         const d = await obtenerDatosHardware(n);
+        if (d.crudo && trabajo && trabajo.logStream) trabajo.logStream.write('--- Slot ' + nn + ' · salida de la EEPROM ---\n' + d.crudo.trim() + '\n---\n');
         if (d.parte || d.serial) {
-          slots[n - 1] = d;
+          slots[n - 1] = { parte: d.parte, serial: d.serial };
           res = { n, estado: 'ok', msg: 'SUCCESS', parte: d.parte, serial: d.serial };
           linea('out', 'Slot ' + nn + ': SUCCESS -> Parte: ' + d.parte + ', Serial: ' + d.serial);
         } else {
-          res = { n, estado: 'fail', msg: 'Responde, sin datos' };
-          linea('err', 'Slot ' + nn + ': FAIL -> Responde pero no se extrajeron datos.');
+          res = { n, estado: 'fail', msg: 'Sin datos: ' + (d.motivo || 'no se extrajeron') };
+          linea('err', 'Slot ' + nn + ': FAIL -> Responde pero no se extrajeron datos · ' + (d.motivo || '') + (d.pasos && d.pasos.length ? ' · pasos: ' + d.pasos.join(' → ') : ''));
         }
       } else {
         if (t.abort) return detenido();
@@ -678,4 +750,5 @@ ipcMain.handle('tc-open-log', () => {
 
 app.on('before-quit', () => { if (trabajo) { trabajo.abort = true; matarArbol(trabajo.proc); } });
 module.exports.escaneando = () => !!(trabajo && trabajo.tipo === 'escaneo');
+module.exports._prueba = { obtenerDatosHardware, extraerParteSerial, textoDeHexdump };
 console.log('[testcase] módulo de Test case cargado');
