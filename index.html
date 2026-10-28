@@ -3286,8 +3286,8 @@ function pintarProgresoValidacion(s) {
   const cont = $('cv-prog');
   if (!cont) return;
   const f = s.fase;
-  const total = 1;
-  const hechas = f === 'listo' ? 1 : 0;
+  const total = s.pasadas || 1;
+  const hechas = f === 'listo' ? total : Math.max(0, (s.pasada || 1) - 1);
   const visible = f === 'buscando' || f === 'ejecutando' || f === 'listo' || f === 'error';
   cont.hidden = !visible;
   if (!visible) return;
@@ -3299,7 +3299,7 @@ function pintarProgresoValidacion(s) {
   cont.classList.toggle('err', f === 'error');
   $('cv-prog-state').textContent =
     f === 'buscando' ? 'Preparando…' :
-    f === 'ejecutando' ? 'Leyendo rectificadores con vrmu_util…' :
+    f === 'ejecutando' ? 'Leyendo rectificadores · lectura ' + (s.pasada || 1) + ' de ' + total :
     f === 'listo' ? 'Completado · ' + (s.encontrados || 0) + ' de ' + (s.total || 24) + ' rectificadores' :
     'No se pudo leer';
   $('cv-prog-pct').textContent = pct + '%';
@@ -3317,8 +3317,8 @@ function aplicarEstado(s) {
     mostrarBarra('busy', 'Preparando lectura…', '');
     limpiarColores();
   } else if (s.fase === 'ejecutando') {
-    mostrarBarra('busy', 'Leyendo rectificadores…', s.ruta || '');
-    $('console-body').textContent = '';
+    mostrarBarra('busy', 'Leyendo rectificadores ' + (s.pasada || 1) + '/' + (s.pasadas || 1) + '…', s.ruta || '');
+    if ((s.pasada || 1) <= 1) $('console-body').textContent = '';
   } else if (s.fase === 'no-encontrado') {
     pintarResultados({ rects: {} });   // todos en rojo
     mostrarBarra('offline', 'No se encontró vrmu_util', s.error || '');

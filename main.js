@@ -66,6 +66,7 @@ const VRMU_HOST_ALT = process.env.CV_VRMU_HOST_ALT || '10.254.128.3';   // en al
 const VRMU_BIN = process.env.CV_VRMU_BIN || path.join(os.homedir(), 'vrmu_util');
 const NUM_RECTIFICADORES = 24;
 const TIMEOUT_VRMU_MS = 2 * 60 * 1000;
+const PASADAS_RECT = 5;   // lecturas seguidas de los rectificadores en cada "Probar conexión"
 
 /* ============================================================
    PING EN SEGUNDO PLANO (instrumentos)
@@ -251,8 +252,8 @@ async function iniciarProcesoValidacion() {
   revisionIzumis.revisarTodas((t) => emitirConsola('[Izumis] ' + t)).catch((e) => emitirConsola('[Izumis] Error: ' + e.message + '\n'));
   abrirLogValidacion();
   const cmd = '~/vrmu_util --hostname=' + VRMU_HOST + ' --envelope_enabled=false | grep -a4 dc-voltage';
-  bitacora.registrar('Validación', 'Probar conexión', 'vrmu_util ' + VRMU_HOST + ' + revisión de Izumis');
-  emitirEstado({ fase: 'buscando', error: null, salida: '', rects: null, detalle: null, ruta: cmd, encontrados: 0, total: NUM_RECTIFICADORES });
+  bitacora.registrar('Validación', 'Probar conexión', PASADAS_RECT + ' lecturas con vrmu_util ' + VRMU_HOST + ' + revisión de Izumis');
+  emitirEstado({ fase: 'buscando', error: null, salida: '', rects: null, detalle: null, ruta: cmd, encontrados: 0, total: NUM_RECTIFICADORES, pasada: 0, pasadas: PASADAS_RECT });
   try {
     if (!fs.existsSync(VRMU_BIN)) {
       const msg = 'No se encontró ' + VRMU_BIN + ' (se descarga en el paso "VRMU util" de la configuración del servidor)';
@@ -262,21 +263,33 @@ async function iniciarProcesoValidacion() {
       cerrarLogValidacion('vrmu_util no encontrado');
       return;
     }
-    emitirEstado({ fase: 'ejecutando' });
-    emitirConsola('$ ' + cmd + '\n');
-    let r = await correrVrmu(VRMU_HOST);
-    let { rects, detalle } = leerRectificadores(r.salida);
-    let hostUsado = VRMU_HOST;
-    // Si la .2 no trae los 24, se prueba también la .3 y se queda con la que traiga más
-    const n1 = Object.keys(rects).length;
-    if (n1 < NUM_RECTIFICADORES && VRMU_HOST_ALT && VRMU_HOST_ALT !== VRMU_HOST) {
-      emitirConsola('\n' + (n1 ? 'En ' + VRMU_HOST + ' salieron ' + n1 + ' de ' + NUM_RECTIFICADORES : 'No salió ningún rectificador en ' + VRMU_HOST) + '; se prueba también ' + VRMU_HOST_ALT + '\n$ ~/vrmu_util --hostname=' + VRMU_HOST_ALT + ' --envelope_enabled=false | grep -a4 dc-voltage\n');
-      const r2 = await correrVrmu(VRMU_HOST_ALT);
-      const l2 = leerRectificadores(r2.salida);
-      const n2 = Object.keys(l2.rects).length;
-      if (n2 > n1) { r = r2; rects = l2.rects; detalle = l2.detalle; hostUsado = VRMU_HOST_ALT; }
-      emitirConsola('Se usa ' + hostUsado + ' (' + Math.max(n1, n2) + ' de ' + NUM_RECTIFICADORES + ')\n');
+    // Los rectificadores se leen 5 veces seguidas: a veces una lectura sale sin alguno aunque sí esté.
+    // Cuenta como detectado si salió en cualquiera de las 5; el voltaje es el de la lectura más reciente.
+    // (Las Izumis no se tocan: se revisan aparte, en paralelo.)
+    let r = null, hostUsado = VRMU_HOST;
+    const rects = {}, detalle = {}, vistos = {};
+    for (let i = 1; i <= PASADAS_RECT; i++) {
+      emitirEstado({ fase: 'ejecutando', pasada: i, pasadas: PASADAS_RECT });
+      emitirConsola((i > 1 ? '\n' : '') + '===== Pasada ' + i + ' de ' + PASADAS_RECT + ' =====\n$ ~/vrmu_util --hostname=' + hostUsado + ' --envelope_enabled=false | grep -a4 dc-voltage\n');
+      let ri = await correrVrmu(hostUsado);
+      let li = leerRectificadores(ri.salida);
+      // En la primera pasada se decide la dirección: si la .2 no trae los 24, se prueba también la .3
+      if (i === 1) {
+        const n1 = Object.keys(li.rects).length;
+        if (n1 < NUM_RECTIFICADORES && VRMU_HOST_ALT && VRMU_HOST_ALT !== VRMU_HOST) {
+          emitirConsola('\n' + (n1 ? 'En ' + VRMU_HOST + ' salieron ' + n1 + ' de ' + NUM_RECTIFICADORES : 'No salió ningún rectificador en ' + VRMU_HOST) + '; se prueba también ' + VRMU_HOST_ALT + '\n$ ~/vrmu_util --hostname=' + VRMU_HOST_ALT + ' --envelope_enabled=false | grep -a4 dc-voltage\n');
+          const r2 = await correrVrmu(VRMU_HOST_ALT);
+          const l2 = leerRectificadores(r2.salida);
+          const n2 = Object.keys(l2.rects).length;
+          if (n2 > n1) { ri = r2; li = l2; hostUsado = VRMU_HOST_ALT; }
+          emitirConsola('Se usa ' + hostUsado + ' (' + Math.max(n1, n2) + ' de ' + NUM_RECTIFICADORES + ')\n');
+        }
+      }
+      r = ri;
+      for (const [n, v] of Object.entries(li.rects)) { rects[n] = v; detalle[n] = li.detalle[n]; vistos[n] = (vistos[n] || 0) + 1; }
+      emitirConsola('Pasada ' + i + ': ' + Object.keys(li.rects).length + ' de ' + NUM_RECTIFICADORES + ' · acumulado ' + Object.keys(rects).length + ' de ' + NUM_RECTIFICADORES + '\n');
     }
+    for (const n of Object.keys(detalle)) detalle[n] = detalle[n] + ' · salió en ' + vistos[n] + ' de ' + PASADAS_RECT + ' lecturas';
     const encontrados = Object.keys(rects).length;
     // grep sale con 1 si no encontró nada: eso no es error, es que no se detectó ningún rectificador.
     // Error de verdad: vrmu_util no corrió o se pasó del tiempo y no hay ninguna lectura.
@@ -290,11 +303,11 @@ async function iniciarProcesoValidacion() {
     const faltan = [];
     for (let n = 1; n <= NUM_RECTIFICADORES; n++) if (rects[n] === undefined) faltan.push('R' + n);
     emitirConsola('\n' + encontrados + ' de ' + NUM_RECTIFICADORES + ' rectificadores detectados' + (faltan.length ? ' · faltan: ' + faltan.join(', ') : '') + '\n');
-    emitirEstado({ fase: 'listo', salida: r.salida, error: r.error, hora: Date.now(), rects, detalle, encontrados });
+    emitirEstado({ fase: 'listo', salida: r.salida, error: r.error, hora: Date.now(), rects, detalle, encontrados, pasada: PASADAS_RECT, pasadas: PASADAS_RECT });
     bitacora.registrar('Validación', 'Terminó', encontrados + ' de ' + NUM_RECTIFICADORES + ' rectificadores' + (faltan.length ? ' · faltan ' + faltan.join(', ') : ''));
     bitacora.guardar('validacion', 'rectificadores_' + bitacora.sello() + '.txt',
       '# Rectificadores · ' + bitacora.fecha() + ' ' + bitacora.hora() + ' · ' + encontrados + ' de ' + NUM_RECTIFICADORES + '\n\n' +
-      Array.from({ length: NUM_RECTIFICADORES }, (_, k) => k + 1).map((n) => 'R' + String(n).padStart(2, ' ') + ' | ' + (rects[n] !== undefined ? rects[n].toFixed(2) + ' V | ' + detalle[n] : 'no detectado')).join('\n') + '\n');
+      Array.from({ length: NUM_RECTIFICADORES }, (_, k) => k + 1).map((n) => 'R' + String(n).padStart(2, ' ') + ' | ' + (rects[n] !== undefined ? rects[n].toFixed(2) + ' V | ' + detalle[n] : 'no detectado en ninguna de las ' + PASADAS_RECT + ' lecturas')).join('\n') + '\n');
     cerrarLogValidacion('Terminó · ' + encontrados + ' de ' + NUM_RECTIFICADORES);
   } catch (e) {
     emitirEstado({ fase: 'error', error: 'Error inesperado: ' + e.message, hora: Date.now() });
