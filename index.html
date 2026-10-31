@@ -869,7 +869,7 @@ h1 { font-size: clamp(22px, min(4vw, 5.5vh), 42px); font-weight: 700; letter-spa
 .status-title { min-width: 0; }
 
 /* Menú: en ventanas angostas usa nombres cortos para que quepan todas las pestañas */
-@media (max-width: 1180px) {
+@media (max-width: 860px) {
   .nav nav { gap: 6px; }
   .nav-link { padding: 6px 10px; }
   .lbl-full { display: none; }
@@ -1836,6 +1836,22 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .notif-vacio { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
 .notif-vacio b { color: var(--text); font-size: 15px; }
 .notif-ico { font-size: 34px; filter: grayscale(.3); }
+/* ===== Menú compacto con submenús ===== */
+.nav nav { overflow: visible !important; }
+.nav-grupo { position: relative; }
+.nav-padre { display: inline-flex; align-items: center; gap: 6px; font: 500 13.5px var(--font); color: var(--muted); background: none; border: 0; padding: 8px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap; transition: color .18s, background-color .18s; }
+.nav-padre:hover, .nav-grupo.abierto .nav-padre { color: var(--text); background: var(--bg-soft); }
+.nav-grupo:has(.nav-sub.active) .nav-padre { color: var(--blue); background: rgba(29, 92, 207, .08); font-weight: 600; }
+.nav-flecha { width: 7px; height: 7px; border-right: 1.6px solid currentColor; border-bottom: 1.6px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .18s; }
+.nav-grupo.abierto .nav-flecha { transform: translateY(1px) rotate(225deg); }
+.nav-menu { display: none; position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); min-width: 210px; padding: 6px; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 14px 34px rgba(16, 24, 40, .16); z-index: 60; animation: navMenu .14s ease-out; }
+.nav-menu::before { content: ""; position: absolute; top: -8px; left: 0; right: 0; height: 8px; }   /* puente para que no se cierre al bajar el mouse */
+@keyframes navMenu { from { opacity: 0; transform: translateX(-50%) translateY(-4px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.nav-grupo.abierto .nav-menu { display: block; }
+@media (hover: hover) { .nav-grupo:not(.sin-hover):hover .nav-menu { display: block; } .nav-grupo:not(.sin-hover):hover .nav-flecha { transform: translateY(1px) rotate(225deg); } }
+.nav-sub { display: flex !important; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; padding: 9px 12px !important; border-radius: 8px !important; font-size: 13.5px; }
+.nav-sub.active { color: var(--blue); background: rgba(29, 92, 207, .08); }
+@media (max-width: 760px) { .nav-menu { left: 0; transform: none; } @keyframes navMenu { from { opacity: 0; } to { opacity: 1; } } }
 </style>
 </head>
 <body>
@@ -1868,14 +1884,24 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       </div>
       <nav aria-label="Principal">
         <a href="#connection-validation" class="nav-link active" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
-        <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve · beta"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
-        <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi" title="Remplazar Izumi"><span class="lbl-full">Remplazar Izumi</span><span class="lbl-corto">Izumi</span></a>
-        <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
-        <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
-        <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
-        <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
+        <div class="nav-grupo" data-grupo="config">
+          <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Configuración general</span><span class="lbl-corto">Config.</span><span class="nav-flecha" aria-hidden="true"></span></button>
+          <div class="nav-menu" role="menu">
+            <a href="#set-valve" class="nav-link nav-sub" data-section="set-valve" role="menuitem">Set valve <span class="beta-tag">BETA</span></a>
+            <a href="#configuracion" class="nav-link nav-sub" data-section="configuracion" role="menuitem">Configuración</a>
+            <a href="#generar-test-case" class="nav-link nav-sub" data-section="generar-test-case" role="menuitem">Generar test case</a>
+            <a href="#recursos" class="nav-link nav-sub" data-section="recursos" role="menuitem">Recursos</a>
+          </div>
+        </div>
+        <div class="nav-grupo" data-grupo="izumis">
+          <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Izumis</span><span class="lbl-corto">Izumis</span><span class="nav-flecha" aria-hidden="true"></span></button>
+          <div class="nav-menu" role="menu">
+            <a href="#remplazar-izumi" class="nav-link nav-sub" data-section="remplazar-izumi" role="menuitem">Remplazar Izumi</a>
+            <a href="#generar-test-case" class="nav-link nav-sub" data-section="generar-test-case" role="menuitem">Generar test case</a>
+            <a href="#files-dhcp" class="nav-link nav-sub" data-section="files-dhcp" role="menuitem">Files DHCP</a>
+          </div>
+        </div>
         <a href="#notificaciones" class="nav-link" data-section="notificaciones" title="Centro de notificaciones · beta"><span class="lbl-full">Centro de notificaciones</span><span class="lbl-corto">Avisos</span><span class="beta-tag">BETA</span></a>
-
       </nav>
     </div>
   </header>
@@ -6375,6 +6401,27 @@ function pintarSeleccionIzumi() {
   }
   window.sistema.onRectAuto(aplicarAuto);
   window.sistema.rectAutoObtener().then(aplicarAuto).catch(() => {});
+})();
+
+/* ---------- Menú compacto: abrir / cerrar submenús ---------- */
+(function () {
+  const grupos = [...document.querySelectorAll('.nav-grupo')];
+  const cerrar = (g) => { g.classList.remove('abierto'); g.querySelector('.nav-padre').setAttribute('aria-expanded', 'false'); };
+  grupos.forEach((g) => {
+    const b = g.querySelector('.nav-padre');
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const abrir = !g.classList.contains('abierto');
+      grupos.forEach(cerrar);
+      if (abrir) { g.classList.add('abierto'); b.setAttribute('aria-expanded', 'true'); }
+    });
+    g.querySelectorAll('.nav-sub').forEach((a) => a.addEventListener('click', () => {
+      cerrar(g); g.classList.add('sin-hover');   // se cierra aunque el mouse siga encima
+    }));
+    g.addEventListener('mouseleave', () => g.classList.remove('sin-hover'));
+  });
+  document.addEventListener('click', (e) => { if (!e.target.closest('.nav-grupo')) grupos.forEach(cerrar); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') grupos.forEach(cerrar); });
 })();
 // CFG-FIN
 
