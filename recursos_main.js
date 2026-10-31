@@ -5,7 +5,9 @@
    los porcentajes a la ventana Recursos. Solo mide mientras esa
    ventana está abierta (la ventana lo pide cada 2 s).
    ============================================================ */
-const { ipcMain } = require('electron');
+const { ipcMain, app } = require('electron');
+const os = require('os');
+const path = require('path');
 const { execFile } = require('child_process');
 
 const COMANDO = 'echo -e "CPU: $(top -bn1 | grep "Cpu(s)" | sed "s/.*, *\\([0-9.]*\\)%* id.*/\\1/" | awk \'{print 100 - $1"%"}\') | RAM: $(free | grep Mem | awk \'{print int($3/$2 * 100)"%"}\') | DISCO: $(df -h / | awk \'NR==2 {print $5}\')"';
@@ -41,6 +43,38 @@ function medir() {
 }
 
 ipcMain.handle('rec-medir', () => medir());
+
+/* ---------- Consumo de esta app (todos sus procesos de Electron) ---------- */
+let discoCache = { kb: null, hora: 0 }, discoMidiendo = false;
+function medirDiscoApp() {
+  if (discoMidiendo || Date.now() - discoCache.hora < 60000) return;   // el disco se mide cada minuto (du es lento)
+  discoMidiendo = true;
+  const carpetas = [app.getAppPath(), app.getPath('userData'), path.join(os.homedir(), 'Ghostfish-Logs')];
+  execFile('du', ['-skc', ...carpetas], { timeout: 20000 }, (err, out) => {
+    discoMidiendo = false;
+    const m = String(out || '').match(/(\d+)\s+total\s*$/m);
+    discoCache = { kb: m ? +m[1] : discoCache.kb, hora: Date.now() };
+  });
+}
+function consumoApp() {
+  medirDiscoApp();
+  let cpu = 0, memKb = 0, procesos = 0;
+  try {
+    for (const m of app.getAppMetrics()) { procesos++; cpu += (m.cpu && m.cpu.percentCPUUsage) || 0; memKb += (m.memory && m.memory.workingSetSize) || 0; }
+  } catch (e) {}
+  const nucleos = (os.cpus() || []).length || 1;
+  const totalMemKb = os.totalmem() / 1024;
+  return {
+    ok: true, procesos,
+    cpu: Math.min(100, Math.round((cpu / nucleos) * 10) / 10),          // % del CPU total del servidor
+    ramMb: Math.round(memKb / 1024), ram: Math.round((memKb / totalMemKb) * 1000) / 10,   // % de la RAM total
+    discoMb: discoCache.kb != null ? Math.round(discoCache.kb / 1024) : null,
+    discoTotalMb: (() => { try { const f = require('fs').statfsSync('/'); return Math.round(f.blocks * f.bsize / 1048576); } catch (e) { return null; } })(),
+    hora: Date.now()
+  };
+}
+ipcMain.handle('rec-app', () => consumoApp());
+
 
 module.exports = { medir, interpretar, COMANDO };
 console.log('[recursos] medición de CPU / RAM / DISCO lista');

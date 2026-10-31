@@ -86,6 +86,7 @@ contextBridge.exposeInMainWorld('sistema', {
   onRectAuto: (cb) => ipcRenderer.on('rect-auto', (_e, d) => cb(d)),
   // Recursos (CPU / RAM / DISCO)
   recMedir: () => ipcRenderer.invoke('rec-medir'),
+  recApp: () => ipcRenderer.invoke('rec-app'),
   // Llave USB con las contraseñas
   llaveEstado: () => ipcRenderer.invoke('llave-estado'),
   llaveLeer: () => ipcRenderer.invoke('llave-leer'),

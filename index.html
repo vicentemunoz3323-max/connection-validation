@@ -1819,6 +1819,23 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .izumi:hover::after, .izumi:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
 .izumi:hover { transform: translateY(-1px); }
 @media (prefers-reduced-motion: reduce) { .rect-auto.vivo .ra-dot { animation: none; } }
+/* Consumo de esta app (Recursos) */
+.rec-app-card { margin-top: 14px; padding: 14px 18px; }
+.rec-app { display: grid; gap: 8px; margin-top: 8px; }
+.ra-fila { display: grid; grid-template-columns: 90px minmax(0, 1fr) 150px; gap: 12px; align-items: center; font-size: 12.5px; }
+.ra-nom { font-weight: 600; color: var(--text); }
+.ra-barra { height: 8px; border-radius: 99px; background: var(--bg-soft); border: 1px solid var(--line); overflow: hidden; }
+.ra-barra i { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #38bdf8, #2f7cf6); transition: width .8s ease; }
+.ra-fila.alto .ra-barra i { background: linear-gradient(90deg, #f6b34a, #d97706); }
+.ra-fila.crit .ra-barra i { background: linear-gradient(90deg, #f87171, #c8261d); }
+.ra-val { font: 12px var(--mono); color: var(--muted); text-align: right; }
+.ra-nota { margin: 10px 0 0; font-size: 11.5px; color: var(--muted); }
+@media (max-width: 640px) { .ra-fila { grid-template-columns: 74px minmax(0, 1fr) 110px; } }
+/* Centro de notificaciones */
+.notif-card { padding: 40px 20px; }
+.notif-vacio { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+.notif-vacio b { color: var(--text); font-size: 15px; }
+.notif-ico { font-size: 34px; filter: grayscale(.3); }
 </style>
 </head>
 <body>
@@ -1857,6 +1874,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
         <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
         <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
+        <a href="#notificaciones" class="nav-link" data-section="notificaciones" title="Centro de notificaciones · beta"><span class="lbl-full">Centro de notificaciones</span><span class="lbl-corto">Avisos</span><span class="beta-tag">BETA</span></a>
 
       </nav>
     </div>
@@ -2865,6 +2883,32 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
         <div class="rec-leyenda"><span><i class="l-ok"></i>Normal</span><span><i class="l-alto"></i>Alto (70% o más)</span><span><i class="l-crit"></i>Crítico (90% o más)</span></div>
         <pre class="rec-salida" id="rec-salida" title="Salida del comando">—</pre>
+      </div>
+
+      <div class="card rec-app-card">
+        <div class="card-head"><span class="card-title">Consumo de esta app</span><span class="card-count" id="ra-procs">—</span></div>
+        <div class="rec-app">
+          <div class="ra-fila" data-k="cpu"><span class="ra-nom">Procesador</span><div class="ra-barra"><i></i></div><span class="ra-val">—</span></div>
+          <div class="ra-fila" data-k="ram"><span class="ra-nom">RAM</span><div class="ra-barra"><i></i></div><span class="ra-val">—</span></div>
+          <div class="ra-fila" data-k="disco"><span class="ra-nom">Disco</span><div class="ra-barra"><i></i></div><span class="ra-val">—</span></div>
+        </div>
+        <p class="ra-nota">Lo que usa Connection Validation (todos sus procesos). Disco = archivos de la app, sus datos y ~/Ghostfish-Logs.</p>
+      </div>
+    </section>
+
+    <section id="notificaciones" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Avisos</span>
+            <h1>Centro de notificaciones <span class="beta-tag beta-grande">BETA</span></h1>
+            <p class="lead">Aquí van a llegar los avisos de la app.</p>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="card notif-card">
+        <div class="notif-vacio"><span class="notif-ico">🔔</span><b>Sin notificaciones</b><span>Este apartado está en construcción.</span></div>
       </div>
     </section>
 
@@ -6637,9 +6681,30 @@ function pintarSeleccionIzumi() {
     $r('rec-vivo').classList.toggle('err', !r || !r.ok);
     if (!r || !r.ok) { $r('rec-hora').textContent = 'Error al medir'; $r('rec-salida').textContent = (r && (r.error || r.texto)) || 'Sin respuesta'; return; }
     pintar('cpu', r.cpu); pintar('ram', r.ram); pintar('disco', r.disco);
+    medirApp();
     $r('rec-hora').textContent = 'Actualizado ' + hora(r.hora);
     $r('rec-salida').textContent = r.texto;
   }
+  async function medirApp() {
+    if (!window.sistema || typeof window.sistema.recApp !== 'function') return;
+    let a; try { a = await window.sistema.recApp(); } catch (e) { return; }
+    if (!a || !a.ok) return;
+    const fila = (k, pct, txt) => {
+      const f = sec.querySelector('.ra-fila[data-k="' + k + '"]'); if (!f) return;
+      f.querySelector('.ra-barra i').style.width = Math.max(pct || 0, pct ? 1.5 : 0) + '%';
+      f.querySelector('.ra-val').textContent = txt;
+      f.classList.toggle('alto', pct >= 50 && pct < 80); f.classList.toggle('crit', pct >= 80);
+    };
+    const gb = (mb) => (mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB');
+    fila('cpu', a.cpu, a.cpu.toFixed(1) + '%');
+    fila('ram', a.ram, gb(a.ramMb) + ' · ' + a.ram.toFixed(1) + '%');
+    // El disco de la app se muestra como parte de lo que ocupa "/" (para que la barra tenga escala)
+    if (a.discoTotalMb) discoTotalMb = a.discoTotalMb;
+    const discoPct = a.discoMb != null && discoTotalMb ? (a.discoMb / discoTotalMb) * 100 : 0;
+    fila('disco', discoPct, a.discoMb != null ? gb(a.discoMb) + (discoTotalMb ? ' · ' + discoPct.toFixed(2) + '%' : '') : 'midiendo…');
+    document.getElementById('ra-procs').textContent = a.procesos + (a.procesos === 1 ? ' proceso' : ' procesos');
+  }
+  let discoTotalMb = 0;
   function arrancar() { if (timer) return; medir(); timer = setInterval(medir, 2000); }
   function parar() { clearInterval(timer); timer = null; }
   // Mide solo mientras la ventana Recursos está abierta
