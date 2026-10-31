@@ -33,6 +33,7 @@ const chillerMonitor = require('./chiller_main.js');
 const servidor = require('./server_main.js');
 require('./llave_main.js');   // llave USB con las contraseñas
 require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO
+const setValve = require('./setvalve_main.js'); // Set valve: PWM de las válvulas por slot
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)
 const revisionIzumis = require('./izumi_check.js');
 revisionIzumis.configurar({
@@ -891,6 +892,25 @@ chillerMonitor.configurar({
   varsSesion: VARS_SESION
 });
 
+// Set valve: el tablero queda habilitado un rato después de poner bien la contraseña (o hasta bajar el switch)
+const SV_MINUTOS = 30;
+let svHabilitadoHasta = 0;
+let svPass = null;   // solo en memoria mientras el tablero está habilitado (para la contraseña de testusr del script)
+function ipPrincipal() {
+  const ifs = os.networkInterfaces();
+  for (const patron of INTERFACES_PRINCIPALES) for (const [nombre, dirs] of Object.entries(ifs)) {
+    if (!patron.test(nombre)) continue;
+    const v4 = (dirs || []).find((i) => (i.family === 'IPv4' || i.family === 4) && !i.internal);
+    if (v4) return v4.address;
+  }
+  return null;
+}
+setValve.configurar({
+  habilitado: () => Date.now() < svHabilitadoHasta,
+  password: () => (Date.now() < svHabilitadoHasta ? svPass : null),
+  ipServidor: ipPrincipal
+});
+ipcMain.handle('sv-bloquear', () => { svHabilitadoHasta = 0; svPass = null; return true; });
 // Set valve: revisa la contraseña de sudo para habilitar el tablero (no la guarda)
 ipcMain.handle('sv-verificar-pass', async (_e, pass) => {
   if (typeof pass !== 'string' || !pass || pass.length > 300) return { ok: false, error: 'Contraseña no válida' };
@@ -907,7 +927,7 @@ ipcMain.handle('sv-verificar-pass', async (_e, pass) => {
     p.stdin.write(pass + '\n'); p.stdin.end();
     const listo = (c) => {
       if (fin) return; fin = true; clearTimeout(t);
-      if (c === 0) { bitacora.registrar('Set valve', 'Contraseña correcta'); return resolve({ ok: true }); }
+      if (c === 0) { svHabilitadoHasta = Date.now() + SV_MINUTOS * 60000; svPass = pass; bitacora.registrar('Set valve', 'Contraseña correcta'); return resolve({ ok: true }); }
       if (/no new privileges/i.test(err)) return resolve({ ok: false, error: 'sudo está bloqueado ("no new privileges"). Abre la app desde el menú de aplicaciones.' });
       if (/not in the sudoers|not allowed/i.test(err)) return resolve({ ok: false, error: 'Tu usuario no tiene permiso de sudo' });
       resolve({ ok: false, error: 'Contraseña incorrecta' });

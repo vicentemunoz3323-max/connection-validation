@@ -1781,6 +1781,30 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 #set-valve.sv-bloq .sv-vista, #set-valve.sv-sinsel .sv-vista { filter: grayscale(.85); opacity: .7; }
 #set-valve.sv-bloq .sv-flujo, #set-valve.sv-sinsel .sv-flujo { visibility: hidden; }
 .sv-ctrl input:disabled, .sv-ctrl .sv-rapidos button:disabled { opacity: .45; cursor: not-allowed; }
+.sv-host { display: flex; gap: 14px; align-items: flex-end; flex-wrap: wrap; margin-top: 12px; }
+.sv-host label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.sv-host input { width: 180px; padding: 6px 10px; font: 13px var(--mono); }
+.sv-llave { font-size: 12.5px; padding-bottom: 7px; } .sv-llave.ok { color: var(--green); } .sv-llave.mal { color: var(--red); }
+.sv-console { max-width: 1060px; margin: 14px auto 0; }
+.sv-body { max-height: 320px; overflow-y: auto; padding: 6px 0; }
+.sv-body .sl { padding: 0 12px; white-space: pre-wrap; word-break: break-word; }
+.sv-body .sl.err { color: #ff8a80; } .sv-body .sl.ok { color: #7ee2a0; } .sv-body .sl.sys { color: #7fb6ff; font-weight: 700; } .sv-body .sl.cmd { color: #c7a6ff; } .sv-body .sl.warn { color: #ffcc66; } .sv-body .sl.dim { color: #6b7685; }
+.sv-slot.corre { border-color: var(--blue); } .sv-slot.corre .sv-slot-ck { border-color: var(--blue); border-top-color: transparent; animation: girar .8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+.sv-slot.okr .sv-slot-n::after { content: " ✓"; color: var(--green); }
+.sv-slot.mal { border-color: var(--red); background: rgba(200,38,29,.05); } .sv-slot.mal .sv-slot-n::after { content: " ✕"; color: var(--red); }
+.sv-slot-r { font-size: 10.5px; color: var(--muted); min-height: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.sv-slot.mal .sv-slot-r { color: var(--red); }
+.sv-rack { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); }
+.sv-rack-tit { font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.sv-rack-opc { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 8px; }
+.sv-radio { display: inline-flex; gap: 6px; align-items: center; font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.sv-radio code { font-size: 12px; background: var(--bg-soft); padding: 1px 6px; border-radius: 4px; }
+.sv-host small { font-weight: 500; color: var(--muted); }
+#sv-pass-otro { width: 220px; padding: 6px 10px; }
+.sv-script-card { max-width: 1060px; margin: 14px auto 0 !important; padding: 14px 18px; }
+.sv-sc { height: 420px; margin-top: 8px; }
+#sv-llave { margin-top: 6px; padding: 0; }
 </style>
 </head>
 <body>
@@ -1813,7 +1837,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       </div>
       <nav aria-label="Principal">
         <a href="#connection-validation" class="nav-link active" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
-        <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve · beta: no modifica ningún parámetro del rack"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
+        <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve · beta"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
         <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi" title="Remplazar Izumi"><span class="lbl-full">Remplazar Izumi</span><span class="lbl-corto">Izumi</span></a>
         <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
         <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar Test case"><span class="lbl-full">Generar Test case</span><span class="lbl-corto">Test case</span></a>
@@ -1982,7 +2006,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <span class="inst-eyebrow">Control</span>
             <h1>Set valve <span class="beta-tag beta-grande">BETA</span></h1>
             <p class="lead">Ajuste de la válvula.</p>
-            <div class="beta-aviso"><b>Apartado beta:</b> no modifica ningún parámetro en el rack. Solo muestra la apertura y la guarda en esta PC.</div>
+            <div class="beta-aviso"><b>Apartado beta:</b> Aplicar <b>sí cambia el PWM</b> de las válvulas de los slots seleccionados (corre <code>set_valve_remote_V2.sh</code> slot por slot).</div>
             <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
         </div>
@@ -2047,8 +2071,50 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <button type="button" class="btn btn-secundario btn-mini" id="sv-ninguno">Quitar selección</button>
           </div>
         </div>
-        <div class="sv-slots" id="sv-slots"><button type="button" class="sv-slot" data-n="1" aria-pressed="false"><span class="sv-slot-n">Slot 1</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="2" aria-pressed="false"><span class="sv-slot-n">Slot 2</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="3" aria-pressed="false"><span class="sv-slot-n">Slot 3</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="4" aria-pressed="false"><span class="sv-slot-n">Slot 4</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="5" aria-pressed="false"><span class="sv-slot-n">Slot 5</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="6" aria-pressed="false"><span class="sv-slot-n">Slot 6</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="7" aria-pressed="false"><span class="sv-slot-n">Slot 7</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="8" aria-pressed="false"><span class="sv-slot-n">Slot 8</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="9" aria-pressed="false"><span class="sv-slot-n">Slot 9</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="10" aria-pressed="false"><span class="sv-slot-n">Slot 10</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="11" aria-pressed="false"><span class="sv-slot-n">Slot 11</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="12" aria-pressed="false"><span class="sv-slot-n">Slot 12</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="13" aria-pressed="false"><span class="sv-slot-n">Slot 13</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="14" aria-pressed="false"><span class="sv-slot-n">Slot 14</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="15" aria-pressed="false"><span class="sv-slot-n">Slot 15</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="16" aria-pressed="false"><span class="sv-slot-n">Slot 16</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-ck">✓</span></button></div>
-        <p class="sv-slots-nota">Toca los slots para elegirlos. La apertura se aplica solo a los slots seleccionados; cada uno guarda su propio valor.</p>
+        <div class="sv-slots" id="sv-slots"><button type="button" class="sv-slot" data-n="1" aria-pressed="false"><span class="sv-slot-n">Slot 1</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="2" aria-pressed="false"><span class="sv-slot-n">Slot 2</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="3" aria-pressed="false"><span class="sv-slot-n">Slot 3</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="4" aria-pressed="false"><span class="sv-slot-n">Slot 4</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="5" aria-pressed="false"><span class="sv-slot-n">Slot 5</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="6" aria-pressed="false"><span class="sv-slot-n">Slot 6</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="7" aria-pressed="false"><span class="sv-slot-n">Slot 7</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="8" aria-pressed="false"><span class="sv-slot-n">Slot 8</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="9" aria-pressed="false"><span class="sv-slot-n">Slot 9</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="10" aria-pressed="false"><span class="sv-slot-n">Slot 10</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="11" aria-pressed="false"><span class="sv-slot-n">Slot 11</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="12" aria-pressed="false"><span class="sv-slot-n">Slot 12</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="13" aria-pressed="false"><span class="sv-slot-n">Slot 13</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="14" aria-pressed="false"><span class="sv-slot-n">Slot 14</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="15" aria-pressed="false"><span class="sv-slot-n">Slot 15</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button><button type="button" class="sv-slot" data-n="16" aria-pressed="false"><span class="sv-slot-n">Slot 16</span><span class="sv-slot-v">—</span><span class="sv-slot-b"><i></i></span><span class="sv-slot-r"></span><span class="sv-slot-ck">✓</span></button></div>
+        <p class="sv-slots-nota">Toca los slots para elegirlos. El PWM se aplica solo a los seleccionados, uno por uno; si uno falla, los demás siguen.</p>
+        <div class="sv-rack">
+          <div class="sv-rack-tit">Rack donde se lanza el script</div>
+          <div class="sv-rack-opc">
+            <label class="sv-radio"><input type="radio" name="sv-destino" value="este" checked> Este rack <code id="sv-ip-este">—</code></label>
+            <label class="sv-radio"><input type="radio" name="sv-destino" value="otro"> Otro rack (remoto)</label>
+          </div>
+          <div class="sv-host">
+            <label>IP del rack (test host) <input type="text" id="sv-host" spellcheck="false" autocomplete="off" placeholder="172.24.125.x" inputmode="decimal"></label>
+            <label id="sv-pass-otro-l" hidden>Contraseña de testusr del otro rack <small>(vacía = la misma con que habilitaste)</small><input type="password" id="sv-pass-otro" autocomplete="off"></label>
+            <button type="button" class="btn btn-secundario btn-mini" id="sv-ping">Probar ping</button>
+            <span id="sv-ping-res" class="sv-llave"></span>
+          </div>
+          <div id="sv-llave" class="sv-llave"></div>
+        </div>
+      </div>
+
+      <div class="upd-console sv-console">
+        <div class="uc-head">
+          <span>Consola · set valve</span>
+          <span class="uc-meta" id="sv-meta">0 líneas</span>
+          <div class="uc-actions">
+            <button id="sv-log" class="btn btn-secundario btn-mini" type="button">Abrir logs</button>
+            <button id="sv-limpiar" class="btn btn-secundario btn-mini" type="button">Limpiar</button>
+          </div>
+        </div>
+        <div class="uc-body sv-body" id="sv-body"></div>
+      </div>
+
+      <div class="card sv-script-card">
+        <div class="card-head">
+          <span class="card-title">Script · set_valve_remote_V2.sh <span class="srv-mod" id="sv-sc-mod" hidden>modificado</span></span>
+          <button type="button" class="btn btn-secundario btn-mini" id="sv-sc-ver">Ver / editar</button>
+        </div>
+        <div id="sv-sc-panel" hidden>
+          <p class="srv-nota">Lo que guardes aquí es lo que corre Set valve. Antes de guardar se revisa con <code>bash -n</code> que no tenga errores. "Regresar al original" pone el script de la foto, sin cambios.</p>
+          <textarea id="sv-sc" class="srv-sc sv-sc" spellcheck="false" wrap="off"></textarea>
+          <div class="srv-acc">
+            <span class="srv-sc-msg" id="sv-sc-msg"></span>
+            <button type="button" class="btn btn-secundario" id="sv-sc-orig">Regresar al original</button>
+            <button type="button" class="btn" id="sv-sc-guardar">Guardar script</button>
+          </div>
+        </div>
       </div>
 
       <!-- Contraseña para habilitar el tablero -->
@@ -6271,7 +6337,7 @@ function pintarSeleccionIzumi() {
       const n = +b.dataset.n, d = datos.slots[n];
       b.classList.toggle('sel', sel.has(n));
       b.setAttribute('aria-pressed', sel.has(n) ? 'true' : 'false');
-      b.disabled = !habil;
+      b.disabled = !habil || (typeof corriendo !== 'undefined' && corriendo);
       b.querySelector('.sv-slot-v').textContent = d ? d.v + '%' : '—';
       b.querySelector('.sv-slot-b i').style.width = (d ? d.v : 0) + '%';
       b.classList.toggle('pend', sel.has(n) && (!d || d.v !== actual));
@@ -6289,13 +6355,14 @@ function pintarSeleccionIzumi() {
     $v('sv-in').value = actual; $v('sv-rango').value = actual;
     $v('sv-rango').style.setProperty('--p', ((actual - 1) / 99 * 100).toFixed(1) + '%');
     const pend = ls.filter((n) => !datos.slots[n] || datos.slots[n].v !== actual);
-    $v('sv-aplicar').disabled = !activo || !pend.length;
+    $v('sv-aplicar').disabled = (typeof corriendo !== 'undefined' && corriendo) ? false : (!activo || !pend.length);
+    if (typeof corriendo !== 'undefined' && corriendo) { ['sv-in', 'sv-rango'].forEach((id) => { $v(id).disabled = true; }); document.querySelectorAll('.sv-rapidos button, #sv-slots .sv-slot').forEach((b) => { b.disabled = true; }); }
     $v('sv-estado').textContent = !habil ? 'BLOQUEADO' : !ls.length ? 'SIN SLOTS' : pend.length ? 'SIN APLICAR' : 'APLICADO';
     document.querySelector('.sv-ctrl').classList.toggle('on', activo && !pend.length);
     $v('sv-sel-txt').innerHTML = !ls.length ? 'Ningún slot seleccionado' : 'Slots: <b>' + (ls.length === 16 ? 'todos (1–16)' : ls.join(', ')) + '</b>';
     $v('sv-hint').textContent = !habil ? 'Sube el switch e ingresa tu contraseña para habilitar el tablero'
       : !ls.length ? 'Selecciona al menos un slot abajo para activar la válvula'
-      : pend.length ? 'Presiona Aplicar para dejar ' + actual + '% en ' + pend.length + (pend.length === 1 ? ' slot' : ' slots') + ' (beta: no cambia nada en el rack)'
+      : pend.length ? 'Presiona Aplicar para poner PWM ' + actual + ' en ' + pend.length + (pend.length === 1 ? ' slot' : ' slots')
       : 'Aplicado en ' + (ls.length === 1 ? 'el slot ' + ls[0] : 'los ' + ls.length + ' slots');
     pintarSlots();
   }
@@ -6323,15 +6390,133 @@ function pintarSeleccionIzumi() {
   $v('sv-in').addEventListener('change', (e) => elegirValor(e.target.value));
   $v('sv-in').addEventListener('keydown', (e) => { if (e.key === 'Enter') { elegirValor(e.target.value); $v('sv-aplicar').click(); } });
   document.querySelectorAll('.sv-rapidos button').forEach((b) => b.addEventListener('click', () => elegirValor(b.dataset.v)));
-  $v('sv-aplicar').addEventListener('click', () => {
+  /* ---------- Aplicar de verdad: corre set_valve_remote_V2.sh slot por slot ---------- */
+  let corriendo = false;
+  const res = {};   // n -> { estado, msg }
+  const api = () => !!(window.sistema && typeof window.sistema.svAplicar === 'function');
+  $v('sv-aplicar').addEventListener('click', async () => {
+    if (corriendo) { if (confirm('¿Detener? Termina el slot que va corriendo y los demás ya no se hacen.')) window.sistema.svDetener(); return; }
     const ls = lista();
     if (!habil || !ls.length) return;
-    const t = Date.now();
-    for (const n of ls) datos.slots[n] = { v: actual, t };
-    guardar();
-    reg('Aplicó apertura', actual + '% · slots ' + (ls.length === 16 ? '1-16' : ls.join(', ')));
-    pintar();
+    if (!api()) { $v('sv-hint').textContent = 'Abre la app con Electron para aplicar'; return; }
+    const host = $v('sv-host').value.trim();
+    const otro = esOtro();
+    if (otro && (!host || host === ipEste)) { $v('sv-hint').textContent = 'Escribe la IP del otro rack'; $v('sv-host').focus(); return; }
+    if (!confirm('¿Poner PWM ' + actual + ' en ' + (ls.length === 16 ? 'los 16 slots' : 'slot(s) ' + ls.join(', ')) + '?\n\nRack: ' + (host || 'este servidor') + (otro ? '  (OTRO RACK, remoto)' : '  (este rack)') + '\nCorre set_valve_remote_V2.sh' + ($v('sv-sc-mod').hidden ? '' : ' (EDITADO)') + ', un slot a la vez.')) return;
+    for (const n of ls) delete res[n];
+    const r = await window.sistema.svAplicar({ slots: ls, pwm: actual, host, passRemoto: otro ? $v('sv-pass-otro').value : '' }).catch((e) => ({ ok: false, error: e.message }));
+    if (r && r.ok === false) { $v('sv-hint').textContent = r.error; svLinea({ t: 'err', s: r.error }); }
   });
+  // Consola
+  let svLineas = 0;
+  function svLinea(l) {
+    const b = $v('sv-body'), d = document.createElement('div');
+    d.className = 'sl ' + (l.t || 'out'); d.textContent = l.s;
+    const alFinal = b.scrollTop + b.clientHeight >= b.scrollHeight - 30;
+    b.appendChild(d); svLineas++;
+    while (b.childElementCount > 3000) b.firstElementChild.remove();
+    if (alFinal) b.scrollTop = b.scrollHeight;
+    $v('sv-meta').textContent = svLineas + ' líneas';
+  }
+  $v('sv-limpiar').addEventListener('click', () => { $v('sv-body').textContent = ''; svLineas = 0; $v('sv-meta').textContent = '0 líneas'; });
+  $v('sv-log').addEventListener('click', () => { if (window.sistema && window.sistema.logsAbrir) window.sistema.logsAbrir('setvalve'); });
+  function pintarResultado(n) {
+    const b = document.querySelector('#sv-slots .sv-slot[data-n="' + n + '"]'); if (!b) return;
+    const x = res[n];
+    b.classList.toggle('corre', !!x && x.estado === 'corriendo');
+    b.classList.toggle('okr', !!x && x.estado === 'ok');
+    b.classList.toggle('mal', !!x && (x.estado === 'fallo' || x.estado === 'detenido'));
+    b.querySelector('.sv-slot-r').textContent = x ? x.msg : '';
+    b.querySelector('.sv-slot-r').title = x ? x.msg : '';
+  }
+  /* ---------- Rack destino: este u otro (remoto) ---------- */
+  let ipEste = '', llaveLocal = false;
+  const esOtro = () => (document.querySelector('input[name="sv-destino"]:checked') || {}).value === 'otro';
+  function destino() {
+    const otro = esOtro(), h = $v('sv-host');
+    h.readOnly = !otro;
+    if (!otro) h.value = ipEste;
+    else if (h.value === ipEste) { h.value = ''; setTimeout(() => h.focus(), 20); }
+    $v('sv-pass-otro-l').hidden = !otro;
+    const ll = $v('sv-llave');
+    if (otro) { ll.className = 'sv-llave'; ll.textContent = 'En el otro rack, su testusr debe tener ~/mfg_ssh_key (el script la copia desde allá).'; }
+    else { ll.className = 'sv-llave ' + (llaveLocal ? 'ok' : 'mal'); ll.textContent = llaveLocal ? '✓ ~/mfg_ssh_key encontrada' : '✕ Falta ~/mfg_ssh_key en tu carpeta personal'; }
+    $v('sv-ping-res').textContent = '';
+  }
+  document.querySelectorAll('input[name="sv-destino"]').forEach((r) => r.addEventListener('change', destino));
+  $v('sv-host').addEventListener('input', () => { $v('sv-ping-res').textContent = ''; });
+  $v('sv-ping').addEventListener('click', async () => {
+    const ip = $v('sv-host').value.trim(), out = $v('sv-ping-res');
+    if (!window.sistema || !window.sistema.svPing) return;
+    out.className = 'sv-llave'; out.textContent = 'Probando…';
+    const r = await window.sistema.svPing(ip).catch(() => ({ ok: false }));
+    out.className = 'sv-llave ' + (r.ok ? 'ok' : 'mal');
+    out.textContent = r.ok ? '✓ ' + ip + ' contesta' + (r.ms != null ? ' (' + r.ms + ' ms)' : '') : '✕ ' + (r.error || ip + ' no contesta');
+  });
+
+  /* ---------- Editor del script ---------- */
+  let scOriginalCargado = '';
+  async function scCargar() {
+    if (!window.sistema || !window.sistema.svScriptLeer) return;
+    const r = await window.sistema.svScriptLeer().catch((e) => ({ ok: false, error: e.message }));
+    if (!r || !r.ok) { $v('sv-sc-msg').textContent = (r && r.error) || 'No se pudo leer'; return; }
+    $v('sv-sc').value = r.texto; scOriginalCargado = r.texto; $v('sv-sc-mod').hidden = !r.editado;
+    $v('sv-sc-msg').className = 'srv-sc-msg'; $v('sv-sc-msg').textContent = r.editado ? 'Este es el script editado' : 'Este es el script original';
+  }
+  $v('sv-sc-ver').addEventListener('click', () => {
+    const p = $v('sv-sc-panel'); p.hidden = !p.hidden;
+    $v('sv-sc-ver').textContent = p.hidden ? 'Ver / editar' : 'Ocultar';
+    if (!p.hidden) scCargar();
+  });
+  $v('sv-sc').addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') { e.preventDefault(); const t = e.target, i = t.selectionStart; t.setRangeText('    ', i, t.selectionEnd, 'end'); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); $v('sv-sc-guardar').click(); }
+  });
+  $v('sv-sc-guardar').addEventListener('click', async () => {
+    const m = $v('sv-sc-msg'); m.className = 'srv-sc-msg'; m.textContent = 'Revisando con bash -n…';
+    const r = await window.sistema.svScriptGuardar($v('sv-sc').value).catch((e) => ({ ok: false, error: e.message }));
+    if (r && r.ok) { m.className = 'srv-sc-msg ok'; m.textContent = 'Guardado ✓ · ' + (r.editado ? 'Set valve corre este script editado' : 'quedó igual al original'); $v('sv-sc-mod').hidden = !r.editado; reg('Editó el script', r.editado ? 'modificado' : 'igual al original'); }
+    else { m.className = 'srv-sc-msg err'; m.textContent = (r && r.error) || 'No se guardó'; }
+  });
+  $v('sv-sc-orig').addEventListener('click', async () => {
+    if (!confirm('¿Regresar el script al original (el de la foto)?\n\nSe pierden tus cambios.')) return;
+    const r = await window.sistema.svScriptRestaurar().catch((e) => ({ ok: false, error: e.message }));
+    const m = $v('sv-sc-msg');
+    if (r && r.ok) { $v('sv-sc').value = r.texto; $v('sv-sc-mod').hidden = true; m.className = 'srv-sc-msg ok'; m.textContent = 'Listo: es el original'; reg('Regresó el script al original'); }
+    else { m.className = 'srv-sc-msg err'; m.textContent = (r && r.error) || 'No se pudo'; }
+  });
+
+  if (api()) {
+    window.sistema.onSvSalida(svLinea);
+    window.sistema.onSvSlot((d) => {
+      res[d.n] = d;
+      if (d.estado === 'ok') { datos.slots[d.n] = { v: d.pwm, t: Date.now(), lectura: d.lectura }; guardar(); }
+      pintar(); pintarResultado(d.n);
+    });
+    window.sistema.onSvEstado((e) => {
+      corriendo = !!e.corriendo;
+      const b = $v('sv-aplicar');
+      b.textContent = corriendo ? 'Detener' : 'Aplicar';
+      b.classList.toggle('parar', corriendo);
+      if (!corriendo && e.resultados) {
+        const f = e.fallas || [];
+        reg(f.length ? 'Aplicó con fallas' : 'Aplicó PWM', 'PWM ' + e.pwm + (f.length ? ' · fallaron ' + f.join(', ') : ''));
+      }
+      pintar();
+      for (let n = 1; n <= 16; n++) pintarResultado(n);
+      if (!corriendo && e.resultados) {
+        const f = e.fallas || [];
+        $v('sv-hint').textContent = e.abort ? 'Detenido' : f.length ? 'Terminó con fallas en slot(s) ' + f.join(', ') + ' · revisa la consola' : 'Listo: PWM ' + e.pwm + ' aplicado';
+      }
+    });
+    window.sistema.svObtener().then((o) => {
+      ipEste = o.host || ''; llaveLocal = !!o.llave;
+      $v('sv-ip-este').textContent = ipEste || 'sin IP';
+      $v('sv-sc-mod').hidden = !o.editado;
+      destino();
+      if (o.corriendo) { corriendo = true; $v('sv-aplicar').textContent = 'Detener'; }
+    }).catch(() => {});
+  }
 
   // Switch cola de rata + contraseña
   function armar(v) {
@@ -6351,7 +6536,8 @@ function pintarSeleccionIzumi() {
   }
   function cerrarPass() { $v('sv-pass').hidden = true; $v('sv-pass-in').value = ''; }
   $v('sv-arm').addEventListener('click', () => {
-    if (habil) { armar(false); reg('Bloqueó el tablero'); return; }
+    if (typeof corriendo !== 'undefined' && corriendo) return;
+    if (habil) { armar(false); if (window.sistema && window.sistema.svBloquear) window.sistema.svBloquear(); reg('Bloqueó el tablero'); return; }
     pedirPass();
   });
   $v('sv-pass-cancelar').addEventListener('click', cerrarPass);
@@ -6367,7 +6553,7 @@ function pintarSeleccionIzumi() {
     cerrarPass(); armar(true); reg('Habilitó el tablero');
   });
   // Al salir de la sección se vuelve a bloquear
-  new MutationObserver(() => { if (!sec.classList.contains('active') && habil) armar(false); }).observe(sec, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(() => { if (!sec.classList.contains('active') && habil && !(typeof corriendo !== 'undefined' && corriendo)) { armar(false); if (window.sistema && window.sistema.svBloquear) window.sistema.svBloquear(); } }).observe(sec, { attributes: true, attributeFilter: ['class'] });
 
   actual = 50; armar(false);
 })();

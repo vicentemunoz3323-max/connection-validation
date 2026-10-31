@@ -54,6 +54,7 @@
   <a href="#validacion">Connection validation</a>
   <a href="#izumis">Colores de las Izumis</a>
   <a href="#rectificadores">Actualización de rectificadores</a>
+  <a href="#setvalve">Set valve</a>
   <a href="#remplazar">Remplazar Izumi</a>
   <a href="#dhcp">Files DHCP</a>
   <a href="#testcase">Generar Test case</a>
@@ -130,6 +131,19 @@ echo listo</pre>
   <h3>Cuando un comando pregunta algo</h3>
   <p>Si un comando pide contraseña (sudo, ssh) o una confirmación (s/n), aparece abajo de la consola un campo para contestar. Puedes marcar <b>Recordar esta contraseña</b>: se guarda solo mientras la app esté abierta, nunca en disco. <b>Olvidar</b> borra las contraseñas recordadas. <b>Ctrl+C</b> interrumpe el comando actual.</p>
   <p>Cuando termina, sale una notificación de Ubuntu con el resultado.</p>
+
+  <h2 id="setvalve">Set valve (beta)</h2>
+  <p>Pone el PWM de las válvulas (1 a 100) en los slots que elijas. Corre el script original <code>set_valve_remote_V2.sh</code>, sin cambios, <b>una vez por cada slot</b>: así, si un slot está vacío o apagado, los demás se hacen igual.</p>
+  <ol class="pasos">
+    <li>Sube el switch y escribe tu contraseña de sudo (es la misma de testusr que pide el script). El tablero se bloquea al bajar el switch o al salir de la sección.</li>
+    <li>Elige los slots (o "Seleccionar todos"). Sin slots elegidos la válvula no se activa.</li>
+    <li>Pon el valor con la barra, el número o los botones y presiona <b>Aplicar</b>. Cada slot dice si quedó (con la lectura de <code>get_sensors.sh percent</code>) o por qué falló.</li>
+  </ol>
+  <p>Necesita <code>~/mfg_ssh_key</code> en tu carpeta personal (el script la copia a cada unidad). Todo queda en <code>~/Ghostfish-Logs/setvalve/</code>.</p>
+  <ul>
+    <li><b>Rack donde se lanza:</b> "Este rack" usa la IP de este servidor. "Otro rack (remoto)" lanza el mismo script contra la IP que escribas: entra a testusr de ese rack y desde ahí a sus unidades. Si su contraseña es distinta, escríbela en el campo que aparece. Ese rack debe tener su propia <code>~/mfg_ssh_key</code>. "Probar ping" revisa que la IP conteste.</li>
+    <li><b>Script:</b> "Ver / editar" muestra el script que corre Set valve. Al guardar se revisa con <code>bash -n</code>; si tiene error no se guarda. "Regresar al original" pone el script original sin cambios. Si está editado, sale "modificado" y la confirmación de Aplicar lo avisa.</li>
+  </ul>
 
   <h2 id="remplazar">Remplazar Izumi</h2>
   <p>Cambia la MAC de una o varias Izumis en el DHCP cuando las remplazas físicamente.</p>

@@ -70,6 +70,17 @@ contextBridge.exposeInMainWorld('sistema', {
   onSrvLimpiar: (cb) => ipcRenderer.on('srv-limpiar', () => cb()),
   // Set valve: contraseña para habilitar el tablero
   svVerificarPass: (p) => ipcRenderer.invoke('sv-verificar-pass', p),
+  svBloquear: () => ipcRenderer.invoke('sv-bloquear'),
+  svAplicar: (opc) => ipcRenderer.invoke('sv-aplicar', opc),
+  svDetener: () => ipcRenderer.invoke('sv-detener'),
+  svObtener: () => ipcRenderer.invoke('sv-obtener'),
+  svScriptLeer: () => ipcRenderer.invoke('sv-script-leer'),
+  svScriptGuardar: (t) => ipcRenderer.invoke('sv-script-guardar', t),
+  svScriptRestaurar: () => ipcRenderer.invoke('sv-script-restaurar'),
+  svPing: (ip) => ipcRenderer.invoke('sv-ping', ip),
+  onSvSalida: (cb) => ipcRenderer.on('sv-salida', (_e, d) => cb(d)),
+  onSvSlot: (cb) => ipcRenderer.on('sv-slot', (_e, d) => cb(d)),
+  onSvEstado: (cb) => ipcRenderer.on('sv-estado', (_e, d) => cb(d)),
   // Recursos (CPU / RAM / DISCO)
   recMedir: () => ipcRenderer.invoke('rec-medir'),
   // Llave USB con las contraseñas
