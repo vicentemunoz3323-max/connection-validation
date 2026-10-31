@@ -1,7 +1,7 @@
 {
   "name": "ghostfish-engine",
   "productName": "Connection Validation",
-  "version": "1.5.24",
+  "version": "1.5.25",
   "description": "Ghostfish Engine - Motor de validación",
   "main": "main.js",
   "desktopName": "ghostfish-engine.desktop",

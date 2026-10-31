@@ -1852,6 +1852,24 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .nav-sub { display: flex !important; align-items: center; gap: 6px; width: 100%; box-sizing: border-box; padding: 9px 12px !important; border-radius: 8px !important; font-size: 13.5px; }
 .nav-sub.active { color: var(--blue); background: rgba(29, 92, 207, .08); }
 @media (max-width: 760px) { .nav-menu { left: 0; transform: none; } @keyframes navMenu { from { opacity: 0; } to { opacity: 1; } } }
+/* Opciones dentro de un submenú: nombre completo */
+.nav-sub .lbl-corto { display: none !important; }
+.nav-sub .lbl-full { display: inline !important; }
+.nav-grupo.vacio { display: none; }
+/* Ventana "Acomodar el menú" */
+.menu-cfg-dlg { width: min(620px, 100%); }
+.menu-cfg-areas { display: grid; gap: 14px; margin-top: 14px; }
+.mc-area-tit { font-size: 11.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.mc-lista { display: flex; flex-direction: column; gap: 5px; min-height: 38px; padding: 6px; border: 1px dashed var(--line-strong, #c3cad4); border-radius: 10px; background: var(--bg-soft); }
+.mc-vacia { font-size: 12px; color: var(--muted); padding: 6px; text-align: center; }
+.mc-item { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 8px; align-items: center; padding: 7px 10px; background: #fff; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; }
+.mc-item.grupo { border-left: 3px solid var(--blue); font-weight: 600; }
+.mc-item .mc-nom small { color: var(--muted); font-weight: 500; margin-left: 4px; }
+.mc-flechas { display: flex; gap: 4px; }
+.mc-flechas button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: pointer; font-size: 12px; color: var(--text); }
+.mc-flechas button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
+.mc-flechas button:disabled { opacity: .35; cursor: default; }
+.mc-item select { padding: 5px 8px; font: 12.5px var(--font); border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 </style>
 </head>
 <body>
@@ -1863,6 +1881,19 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <button type="button" class="btn btn-mini" id="manual-cerrar">Cerrar</button>
       </div>
       <iframe id="manual-frame" title="Manual de usuario"></iframe>
+    </div>
+  </div>
+  <div class="manual-modal" id="menu-cfg" hidden>
+    <div class="srv-dlg menu-cfg-dlg" role="dialog" aria-label="Acomodar el menú">
+      <div class="srv-dlg-tit">Acomodar el menú</div>
+      <p class="srv-dlg-sub">Cambia el orden con las flechas y elige dónde va cada opción: en la barra o dentro de un submenú. Se guarda en esta PC.</p>
+      <div id="menu-cfg-areas" class="menu-cfg-areas"></div>
+      <div class="srv-acc">
+        <button type="button" class="btn btn-secundario" id="menu-cfg-orig">Menú original</button>
+        <span style="flex:1"></span>
+        <button type="button" class="btn btn-secundario" id="menu-cfg-cancelar">Cancelar</button>
+        <button type="button" class="btn" id="menu-cfg-guardar">Guardar</button>
+      </div>
     </div>
   </div>
   <header class="nav">
@@ -1881,27 +1912,29 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg>
           <i class="punto"></i>
         </button>
+        <button id="btn-menu-cfg" class="upd-btn" type="button" title="Acomodar el menú" aria-label="Acomodar el menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        </button>
       </div>
-      <nav aria-label="Principal">
-        <a href="#connection-validation" class="nav-link active" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
+      <nav aria-label="Principal" id="nav-principal">
+        <a href="#connection-validation" class="nav-link" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
         <div class="nav-grupo" data-grupo="config">
           <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Configuración general</span><span class="lbl-corto">Config.</span><span class="nav-flecha" aria-hidden="true"></span></button>
           <div class="nav-menu" role="menu">
-            <a href="#set-valve" class="nav-link nav-sub" data-section="set-valve" role="menuitem">Set valve <span class="beta-tag">BETA</span></a>
-            <a href="#configuracion" class="nav-link nav-sub" data-section="configuracion" role="menuitem">Configuración</a>
-            <a href="#generar-test-case" class="nav-link nav-sub" data-section="generar-test-case" role="menuitem">Generar test case</a>
-            <a href="#recursos" class="nav-link nav-sub" data-section="recursos" role="menuitem">Recursos</a>
+            <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
+            <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
+            <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar test case"><span class="lbl-full">Generar test case</span><span class="lbl-corto">Test case</span></a>
           </div>
         </div>
         <div class="nav-grupo" data-grupo="izumis">
           <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Izumis</span><span class="lbl-corto">Izumis</span><span class="nav-flecha" aria-hidden="true"></span></button>
           <div class="nav-menu" role="menu">
-            <a href="#remplazar-izumi" class="nav-link nav-sub" data-section="remplazar-izumi" role="menuitem">Remplazar Izumi</a>
-            <a href="#generar-test-case" class="nav-link nav-sub" data-section="generar-test-case" role="menuitem">Generar test case</a>
-            <a href="#files-dhcp" class="nav-link nav-sub" data-section="files-dhcp" role="menuitem">Files DHCP</a>
+            <a href="#remplazar-izumi" class="nav-link" data-section="remplazar-izumi" title="Remplazar Izumi"><span class="lbl-full">Remplazar Izumi</span><span class="lbl-corto">Izumi</span></a>
+            <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
           </div>
         </div>
-        <a href="#notificaciones" class="nav-link" data-section="notificaciones" title="Centro de notificaciones · beta"><span class="lbl-full">Centro de notificaciones</span><span class="lbl-corto">Avisos</span><span class="beta-tag">BETA</span></a>
+        <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
+        <a href="#notificaciones" class="nav-link" data-section="notificaciones" title="Centro de notificaciones"><span class="lbl-full">Centro de notificaciones</span><span class="lbl-corto">Avisos</span><span class="beta-tag">BETA</span></a>
       </nav>
     </div>
   </header>
@@ -6403,6 +6436,116 @@ function pintarSeleccionIzumi() {
   window.sistema.rectAutoObtener().then(aplicarAuto).catch(() => {});
 })();
 
+
+/* ---------- Acomodar el menú (engrane) ---------- */
+(function () {
+  const KEY = 'menu_orden_v1';
+  const nav = document.getElementById('nav-principal');
+  if (!nav) return;
+  const links = {};   // id de sección -> <a> (se mueven, no se recrean: así conservan todo lo que tienen conectado)
+  nav.querySelectorAll('a.nav-link[data-section]').forEach((a) => { links[a.dataset.section] = a; });
+  const grupos = {};
+  nav.querySelectorAll('.nav-grupo').forEach((g) => { grupos[g.dataset.grupo] = g; });
+  const NOMBRE_GRUPO = { config: 'Configuración general', izumis: 'Izumis' };
+  const nombreSec = (id) => (links[id] ? links[id].querySelector('.lbl-full').textContent : id);
+  // Orden actual del HTML = menú original
+  function leerActual() {
+    const top = [], sub = {};
+    for (const el of nav.children) {
+      if (el.matches('a.nav-link')) top.push('s:' + el.dataset.section);
+      else if (el.matches('.nav-grupo')) { top.push('g:' + el.dataset.grupo); sub[el.dataset.grupo] = [...el.querySelectorAll('.nav-menu a.nav-link')].map((a) => a.dataset.section); }
+    }
+    return { top, sub };
+  }
+  const ORIGINAL = leerActual();
+  // Pone el menú como diga el orden (mueve los elementos existentes)
+  function aplicar(o) {
+    const usados = new Set();
+    const vistos = [];
+    for (const t of o.top) {
+      const [tipo, id] = t.split(':');
+      if (tipo === 's' && links[id] && !usados.has(id)) { links[id].classList.remove('nav-sub'); links[id].removeAttribute('role'); nav.appendChild(links[id]); usados.add(id); }
+      if (tipo === 'g' && grupos[id]) { nav.appendChild(grupos[id]); vistos.push(id); }
+    }
+    for (const gid of Object.keys(grupos)) {
+      if (!vistos.includes(gid)) nav.appendChild(grupos[gid]);
+      const menu = grupos[gid].querySelector('.nav-menu');
+      for (const id of (o.sub[gid] || [])) if (links[id] && !usados.has(id)) { links[id].classList.add('nav-sub'); links[id].setAttribute('role', 'menuitem'); menu.appendChild(links[id]); usados.add(id); }
+      grupos[gid].classList.toggle('vacio', !menu.querySelector('a'));
+    }
+    // Lo que no quedó en ningún lado (por ejemplo una sección nueva) va a la barra
+    for (const id of Object.keys(links)) if (!usados.has(id)) { links[id].classList.remove('nav-sub'); nav.appendChild(links[id]); }
+  }
+  function valido(o) { return o && Array.isArray(o.top) && o.sub && typeof o.sub === 'object'; }
+  let guardado = null;
+  try { guardado = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  aplicar(valido(guardado) ? guardado : ORIGINAL);
+
+  /* ---- Ventana ---- */
+  let borrador = null;
+  const copia = (o) => JSON.parse(JSON.stringify(o));
+  function dondeEsta(id) {
+    if (borrador.top.includes('s:' + id)) return 'top';
+    for (const g of Object.keys(borrador.sub)) if (borrador.sub[g].includes(id)) return g;
+    return 'top';
+  }
+  function mover(id, destino) {
+    borrador.top = borrador.top.filter((t) => t !== 's:' + id);
+    for (const g of Object.keys(borrador.sub)) borrador.sub[g] = borrador.sub[g].filter((x) => x !== id);
+    if (destino === 'top') borrador.top.push('s:' + id); else (borrador.sub[destino] = borrador.sub[destino] || []).push(id);
+    pintar();
+  }
+  function subir(lista, i, d) { const j = i + d; if (j < 0 || j >= lista.length) return; [lista[i], lista[j]] = [lista[j], lista[i]]; pintar(); }
+  function fila(texto, esGrupo, lista, i, id) {
+    const d = document.createElement('div');
+    d.className = 'mc-item' + (esGrupo ? ' grupo' : '');
+    d.innerHTML = '<span class="mc-nom"></span><span class="mc-sel"></span><span class="mc-flechas"><button type="button" title="Subir">▲</button><button type="button" title="Bajar">▼</button></span>';
+    d.querySelector('.mc-nom').innerHTML = texto;
+    const [arriba, abajo] = d.querySelectorAll('.mc-flechas button');
+    arriba.disabled = i === 0; abajo.disabled = i === lista.length - 1;
+    arriba.addEventListener('click', () => subir(lista, i, -1));
+    abajo.addEventListener('click', () => subir(lista, i, 1));
+    if (id) {
+      const sel = document.createElement('select');
+      sel.innerHTML = '<option value="top">En la barra</option>' + Object.keys(grupos).map((g) => '<option value="' + g + '">Dentro de ' + NOMBRE_GRUPO[g] + '</option>').join('');
+      sel.value = dondeEsta(id);
+      sel.addEventListener('change', () => mover(id, sel.value));
+      d.querySelector('.mc-sel').appendChild(sel);
+    }
+    return d;
+  }
+  function area(titulo, lista, esTop) {
+    const w = document.createElement('div');
+    w.innerHTML = '<div class="mc-area-tit"></div><div class="mc-lista"></div>';
+    w.querySelector('.mc-area-tit').textContent = titulo;
+    const cont = w.querySelector('.mc-lista');
+    if (!lista.length) cont.innerHTML = '<div class="mc-vacia">Vacío (no se muestra en la barra)</div>';
+    lista.forEach((x, i) => {
+      if (esTop) {
+        const [tipo, id] = x.split(':');
+        if (tipo === 'g') cont.appendChild(fila(NOMBRE_GRUPO[id] + ' <small>submenú</small>', true, lista, i, null));
+        else cont.appendChild(fila(nombreSec(id), false, lista, i, id));
+      } else cont.appendChild(fila(nombreSec(x), false, lista, i, x));
+    });
+    return w;
+  }
+  function pintar() {
+    const c = document.getElementById('menu-cfg-areas'); c.textContent = '';
+    c.appendChild(area('Barra principal', borrador.top, true));
+    for (const g of Object.keys(grupos)) c.appendChild(area('Submenú · ' + NOMBRE_GRUPO[g], borrador.sub[g] = borrador.sub[g] || [], false));
+  }
+  const modal = document.getElementById('menu-cfg');
+  document.getElementById('btn-menu-cfg').addEventListener('click', () => { borrador = copia(leerActual()); pintar(); modal.hidden = false; });
+  document.getElementById('menu-cfg-cancelar').addEventListener('click', () => { modal.hidden = true; });
+  document.getElementById('menu-cfg-orig').addEventListener('click', () => { borrador = copia(ORIGINAL); pintar(); });
+  document.getElementById('menu-cfg-guardar').addEventListener('click', () => {
+    aplicar(borrador);
+    try { localStorage.setItem(KEY, JSON.stringify(borrador)); } catch (e) {}
+    if (typeof registrarAccion === 'function') registrarAccion('App', 'Acomodó el menú', borrador.top.join(', '));
+    modal.hidden = true;
+  });
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.hidden = true; });
+})();
 /* ---------- Menú compacto: abrir / cerrar submenús ---------- */
 (function () {
   const grupos = [...document.querySelectorAll('.nav-grupo')];
@@ -6415,9 +6558,9 @@ function pintarSeleccionIzumi() {
       grupos.forEach(cerrar);
       if (abrir) { g.classList.add('abierto'); b.setAttribute('aria-expanded', 'true'); }
     });
-    g.querySelectorAll('.nav-sub').forEach((a) => a.addEventListener('click', () => {
-      cerrar(g); g.classList.add('sin-hover');   // se cierra aunque el mouse siga encima
-    }));
+    g.addEventListener('click', (e) => {   // delegado: sirve aunque el menú se acomode distinto
+      if (e.target.closest('.nav-menu a')) { cerrar(g); g.classList.add('sin-hover'); }   // se cierra aunque el mouse siga encima
+    });
     g.addEventListener('mouseleave', () => g.classList.remove('sin-hover'));
   });
   document.addEventListener('click', (e) => { if (!e.target.closest('.nav-grupo')) grupos.forEach(cerrar); });
