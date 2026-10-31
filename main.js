@@ -34,6 +34,7 @@ const servidor = require('./server_main.js');
 require('./llave_main.js');   // llave USB con las contraseñas
 require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO
 const setValve = require('./setvalve_main.js'); // Set valve: PWM de las válvulas por slot
+const protector = require('./protector_main.js'); // avisos a pantalla completa (se quitan con la contraseña de root)
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)
 const revisionIzumis = require('./izumi_check.js');
 revisionIzumis.configurar({
@@ -1063,6 +1064,9 @@ app.whenReady().then(() => {
   createWindow();
   iniciarMonitorInstrumentos();
   setTimeout(cicloRectAuto, 1500);   // rectificadores cada 5 s
+  // su no funciona con "no new privileges": entonces se corre fuera de la app con systemd-run
+  protector.configurar({ envolver: async (cmd) => ((await probarSystemdRun()) ? [SYSTEMD_RUN, '--user', '--pipe', '--wait', '--quiet', '--collect', '--', ...cmd] : cmd) });
+  protector.iniciar();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

@@ -1,6 +1,15 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('sistema', {
+  // Protector de pantalla (avisos a pantalla completa)
+  protAvisos: () => ipcRenderer.invoke('prot-avisos'),
+  protEstado: () => ipcRenderer.invoke('prot-estado'),
+  protLanzar: (tipo, nota) => ipcRenderer.invoke('prot-lanzar', tipo, nota),
+  onProtCambio: (cb) => ipcRenderer.on('prot-cambio', (_e, d) => cb(d)),
+  protConfigLeer: () => ipcRenderer.invoke('prot-config-leer'),
+  protConfigGuardar: (c) => ipcRenderer.invoke('prot-config-guardar', c),
+  protImagenElegir: () => ipcRenderer.invoke('prot-imagen-elegir'),
+  protVistaPrevia: (tipo, cfg) => ipcRenderer.invoke('prot-vista-previa', tipo, cfg),
   // Validación de conexión
   ejecutar: () => ipcRenderer.invoke('run-validation'),
   estado: () => ipcRenderer.invoke('get-estado'),

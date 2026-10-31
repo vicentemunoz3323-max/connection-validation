@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'">
+<title>Aviso</title>
+<style>
+@font-face { font-family: "GF Inter"; src: url("fonts/Inter-Regular.otf") format("opentype"); font-weight: 300 400; }
+@font-face { font-family: "GF Inter"; src: url("fonts/Inter-Medium.otf") format("opentype"); font-weight: 500; }
+@font-face { font-family: "GF Inter"; src: url("fonts/Inter-SemiBold.otf") format("opentype"); font-weight: 600; }
+@font-face { font-family: "GF Inter"; src: url("fonts/Inter-Bold.otf") format("opentype"); font-weight: 700 900; }
+:root { --c: #f59e0b; --text: #111827; --muted: #4b5563; --font: "GF Inter", Inter, Ubuntu, "Segoe UI", Arial, sans-serif; }
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; overflow: hidden; background: #fff; color: var(--text); font-family: var(--font); user-select: none; cursor: default; }
+.banda { position: fixed; left: 0; right: 0; top: 0; height: 14px; background: repeating-linear-gradient(-45deg, var(--c) 0 28px, #111827 28px 56px); animation: avanza 1.6s linear infinite; background-size: 79.2px 14px; }
+.banda.abajo { top: auto; bottom: 0; }
+@keyframes avanza { to { background-position: 79.2px 0; } }
+main { height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: center; gap: 4vw; padding: 6vh 6vw; }
+.img { display: flex; justify-content: center; }
+.img img { width: 100%; max-width: 640px; max-height: 76vh; object-fit: contain; }
+.txt { display: flex; flex-direction: column; gap: 2.4vh; }
+.chip { align-self: flex-start; display: inline-flex; align-items: center; gap: 10px; padding: 8px 18px 8px 12px; border-radius: 999px; background: color-mix(in srgb, var(--c) 14%, #fff); color: color-mix(in srgb, var(--c) 75%, #000); font-weight: 700; font-size: clamp(14px, 1.3vw, 20px); letter-spacing: .08em; text-transform: uppercase; }
+.chip i { width: 12px; height: 12px; border-radius: 50%; background: var(--c); animation: late 1.2s ease-in-out infinite; }
+@keyframes late { 50% { transform: scale(1.5); opacity: .5; } }
+.icono { width: clamp(64px, 7vw, 110px); height: clamp(64px, 7vw, 110px); border-radius: 24px; display: grid; place-items: center; background: var(--c); color: #fff; box-shadow: 0 12px 30px color-mix(in srgb, var(--c) 40%, transparent); }
+.icono svg { width: 58%; height: 58%; }
+h1 { font-size: clamp(36px, 4.6vw, 84px); line-height: 1.05; font-weight: 800; letter-spacing: -.02em; }
+.sub { font-size: clamp(22px, 2.6vw, 46px); font-weight: 700; color: var(--c); filter: brightness(.85); }
+.nota { font-size: clamp(16px, 1.4vw, 24px); color: var(--muted); }
+.meta { display: flex; flex-wrap: wrap; gap: 10px 28px; font-size: clamp(14px, 1.15vw, 19px); color: var(--muted); margin-top: 1vh; }
+.meta b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.reloj { font-size: clamp(28px, 2.8vw, 48px); font-weight: 300; font-variant-numeric: tabular-nums; color: var(--text); }
+.candado { position: fixed; right: 28px; bottom: 30px; display: flex; align-items: center; gap: 10px; }
+.btn-candado { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 16px; border: 1px solid #d1d5db; border-radius: 999px; background: #fff; color: var(--muted); font: 500 13px var(--font); cursor: pointer; opacity: .75; }
+.btn-candado:hover { opacity: 1; color: var(--text); }
+.btn-candado svg { width: 16px; height: 16px; }
+.caja { display: none; align-items: center; gap: 8px; padding: 8px; border-radius: 16px; background: #fff; border: 1px solid #d1d5db; box-shadow: 0 16px 40px rgba(17,24,39,.18); }
+.candado.abierto .caja { display: flex; }
+.candado.abierto .btn-candado { display: none; }
+.caja input { width: 240px; height: 40px; padding: 0 12px; border: 1px solid #d1d5db; border-radius: 10px; font: 15px var(--font); outline: none; }
+.caja input:focus { border-color: var(--c); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c) 25%, transparent); }
+.caja button { height: 40px; padding: 0 16px; border: 0; border-radius: 10px; font: 600 14px var(--font); cursor: pointer; }
+.ok { background: #111827; color: #fff; }
+.ok:disabled { opacity: .5; cursor: wait; }
+.x { background: #f3f4f6; color: var(--muted); }
+.err { position: absolute; right: 8px; bottom: calc(100% + 8px); padding: 6px 12px; border-radius: 8px; background: #fee2e2; color: #991b1b; font-size: 13px; white-space: nowrap; }
+.err:empty { display: none; }
+.caja.mal { animation: tiembla .35s; }
+@keyframes tiembla { 25% { transform: translateX(-8px); } 75% { transform: translateX(8px); } }
+/* ---- Fondos ---- */
+body.f-oscuro { background: #0b1220; --text: #f3f4f6; --muted: #9ca3af; }
+body.f-agua { background: linear-gradient(180deg, #e0f7ff 0%, #9be4ff 45%, #38bdf8 80%, #0284c7 100%); --text: #0b2545; --muted: #134e6f; }
+body.f-agua::after { content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse 60% 25% at 30% -5%, rgba(255,255,255,.65), transparent 70%), radial-gradient(ellipse 50% 20% at 75% -5%, rgba(255,255,255,.45), transparent 70%); animation: luz 9s ease-in-out infinite alternate; }
+@keyframes luz { to { transform: translateX(4vw); opacity: .7; } }
+body.f-oscuro .img img, body.f-agua .img img { background: #fff; border-radius: 28px; padding: 18px; box-shadow: 0 20px 50px rgba(0,0,0,.25); }
+body.f-oscuro .chip { background: color-mix(in srgb, var(--c) 22%, #0b1220); color: color-mix(in srgb, var(--c) 60%, #fff); }
+body.f-oscuro .sub { filter: brightness(1.15); }
+body.f-oscuro .btn-candado, body.f-agua .btn-candado { background: rgba(255,255,255,.85); }
+main { position: relative; z-index: 2; }
+main.sin-img { grid-template-columns: 1fr; max-width: 1200px; margin: 0 auto; }
+main.sin-img .img { display: none; }
+.banda, .candado, .previa { z-index: 5; }
+
+/* ---- Agua: burbujas y peces ---- */
+#agua { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+.burbuja { position: absolute; bottom: -80px; left: var(--x); width: var(--s); height: var(--s); border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.95) 0 7%, rgba(255,255,255,.25) 18%, transparent 42%),
+              radial-gradient(circle at 50% 50%, transparent 55%, color-mix(in srgb, var(--c) 22%, rgba(255,255,255,.4)) 72%, rgba(255,255,255,.55) 100%);
+  border: 1px solid color-mix(in srgb, var(--c) 30%, rgba(255,255,255,.6)); opacity: 0;
+  animation: sube var(--d) linear var(--r) infinite, mece calc(var(--d) / 4) ease-in-out var(--r) infinite alternate; }
+body.f-oscuro .burbuja { background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.85) 0 6%, rgba(255,255,255,.18) 16%, transparent 40%),
+  radial-gradient(circle, rgba(255,255,255,.05) 0 55%, color-mix(in srgb, var(--c) 35%, rgba(255,255,255,.25)) 80%, rgba(255,255,255,.4) 100%); border-color: rgba(255,255,255,.25); }
+@keyframes sube { 0% { transform: translateY(0) scale(.7); opacity: 0; } 8% { opacity: .9; } 85% { opacity: .75; } 100% { transform: translateY(calc(-100vh - 120px)) scale(1.05); opacity: 0; } }
+@keyframes mece { from { margin-left: calc(var(--m) * -1); } to { margin-left: var(--m); } }
+.pez { position: absolute; left: 0; top: 0; will-change: transform; opacity: .6; filter: drop-shadow(0 6px 10px rgba(0,0,0,.12)); }   /* pasa detrás del texto: medio transparente para que se lea */
+.pez svg { display: block; overflow: visible; }
+.pez .cola { transform-origin: 30px 40px; animation: cola .45s ease-in-out infinite alternate; }
+.pez .aleta { transform-origin: 70px 46px; animation: aleta .7s ease-in-out infinite alternate; }
+@keyframes cola { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+@keyframes aleta { from { transform: rotate(-12deg); } to { transform: rotate(18deg); } }
+.previa { position: fixed; left: 50%; top: 24px; transform: translateX(-50%); display: none; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 999px; background: #111827; color: #fff; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+.previa button { height: 30px; padding: 0 14px; border: 0; border-radius: 999px; background: #fff; color: #111827; font: 600 12px var(--font); cursor: pointer; }
+body.es-previa .previa { display: flex; }
+body.es-previa .candado { display: none; }
+@media (prefers-reduced-motion: reduce) { .burbuja, .pez .cola, .pez .aleta, .banda { animation-duration: 0s !important; } }
+@media (max-aspect-ratio: 1/1) { main { grid-template-columns: 1fr; text-align: left; } .img img { max-height: 36vh; } }
+</style>
+</head>
+<body>
+  <div id="agua" aria-hidden="true"></div>
+  <div class="banda"></div>
+  <div class="previa"><span>Vista previa · así se ve a pantalla completa</span><button type="button" id="cerrar-previa">Cerrar</button></div>
+  <main id="main">
+    <div class="img"><img id="img" src="protector.png" alt="" draggable="false" onerror="this.remove()"></div>
+    <div class="txt">
+      <span class="chip"><i></i>Aviso del equipo</span>
+      <div class="icono" id="icono"></div>
+      <h1 id="titulo">Equipo en mantenimiento</h1>
+      <div class="sub" id="sub">No ingresar unidades</div>
+      <div class="nota" id="nota" hidden></div>
+      <div class="reloj" id="reloj">--:--</div>
+      <div class="meta">
+        <span>Equipo: <b id="equipo">—</b></span>
+        <span>Desde: <b id="desde">—</b></span>
+        <span>Tiempo: <b id="lleva">—</b></span>
+      </div>
+    </div>
+  </main>
+  <div class="banda abajo"></div>
+
+  <div class="candado" id="candado">
+    <button class="btn-candado" id="btn-abrir" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+      Quitar aviso
+    </button>
+    <form class="caja" id="caja" autocomplete="off">
+      <span class="err" id="err"></span>
+      <input id="pass" type="password" placeholder="Contraseña de root" aria-label="Contraseña de root">
+      <button class="ok" id="ok" type="submit">Quitar</button>
+      <button class="x" id="cancelar" type="button">Cancelar</button>
+    </form>
+  </div>
+
+<script>
+const ICONOS = {
+  llave: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.2L3 17.8V21h3.2l6.3-6.3a4 4 0 0 0 5.2-5.4l-2.6 2.6-2.5-.6-.6-2.5z"/></svg>',
+  memoria: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 7v10M11 7v10M15 7v10M3 20h18M6 17v3M18 17v3"/></svg>',
+  disco: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>',
+  alto: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>'
+};
+const $ = (id) => document.getElementById(id);
+let info = null;
+const hora = (t) => new Date(t).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+function dur(ms) { const m = Math.floor(ms / 60000), h = Math.floor(m / 60); return h ? `${h} h ${String(m % 60).padStart(2, '0')} min` : `${m} min`; }
+function tic() {
+  const d = new Date();
+  $('reloj').textContent = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  if (info) $('lleva').textContent = dur(Date.now() - info.desde);
+}
+async function cargar() {
+  info = await window.protector.info();
+  if (!info) return;
+  const a = info.aviso;
+  document.documentElement.style.setProperty('--c', a.color);
+  document.title = a.titulo;
+  $('titulo').textContent = a.titulo;
+  $('sub').textContent = a.sub;
+  $('icono').innerHTML = ICONOS[a.icono] || '';
+  $('equipo').textContent = info.equipo;
+  $('desde').textContent = new Date(info.desde).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' }) + ' ' + hora(info.desde);
+  $('nota').hidden = !info.nota; $('nota').textContent = info.nota || '';
+  const v = info.visual || {};
+  document.body.className = 'f-' + (v.fondo || 'claro') + (info.previa ? ' es-previa' : '');
+  if (v.imagen === null) $('main').classList.add('sin-img');
+  else { $('main').classList.remove('sin-img'); if (v.imagen && $('img')) $('img').src = v.imagen; }
+  $('reloj').hidden = v.reloj === false;
+  agua(v);
+  tic();
+}
+
+/* ---- Burbujas transparentes y peces ---- */
+const rnd = (a, b) => a + Math.random() * (b - a);
+let peces = [], animando = false;
+function agua(v) {
+  const caja = $('agua');
+  caja.innerHTML = ''; peces = [];
+  if (v.burbujas !== false) {
+    const n = v.nBurbujas || 26;
+    for (let k = 0; k < n; k++) {
+      const b = document.createElement('i');
+      b.className = 'burbuja';
+      const tam = Math.random() < .15 ? rnd(46, 90) : rnd(10, 42);
+      b.style.cssText = `--x:${rnd(0, 100)}%;--s:${tam}px;--d:${rnd(9, 22)}s;--r:${-rnd(0, 22)}s;--m:${rnd(8, 40)}px`;
+      caja.appendChild(b);
+    }
+  }
+  if (v.pez !== false) for (let k = 0; k < (v.nPeces || 1); k++) peces.push(nuevoPez(caja, k));
+  if (peces.length && !animando) { animando = true; requestAnimationFrame(nadar); }
+}
+function svgPez(id) {
+  return `<svg viewBox="0 0 150 80" width="100%" height="100%">
+    <defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" style="stop-color:color-mix(in srgb, var(--c) 55%, #fff)"/><stop offset=".55" style="stop-color:var(--c)"/><stop offset="1" style="stop-color:color-mix(in srgb, var(--c) 70%, #000)"/></linearGradient></defs>
+    <path class="cola" d="M34 40 L4 14 Q12 40 4 66 Z" fill="url(#g${id})" opacity=".9"/>
+    <path d="M66 22 Q80 4 100 18 Q86 20 80 26 Z" fill="url(#g${id})" opacity=".85"/>
+    <ellipse cx="82" cy="40" rx="54" ry="27" fill="url(#g${id})"/>
+    <path d="M60 18 Q50 40 60 62" stroke="rgba(255,255,255,.45)" stroke-width="3" fill="none"/>
+    <path d="M74 15 Q64 40 74 65" stroke="rgba(255,255,255,.3)" stroke-width="3" fill="none"/>
+    <path class="aleta" d="M72 46 Q66 62 84 60 Q80 52 82 46 Z" fill="rgba(255,255,255,.55)"/>
+    <circle cx="116" cy="34" r="7" fill="#fff"/><circle cx="118" cy="34" r="3.6" fill="#111827"/><circle cx="119.5" cy="32.5" r="1.2" fill="#fff"/>
+    <path d="M131 46 Q127 49 122 47" stroke="rgba(0,0,0,.45)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </svg>`;
+}
+function nuevoPez(caja, k) {
+  const el = document.createElement('div');
+  el.className = 'pez';
+  const w = rnd(110, 190) * (k ? rnd(.55, .9) : 1);
+  el.style.width = w + 'px'; el.style.height = (w * 80 / 150) + 'px';
+  el.innerHTML = svgPez(k);
+  caja.appendChild(el);
+  const p = { el, w, dir: Math.random() < .5 ? 1 : -1, vel: rnd(55, 110), fase: rnd(0, 6.28), amp: rnd(14, 40), y0: 0, x: 0 };
+  salida(p, true);
+  return p;
+}
+function salida(p, primera) {   // empieza fuera de la pantalla (o en medio la primera vez)
+  const W = innerWidth, H = innerHeight;
+  p.y0 = rnd(H * .12, H * .82);
+  p.x = primera ? rnd(0, W) : (p.dir > 0 ? -p.w - 40 : W + 40);
+  p.vel = rnd(55, 110);
+}
+let ultimo = performance.now();
+function nadar(t) {
+  const dt = Math.min(.05, (t - ultimo) / 1000); ultimo = t;
+  for (const p of peces) {
+    p.x += p.dir * p.vel * dt;
+    p.fase += dt * 1.6;
+    const y = p.y0 + Math.sin(p.fase) * p.amp;
+    const incl = Math.cos(p.fase) * 6 * p.dir;
+    p.el.style.transform = `translate(${p.x}px, ${y}px) scaleX(${p.dir}) rotate(${incl * p.dir}deg)`;
+    if ((p.dir > 0 && p.x > innerWidth + 60) || (p.dir < 0 && p.x < -p.w - 60)) { p.dir *= -1; salida(p, false); }
+  }
+  if (peces.length) requestAnimationFrame(nadar); else animando = false;
+}
+$('cerrar-previa').onclick = () => window.protector.cerrarPrevia && window.protector.cerrarPrevia();
+setInterval(tic, 1000);
+cargar();
+
+// Quitar el aviso con la contraseña de root
+let ocultar = null;
+function abrir() { $('candado').classList.add('abierto'); $('err').textContent = ''; $('pass').value = ''; setTimeout(() => $('pass').focus(), 30); programarCierre(); }
+function cerrar() { $('candado').classList.remove('abierto'); $('pass').value = ''; $('err').textContent = ''; }
+function programarCierre() { clearTimeout(ocultar); ocultar = setTimeout(cerrar, 45000); }   // si lo dejan abierto, se esconde solo
+$('btn-abrir').onclick = abrir;
+$('cancelar').onclick = cerrar;
+$('pass').addEventListener('input', programarCierre);
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrar(); });
+$('caja').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const p = $('pass').value;
+  if (!p) return $('pass').focus();
+  $('ok').disabled = true; $('ok').textContent = 'Revisando…'; $('err').textContent = '';
+  let r;
+  try { r = await window.protector.desbloquear(p); } catch (err) { r = { ok: false, error: err.message }; }
+  $('ok').disabled = false; $('ok').textContent = 'Quitar';
+  if (r && r.ok) return;            // la ventana se cierra sola
+  $('pass').value = ''; $('pass').focus();
+  $('err').textContent = (r && r.error) || 'Contraseña incorrecta';
+  $('caja').classList.remove('mal'); void $('caja').offsetWidth; $('caja').classList.add('mal');
+  programarCierre();
+});
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('dragstart', (e) => e.preventDefault());
+</script>
+</body>
+</html>

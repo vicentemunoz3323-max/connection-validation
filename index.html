@@ -1832,6 +1832,50 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .ra-nota { margin: 10px 0 0; font-size: 11.5px; color: var(--muted); }
 @media (max-width: 640px) { .ra-fila { grid-template-columns: 74px minmax(0, 1fr) 110px; } }
 /* Centro de notificaciones */
+.prot-card { padding: 20px; margin-bottom: 16px; }
+.prot-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; }
+.prot-head h2 { font-size: 17px; margin: 0 0 4px; }
+.prot-head p { margin: 0; font-size: 13px; color: var(--muted); }
+.prot-estado { flex: none; padding: 6px 12px; border-radius: 999px; background: #fee2e2; color: #991b1b; font-size: 12px; font-weight: 600; }
+.prot-botones { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.prot-btn { position: relative; display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 16px; border: 1px solid var(--line); border-left: 5px solid var(--c); border-radius: 12px; background: #fff; text-align: left; cursor: pointer; font: inherit; color: var(--text); transition: transform .15s, box-shadow .15s; }
+.prot-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(16, 24, 40, .12); }
+.prot-btn b { font-size: 14px; }
+.prot-btn span:not(.prot-ico) { font-size: 12px; color: var(--c); font-weight: 600; }
+.prot-ico { font-size: 24px; margin-bottom: 4px; }
+.prot-nota { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; font-size: 12px; color: var(--muted); }
+.prot-perso { margin-top: 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--bg-soft, #f8fafc); }
+.prot-perso summary { display: flex; align-items: baseline; gap: 12px; padding: 12px 16px; cursor: pointer; list-style: none; font-weight: 600; font-size: 14px; }
+.prot-perso summary::-webkit-details-marker { display: none; }
+.prot-perso summary small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.prot-perso summary::after { content: "▾"; margin-left: auto; color: var(--muted); transition: transform .18s; }
+.prot-perso[open] summary::after { transform: rotate(180deg); }
+.pp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; padding: 4px 16px 8px; }
+.pp-col h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 0 0 10px; }
+.pp-tabs, .pp-seg { display: flex; flex-wrap: wrap; gap: 4px; padding: 3px; background: #fff; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 12px; }
+.pp-seg { margin: 6px 0 0; }
+.pp-tabs button, .pp-seg button { flex: 1; min-width: 0; padding: 6px 10px; border: 0; border-radius: 7px; background: none; font: 500 12px var(--font); color: var(--muted); cursor: pointer; white-space: nowrap; }
+.pp-tabs button.on, .pp-seg button.on { background: var(--blue, #1d5ccf); color: #fff; }
+.pp-campo { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--muted); margin-bottom: 12px; }
+.pp-campo input[type=text] { height: 34px; padding: 0 10px; border: 1px solid var(--line); border-radius: 8px; font: 13px var(--font); color: var(--text); background: #fff; }
+.pp-colores { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pp-colores button { width: 28px; height: 28px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
+.pp-colores button.on { box-shadow: 0 0 0 2px var(--text); }
+.pp-colores input[type=color] { width: 34px; height: 30px; padding: 0; border: 1px solid var(--line); border-radius: 8px; background: #fff; cursor: pointer; }
+.pp-check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 4px 0 6px; cursor: pointer; }
+.pp-rango { display: grid; grid-template-columns: 70px 1fr 28px; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin: 0 0 10px 24px; }
+.pp-rango b { font: 12px var(--mono); color: var(--text); text-align: right; }
+.pp-rango.off { opacity: .4; pointer-events: none; }
+.pp-img { display: grid; grid-template-columns: 96px 1fr; grid-template-rows: auto auto; gap: 6px 12px; align-items: center; }
+.pp-img img { grid-row: 1 / 3; width: 96px; height: 80px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+.pp-img .pp-seg { margin: 0; }
+.pp-link { justify-self: start; border: 0; background: none; color: var(--blue, #1d5ccf); font: 500 12px var(--font); cursor: pointer; padding: 2px 0; }
+.pp-link:disabled { opacity: .5; cursor: default; }
+.pp-foot { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); }
+.pp-msg { margin-right: auto; font-size: 12px; color: var(--muted); }
+.pp-btn { height: 34px; padding: 0 16px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font: 500 13px var(--font); color: var(--text); cursor: pointer; }
+.pp-guardar { background: var(--blue, #1d5ccf); border-color: transparent; color: #fff; }
+.prot-nota input { height: 36px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; font: 13px var(--font); color: var(--text); }
 .notif-card { padding: 40px 20px; }
 .notif-vacio { display: flex; flex-direction: column; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
 .notif-vacio b { color: var(--text); font-size: 15px; }
@@ -2965,6 +3009,74 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
         </div>
+      </div>
+      <div class="card prot-card">
+        <div class="prot-head">
+          <div>
+            <h2>Protector de pantalla</h2>
+            <p>Pone un aviso a pantalla completa en todos los monitores y bloquea la PC. Para quitarlo se necesita la <b>contraseña de root</b>.</p>
+          </div>
+          <span class="prot-estado" id="prot-estado" hidden></span>
+        </div>
+        <div class="prot-botones">
+          <button class="prot-btn" data-prot="mantenimiento" style="--c:#f59e0b"><span class="prot-ico">🛠️</span><b data-pt="titulo">Equipo en mantenimiento</b><span data-pt="sub">No ingresar unidades</span></button>
+          <button class="prot-btn" data-prot="memoria" style="--c:#2563eb"><span class="prot-ico">🧠</span><b data-pt="titulo">Bajo nivel de memoria</b><span data-pt="sub">Llama al equipo de pruebas</span></button>
+          <button class="prot-btn" data-prot="almacenamiento" style="--c:#7c3aed"><span class="prot-ico">💾</span><b data-pt="titulo">Poco almacenamiento</b><span data-pt="sub">Llama al equipo de pruebas</span></button>
+          <button class="prot-btn" data-prot="caido" style="--c:#dc2626"><span class="prot-ico">⛔</span><b data-pt="titulo">Equipo caído</b><span data-pt="sub">No ingresar unidades</span></button>
+        </div>
+        <label class="prot-nota">Nota opcional (sale debajo del aviso)
+          <input id="prot-nota" type="text" maxlength="200" placeholder="Ej.: Cambio de fuente, regresa a las 15:00 · Ext. 1234">
+        </label>
+
+        <details class="prot-perso" id="prot-perso">
+          <summary><span>🎨 Personalizar pantalla</span><small>Textos, colores, fondo, burbujas, peces e imagen</small></summary>
+          <div class="pp-grid">
+            <div class="pp-col">
+              <h3>Avisos</h3>
+              <div class="pp-tabs" id="pp-tabs" role="tablist">
+                <button type="button" data-pp="mantenimiento" class="on">Mantenimiento</button>
+                <button type="button" data-pp="memoria">Memoria</button>
+                <button type="button" data-pp="almacenamiento">Almacenamiento</button>
+                <button type="button" data-pp="caido">Caído</button>
+              </div>
+              <label class="pp-campo">Título<input id="pp-titulo" type="text" maxlength="80"></label>
+              <label class="pp-campo">Subtítulo<input id="pp-sub" type="text" maxlength="120"></label>
+              <div class="pp-campo">Color
+                <div class="pp-colores" id="pp-colores">
+                  <input id="pp-color" type="color" title="Elegir otro color">
+                </div>
+              </div>
+              <button type="button" class="pp-link" id="pp-restaurar-aviso">Restaurar este aviso</button>
+            </div>
+            <div class="pp-col">
+              <h3>Pantalla</h3>
+              <div class="pp-campo">Fondo
+                <div class="pp-seg" id="pp-fondo">
+                  <button type="button" data-v="claro">Claro</button><button type="button" data-v="oscuro">Oscuro</button><button type="button" data-v="agua">Agua</button>
+                </div>
+              </div>
+              <label class="pp-check"><input type="checkbox" id="pp-burbujas"> Burbujas flotando</label>
+              <label class="pp-rango">Cantidad <input type="range" id="pp-nburbujas" min="4" max="80"><b id="pp-nburbujas-v"></b></label>
+              <label class="pp-check"><input type="checkbox" id="pp-pez"> Pez nadando</label>
+              <label class="pp-rango">Peces <input type="range" id="pp-npeces" min="1" max="5"><b id="pp-npeces-v"></b></label>
+              <label class="pp-check"><input type="checkbox" id="pp-reloj"> Mostrar reloj</label>
+              <div class="pp-campo">Imagen
+                <div class="pp-img">
+                  <img id="pp-img-prev" alt="">
+                  <div class="pp-seg pp-seg-v" id="pp-imagen">
+                    <button type="button" data-v="original">Original</button><button type="button" data-v="propia">Propia</button><button type="button" data-v="ninguna">Sin imagen</button>
+                  </div>
+                  <button type="button" class="pp-link" id="pp-elegir">Elegir imagen…</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pp-foot">
+            <span class="pp-msg" id="pp-msg"></span>
+            <button type="button" class="pp-btn" id="pp-previa">👁 Vista previa</button>
+            <button type="button" class="pp-btn pp-guardar" id="pp-guardar">Guardar</button>
+          </div>
+        </details>
       </div>
       <div class="card notif-card">
         <div class="notif-vacio"><span class="notif-ico">🔔</span><b>Sin notificaciones</b><span>Este apartado está en construcción.</span></div>
@@ -7516,6 +7628,93 @@ function pintarSeleccionIzumi() {
       }
     });
   })();
+</script>
+<script>
+/* Protector de pantalla: botones del Centro de notificaciones */
+(() => {
+  const s = window.sistema;
+  if (!s || !s.protLanzar) return;
+  const estado = document.getElementById('prot-estado');
+  const pintar = (a) => { estado.hidden = !a; if (a) estado.textContent = 'Aviso puesto desde ' + new Date(a.desde).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false }); };
+  s.protEstado().then(pintar).catch(() => {});
+  if (s.onProtCambio) s.onProtCambio(pintar);
+  // ---- Personalizar ----
+  const PALETA = ['#f59e0b', '#ea580c', '#dc2626', '#db2777', '#7c3aed', '#2563eb', '#0891b2', '#059669', '#111827'];
+  let cfg = null, base = {}, propia = null, actual = 'mantenimiento';
+  const $p = (id) => document.getElementById(id);
+  const msg = (t) => { $p('pp-msg').textContent = t; clearTimeout(msg.t); if (t) msg.t = setTimeout(() => { $p('pp-msg').textContent = ''; }, 4000); };
+  const aviso = (k) => ({ ...base[k], ...((cfg.avisos || {})[k] || {}) });
+  function pintarBotones() {
+    if (!cfg) return;
+    document.querySelectorAll('[data-prot]').forEach((b) => {
+      const a = aviso(b.dataset.prot);
+      b.style.setProperty('--c', a.color);
+      b.querySelector('[data-pt="titulo"]').textContent = a.titulo;
+      b.querySelector('[data-pt="sub"]').textContent = a.sub;
+    });
+  }
+  function seg(id, v) { document.querySelectorAll('#' + id + ' button').forEach((x) => x.classList.toggle('on', x.dataset.v === v)); }
+  function pintarAviso() {
+    const a = aviso(actual);
+    document.querySelectorAll('#pp-tabs button').forEach((x) => x.classList.toggle('on', x.dataset.pp === actual));
+    $p('pp-titulo').value = a.titulo; $p('pp-sub').value = a.sub; $p('pp-color').value = a.color;
+    document.querySelectorAll('#pp-colores button').forEach((x) => x.classList.toggle('on', x.dataset.c.toLowerCase() === a.color.toLowerCase()));
+  }
+  function pintarPantalla() {
+    seg('pp-fondo', cfg.fondo); seg('pp-imagen', cfg.imagen);
+    $p('pp-burbujas').checked = cfg.burbujas; $p('pp-pez').checked = cfg.pez; $p('pp-reloj').checked = cfg.reloj;
+    $p('pp-nburbujas').value = cfg.nBurbujas; $p('pp-nburbujas-v').textContent = cfg.nBurbujas;
+    $p('pp-npeces').value = cfg.nPeces; $p('pp-npeces-v').textContent = cfg.nPeces;
+    $p('pp-nburbujas').parentElement.classList.toggle('off', !cfg.burbujas);
+    $p('pp-npeces').parentElement.classList.toggle('off', !cfg.pez);
+    const img = $p('pp-img-prev');
+    img.hidden = cfg.imagen === 'ninguna';
+    img.src = cfg.imagen === 'propia' && propia ? propia : 'protector.png';
+  }
+  function cambiarAviso(campo, valor) {
+    cfg.avisos[actual] = { ...(cfg.avisos[actual] || {}), [campo]: valor };
+    if (campo === 'color') pintarAviso();
+    pintarBotones();
+  }
+  const colores = $p('pp-colores');
+  PALETA.forEach((c) => { const b = document.createElement('button'); b.type = 'button'; b.dataset.c = c; b.style.background = c; b.title = c; b.onclick = () => cambiarAviso('color', c); colores.insertBefore(b, $p('pp-color')); });
+  $p('pp-color').addEventListener('input', (e) => cambiarAviso('color', e.target.value));
+  $p('pp-titulo').addEventListener('input', (e) => cambiarAviso('titulo', e.target.value));
+  $p('pp-sub').addEventListener('input', (e) => cambiarAviso('sub', e.target.value));
+  $p('pp-restaurar-aviso').onclick = () => { delete cfg.avisos[actual]; pintarAviso(); pintarBotones(); };
+  document.querySelectorAll('#pp-tabs button').forEach((b) => b.onclick = () => { actual = b.dataset.pp; pintarAviso(); });
+  document.querySelectorAll('#pp-fondo button').forEach((b) => b.onclick = () => { cfg.fondo = b.dataset.v; pintarPantalla(); });
+  document.querySelectorAll('#pp-imagen button').forEach((b) => b.onclick = async () => {
+    if (b.dataset.v === 'propia' && !propia) { await elegir(); return; }
+    cfg.imagen = b.dataset.v; pintarPantalla();
+  });
+  for (const [id, k] of [['pp-burbujas', 'burbujas'], ['pp-pez', 'pez'], ['pp-reloj', 'reloj']]) $p(id).addEventListener('change', (e) => { cfg[k] = e.target.checked; pintarPantalla(); });
+  for (const [id, k] of [['pp-nburbujas', 'nBurbujas'], ['pp-npeces', 'nPeces']]) $p(id).addEventListener('input', (e) => { cfg[k] = +e.target.value; pintarPantalla(); });
+  async function elegir() {
+    const r = await s.protImagenElegir();
+    if (r && r.ok) { propia = r.imagen; cfg.imagen = 'propia'; pintarPantalla(); msg('Imagen cargada. Dale Guardar para usarla.'); }
+    else if (r && r.error) msg(r.error);
+  }
+  $p('pp-elegir').onclick = elegir;
+  $p('pp-previa').onclick = () => s.protVistaPrevia(actual, cfg);
+  $p('pp-guardar').onclick = async () => {
+    const r = await s.protConfigGuardar(cfg);
+    if (r && r.ok) { cfg = r.config; pintarAviso(); pintarPantalla(); pintarBotones(); msg('✓ Guardado. Se usa la próxima vez que pongas un aviso.'); }
+    else msg((r && r.error) || 'No se pudo guardar');
+  };
+  if (s.protConfigLeer) s.protConfigLeer().then((r) => {
+    if (!r) return;
+    cfg = r.config; base = r.base; propia = r.imagenPropia;
+    pintarAviso(); pintarPantalla(); pintarBotones();
+  }).catch(() => {});
+
+  document.querySelectorAll('[data-prot]').forEach((b) => b.addEventListener('click', async () => {
+    const titulo = b.querySelector('[data-pt="titulo"]').textContent;
+    if (!confirm('Se va a poner el aviso "' + titulo + '" a pantalla completa.\n\nLa PC queda bloqueada y solo se quita con la contraseña de root.\n\n¿Continuar?')) return;
+    const r = await s.protLanzar(b.dataset.prot, document.getElementById('prot-nota').value.trim());
+    if (r && r.ok) s.protEstado().then(pintar); else alert((r && r.error) || 'No se pudo poner el aviso');
+  }));
+})();
 </script>
 </body>
 </html>
