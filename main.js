@@ -197,7 +197,7 @@ function leerRectificadores(texto) {
   return { rects, detalle };
 }
 
-function correrVrmu(host) {
+function correrVrmu(host, silencioso) {
   return new Promise((resolve) => {
     let salida = '', err = '', terminado = false;
     const p = spawn('bash', ['-c', comandoVrmu(host)], { cwd: os.homedir(), env: { ...process.env, LC_ALL: 'C' } });
@@ -207,8 +207,8 @@ function correrVrmu(host) {
       try { p.kill('SIGKILL'); } catch (e) {}
       resolve({ salida, error: 'vrmu_util no terminó en ' + Math.round(TIMEOUT_VRMU_MS / 60000) + ' min', codigo: null });
     }, TIMEOUT_VRMU_MS);
-    p.stdout.on('data', (d) => { const t = d.toString('utf8'); salida += t; emitirConsola(t); });
-    p.stderr.on('data', (d) => { const t = d.toString('utf8'); err += t; emitirConsola('[ERR] ' + t); });
+    p.stdout.on('data', (d) => { const t = d.toString('utf8'); salida += t; if (!silencioso) emitirConsola(t); });
+    p.stderr.on('data', (d) => { const t = d.toString('utf8'); err += t; if (!silencioso) emitirConsola('[ERR] ' + t); });
     p.on('error', (e) => { if (terminado) return; terminado = true; clearTimeout(timer); resolve({ salida, error: e.message, codigo: -1 }); });
     p.on('close', (c) => { if (terminado) return; terminado = true; clearTimeout(timer); resolve({ salida, error: err.trim(), codigo: c }); });
   });
@@ -316,6 +316,56 @@ async function iniciarProcesoValidacion() {
     cerrarLogValidacion('Error: ' + e.message);
   }
 }
+
+/* ============================================================
+   MONITOR AUTOMÁTICO DE RECTIFICADORES
+   Desde que abre la app: una lectura con vrmu_util cada 5 s (como el ping de los instrumentos).
+   Se juntan las últimas 5 lecturas: un rectificador cuenta como detectado si salió en cualquiera
+   de ellas (igual que las 5 lecturas de "Probar conexión"). No escribe en la consola ni toca las Izumis.
+   Mientras corre "Probar conexión" se pausa.
+   ============================================================ */
+const INTERVALO_RECT_MS = 5000;
+const VENTANA_RECT = 5;
+let rectAuto = { fase: 'iniciando', rects: {}, detalle: {}, encontrados: 0, hora: null, host: null, error: null };
+const ventanaRect = [];
+let rectAutoHost = VRMU_HOST, ultimoConteoRect = null;
+function emitirRectAuto() { for (const w of BrowserWindow.getAllWindows()) if (!w.isDestroyed()) w.webContents.send('rect-auto', rectAuto); }
+async function leerRectAuto() {
+  if (estadoActual.fase === 'buscando' || estadoActual.fase === 'ejecutando') return;   // está corriendo "Probar conexión"
+  if (!fs.existsSync(VRMU_BIN)) {
+    if (rectAuto.fase !== 'no-encontrado') bitacora.registrar('Rectificadores', 'Monitor: no se encontró vrmu_util', VRMU_BIN);
+    rectAuto = { fase: 'no-encontrado', rects: {}, detalle: {}, encontrados: 0, hora: Date.now(), host: null, error: 'No se encontró ' + VRMU_BIN };
+    return emitirRectAuto();
+  }
+  let r = await correrVrmu(rectAutoHost, true);
+  let l = leerRectificadores(r.salida);
+  // Si la dirección actual no trae nada, se prueba la otra (.2 / .3) y se queda con la que conteste
+  if (!Object.keys(l.rects).length && VRMU_HOST_ALT) {
+    const otra = rectAutoHost === VRMU_HOST ? VRMU_HOST_ALT : VRMU_HOST;
+    const r2 = await correrVrmu(otra, true), l2 = leerRectificadores(r2.salida);
+    if (Object.keys(l2.rects).length) { r = r2; l = l2; rectAutoHost = otra; }
+  }
+  ventanaRect.push({ rects: l.rects, detalle: l.detalle });
+  while (ventanaRect.length > VENTANA_RECT) ventanaRect.shift();
+  const rects = {}, detalle = {}, vistos = {};
+  for (const v of ventanaRect) for (const [n, x] of Object.entries(v.rects)) { rects[n] = x; detalle[n] = v.detalle[n]; vistos[n] = (vistos[n] || 0) + 1; }
+  for (const n of Object.keys(detalle)) detalle[n] += ' · salió en ' + vistos[n] + ' de las últimas ' + ventanaRect.length + ' lecturas';
+  const encontrados = Object.keys(rects).length;
+  const huboError = !encontrados && (r.codigo === null || r.codigo === -1 || (r.error && r.codigo !== 0));
+  rectAuto = { fase: huboError ? 'error' : 'ok', rects, detalle, encontrados, hora: Date.now(), host: rectAutoHost, error: huboError ? 'vrmu_util: ' + String(r.error || ('código ' + r.codigo)).split('\n').pop() : null };
+  // En la bitácora solo cuando cambia cuántos hay (no cada 5 s)
+  if (encontrados !== ultimoConteoRect) {
+    const faltan = []; for (let n = 1; n <= NUM_RECTIFICADORES; n++) if (rects[n] === undefined) faltan.push('R' + n);
+    if (ultimoConteoRect !== null || faltan.length) bitacora.registrar('Rectificadores', 'Monitor', encontrados + ' de ' + NUM_RECTIFICADORES + (faltan.length && faltan.length < NUM_RECTIFICADORES ? ' · faltan ' + faltan.join(', ') : '') + ' · ' + rectAutoHost);
+    ultimoConteoRect = encontrados;
+  }
+  emitirRectAuto();
+}
+async function cicloRectAuto() {
+  try { await leerRectAuto(); } catch (e) { console.log('[rect-auto]', e.message); }
+  setTimeout(cicloRectAuto, INTERVALO_RECT_MS);   // la siguiente empieza 5 s después de terminar esta (no se enciman)
+}
+ipcMain.handle('rect-auto-get', () => rectAuto);
 
 // Accesos rápidos a servicios locales: se abren en una pestaña de Chrome
 const SITIOS_WEB = {
@@ -1012,6 +1062,7 @@ app.whenReady().then(() => {
       .join(' | '));
   createWindow();
   iniciarMonitorInstrumentos();
+  setTimeout(cicloRectAuto, 1500);   // rectificadores cada 5 s
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });

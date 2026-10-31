@@ -1805,6 +1805,20 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .sv-script-card { max-width: 1060px; margin: 14px auto 0 !important; padding: 14px 18px; }
 .sv-sc { height: 420px; margin-top: 8px; }
 #sv-llave { margin-top: 6px; padding: 0; }
+/* Letrero de refresco automático y pista de las Izumis */
+.rect-auto { display: inline-flex; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; background: #fff; border: 1px solid var(--line); font: 600 10.5px var(--mono); letter-spacing: .02em; text-transform: none; color: var(--muted); }
+.ra-dot { width: 7px; height: 7px; border-radius: 50%; background: #a0a8b4; }
+.rect-auto.vivo .ra-dot { background: var(--green); animation: raPulso 5s ease-out infinite; }
+.rect-auto.err .ra-dot { background: var(--red); }
+@keyframes raPulso { 0% { box-shadow: 0 0 0 0 rgba(18,137,74,.55); } 25% { box-shadow: 0 0 0 6px rgba(18,137,74,0); } 100% { box-shadow: 0 0 0 0 rgba(18,137,74,0); } }
+.ra-hora { color: #a0a8b4; font-weight: 500; }
+.ra-hora:not(:empty)::before { content: "· "; }
+.izu-pista { display: flex; align-items: center; justify-content: center; gap: 8px; margin: -4px 0 10px; font-size: 12.5px; color: var(--muted); }
+.izu-pista-ico { font: 700 11px var(--mono); color: #fff; background: #1f2937; padding: 1px 6px; border-radius: 4px; }
+.izumi::after { content: ">_ Abrir consola"; position: absolute; right: 44px; top: 50%; transform: translateY(-50%) translateX(6px); font: 700 10.5px var(--mono); color: #fff; background: #1f2937; padding: 3px 8px; border-radius: 6px; opacity: 0; transition: opacity .15s, transform .15s; pointer-events: none; }
+.izumi:hover::after, .izumi:focus-visible::after { opacity: 1; transform: translateY(-50%) translateX(0); }
+.izumi:hover { transform: translateY(-1px); }
+@media (prefers-reduced-motion: reduce) { .rect-auto.vivo .ra-dot { animation: none; } }
 </style>
 </head>
 <body>
@@ -1889,10 +1903,11 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       <div class="validation-layout" style="margin-top: 14px;">
         <div class="panels">
           <h2 class="panel-title">Jolt</h2>
-          <div class="group-label"><span>Rectificadores</span><span>24 unidades</span></div>
+          <div class="group-label"><span>Rectificadores</span><span class="rect-auto" id="rect-auto" title="Se lee con vrmu_util cada 5 s"><span class="ra-dot"></span><span>Refresh every 5 seconds</span><span class="ra-hora" id="ra-hora"></span></span></div>
           <div id="rectifiers" class="rect-grid" aria-label="Rectificadores"></div>
           <div class="revisa" id="rect-aviso" hidden><div class="foco" aria-hidden="true"><svg viewBox="0 0 48 64"><defs><radialGradient id="fg-r" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff6c2"/><stop offset=".55" stop-color="#ffd23f"/><stop offset="1" stop-color="#f29e0b"/></radialGradient></defs><circle class="foco-halo" cx="24" cy="22" r="22"/><path class="foco-vidrio" fill="url(#fg-r)" d="M24 4C14 4 7 11.5 7 21c0 6.4 3.3 10.6 6.3 13.8 2 2.2 3.2 4.4 3.5 7.2h14.4c.3-2.8 1.5-5 3.5-7.2C37.7 31.6 41 27.4 41 21 41 11.5 34 4 24 4z"/><path class="foco-fil" d="M18 30c2-6 4-8 6-8s4 2 6 8" fill="none"/><rect x="16.5" y="44" width="15" height="4" rx="1.5" fill="#9aa4b2"/><rect x="17.5" y="49" width="13" height="4" rx="1.5" fill="#7d8796"/><rect x="19.5" y="54" width="9" height="4" rx="2" fill="#5f6875"/></svg></div><div class="revisa-txt"><b id="rect-aviso-tit"></b><ul id="rect-aviso-lista"></ul></div></div>
           <h2 class="panel-title panel-title-sec">Izumis</h2>
+          <div class="izu-pista"><span class="izu-pista-ico">&gt;_</span> Haz clic en una Izumi para abrir su consola</div>
           <div id="izumis" class="izumi-grid" aria-label="Izumis"></div>
           <div class="revisa" id="izu-aviso" hidden><div class="foco" aria-hidden="true"><svg viewBox="0 0 48 64"><defs><radialGradient id="fg-i" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#fff6c2"/><stop offset=".55" stop-color="#ffd23f"/><stop offset="1" stop-color="#f29e0b"/></radialGradient></defs><circle class="foco-halo" cx="24" cy="22" r="22"/><path class="foco-vidrio" fill="url(#fg-i)" d="M24 4C14 4 7 11.5 7 21c0 6.4 3.3 10.6 6.3 13.8 2 2.2 3.2 4.4 3.5 7.2h14.4c.3-2.8 1.5-5 3.5-7.2C37.7 31.6 41 27.4 41 21 41 11.5 34 4 24 4z"/><path class="foco-fil" d="M18 30c2-6 4-8 6-8s4 2 6 8" fill="none"/><rect x="16.5" y="44" width="15" height="4" rx="1.5" fill="#9aa4b2"/><rect x="17.5" y="49" width="13" height="4" rx="1.5" fill="#7d8796"/><rect x="19.5" y="54" width="9" height="4" rx="2" fill="#5f6875"/></svg></div><div class="revisa-txt"><b id="izu-aviso-tit"></b><ul id="izu-aviso-lista"></ul></div></div>
           <h2 class="panel-title panel-title-sec">Instrumentos</h2>
@@ -3232,7 +3247,7 @@ function revisarRectificadores(s) {
   if (faltan.length) {
     mostrarRevisa('rect-aviso', faltan.length === 1 ? 'Revisa el rectificador R' + faltan[0] : 'Revisa los rectificadores ' + listaR(faltan), [
       'Que no ' + (faltan.length === 1 ? 'esté alarmado' : 'estén alarmados') + ' (LED de alarma en el frente) y que ' + (faltan.length === 1 ? 'esté bien insertado' : 'estén bien insertados') + ' en el shelf.',
-      'Vuelve a presionar <b>Probar conexión</b>; si sigue en rojo, retíralo y vuelve a insertarlo.']);
+      'Se vuelve a leer solo cada 5 segundos; si sigue en rojo, retíralo y vuelve a insertarlo.']);
     return;
   }
   mostrarRevisa('rect-aviso', null);
@@ -6297,6 +6312,26 @@ function pintarSeleccionIzumi() {
   }
 })();
 
+
+/* ---------- Rectificadores: lectura automática cada 5 s ---------- */
+(function () {
+  if (!window.sistema || typeof window.sistema.onRectAuto !== 'function') return;
+  const badge = document.getElementById('rect-auto'), hora = document.getElementById('ra-hora');
+  const enManual = () => { const b = document.getElementById('test-btn'); return !!(b && b.disabled); };   // "Probar conexión" corriendo
+  function aplicarAuto(a) {
+    if (!a || a.fase === 'iniciando') return;
+    badge.classList.toggle('vivo', a.fase === 'ok');
+    badge.classList.toggle('err', a.fase !== 'ok');
+    badge.classList.remove('vivo'); void badge.offsetWidth; if (a.fase === 'ok') badge.classList.add('vivo');   // reinicia el pulso en cada lectura
+    hora.textContent = a.hora ? new Date(a.hora).toLocaleTimeString('es') : '';
+    badge.title = a.fase === 'ok' ? 'Última lectura ' + hora.textContent + ' · ' + a.encontrados + ' de 24 · ' + (a.host || '') : (a.error || 'Sin lectura');
+    if (enManual()) return;
+    pintarResultados({ rects: a.rects || {}, detalle: a.detalle || {} });
+    revisarRectificadores(a.fase === 'ok' ? { fase: 'listo', rects: a.rects } : a.fase === 'no-encontrado' ? { fase: 'no-encontrado' } : { fase: 'error', error: a.error, rects: {} });
+  }
+  window.sistema.onRectAuto(aplicarAuto);
+  window.sistema.rectAutoObtener().then(aplicarAuto).catch(() => {});
+})();
 // CFG-FIN
 
 /* ===================== SET VALVE: velocímetro, flujo, slots y bloqueo ===================== */

@@ -81,6 +81,9 @@ contextBridge.exposeInMainWorld('sistema', {
   onSvSalida: (cb) => ipcRenderer.on('sv-salida', (_e, d) => cb(d)),
   onSvSlot: (cb) => ipcRenderer.on('sv-slot', (_e, d) => cb(d)),
   onSvEstado: (cb) => ipcRenderer.on('sv-estado', (_e, d) => cb(d)),
+  // Rectificadores: lectura automática cada 5 s
+  rectAutoObtener: () => ipcRenderer.invoke('rect-auto-get'),
+  onRectAuto: (cb) => ipcRenderer.on('rect-auto', (_e, d) => cb(d)),
   // Recursos (CPU / RAM / DISCO)
   recMedir: () => ipcRenderer.invoke('rec-medir'),
   // Llave USB con las contraseñas
