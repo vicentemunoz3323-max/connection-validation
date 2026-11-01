@@ -3014,7 +3014,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <div class="prot-head">
           <div>
             <h2>Protector de pantalla</h2>
-            <p>Pone un aviso a pantalla completa en todos los monitores y bloquea la PC. Para quitarlo se necesita la <b>contraseña de root</b>.</p>
+            <p>Pone un aviso a pantalla completa en todos los monitores y bloquea la PC. Para quitarlo se necesita la <b>contraseña de root o la de sudo</b>.</p>
           </div>
           <span class="prot-estado" id="prot-estado" hidden></span>
         </div>
@@ -7710,7 +7710,7 @@ function pintarSeleccionIzumi() {
 
   document.querySelectorAll('[data-prot]').forEach((b) => b.addEventListener('click', async () => {
     const titulo = b.querySelector('[data-pt="titulo"]').textContent;
-    if (!confirm('Se va a poner el aviso "' + titulo + '" a pantalla completa.\n\nLa PC queda bloqueada y solo se quita con la contraseña de root.\n\n¿Continuar?')) return;
+    if (!confirm('Se va a poner el aviso "' + titulo + '" a pantalla completa.\n\nLa PC queda bloqueada y solo se quita con la contraseña de root o la de sudo.\n\n¿Continuar?')) return;
     const r = await s.protLanzar(b.dataset.prot, document.getElementById('prot-nota').value.trim());
     if (r && r.ok) s.protEstado().then(pintar); else alert((r && r.error) || 'No se pudo poner el aviso');
   }));

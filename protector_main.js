@@ -75,7 +75,6 @@ let envolver = async (cmd) => cmd;      // main.js lo cambia para salir del "no 
 let ventanas = [];
 let activo = null;                      // { tipo, desde, nota }
 let permitirCierre = false;
-let intentos = [];                      // horas de intentos fallidos (para frenar a quien adivina)
 
 const archivoEstado = () => path.join(app.getPath('userData'), 'protector.json');
 function guardarEstado() {
@@ -180,6 +179,38 @@ async function revisarRoot(pass) {
   });
 }
 
+// Contraseña de tu usuario (la de sudo). En Ubuntu root normalmente no tiene contraseña propia
+// y la que usas para "sudo" es la de tu usuario; por eso se aceptan las dos.
+async function revisarSudo(pass) {
+  // si la app corre como root, sudo no pide contraseña y aceptaría cualquiera
+  if (process.getuid && process.getuid() === 0) return { ok: false, error: 'la app corre como root' };
+  const cmd = await envolver(['sudo', '-k', '-S', '-p', '', '-v']);
+  return new Promise((resolve) => {
+    let p, fin = false, err = '';
+    try { p = spawn(cmd[0], cmd.slice(1), { stdio: ['pipe', 'ignore', 'pipe'], env: { ...process.env, LC_ALL: 'C' } }); }
+    catch (e) { return resolve({ ok: false, error: e.message }); }
+    const t = setTimeout(() => { try { p.kill('SIGKILL'); } catch (e) {} }, 20000);
+    p.stderr.on('data', (d) => { err += d; });
+    p.stdin.on('error', () => {});
+    p.stdin.write(pass + '\n'); p.stdin.end();
+    const listo = (c) => {
+      if (fin) return; fin = true; clearTimeout(t);
+      if (c === 0) return resolve({ ok: true });
+      if (/no new privileges/i.test(err)) return resolve({ ok: false, error: 'sudo está bloqueado ("no new privileges")' });
+      resolve({ ok: false, error: 'Contraseña incorrecta' });
+    };
+    p.on('error', () => listo(-1));
+    p.on('close', (c) => listo(c === null ? -1 : c));
+  });
+}
+// Acepta la contraseña de root o la de sudo
+async function revisarPass(pass) {
+  const [root, sudo] = await Promise.all([revisarRoot(pass), revisarSudo(pass)]);
+  if (root.ok) return { ok: true, cual: 'root' };
+  if (sudo.ok) return { ok: true, cual: 'sudo' };
+  return { ok: false, error: 'Contraseña incorrecta (no es la de root ni la de sudo)', detalle: 'root: ' + root.error + ' · sudo: ' + sudo.error };
+}
+
 /* ---------- Canales ---------- */
 ipcMain.handle('prot-avisos', () => { const c = leerConfig(); const r = {}; for (const k of Object.keys(AVISOS)) r[k] = avisoDe(k, c); return r; });
 ipcMain.handle('prot-config-leer', () => ({ config: leerConfig(), base: AVISOS, imagenPropia: imagenPropia() }));
@@ -233,24 +264,17 @@ ipcMain.handle('prot-info', (e) => {
 });
 ipcMain.handle('prot-desbloquear', async (_e, pass) => {
   if (!activo) return { ok: true };
-  if (typeof pass !== 'string' || !pass || pass.length > 300) return { ok: false, error: 'Escribe la contraseña de root' };
-  const ahora = Date.now();
-  intentos = intentos.filter((t) => ahora - t < 5 * 60000);
-  if (intentos.length >= 5) {
-    const espera = Math.ceil((intentos[0] + 5 * 60000 - ahora) / 1000);
-    return { ok: false, error: `Demasiados intentos. Espera ${espera > 60 ? Math.ceil(espera / 60) + ' min' : espera + ' s'}.` };
-  }
-  const r = await revisarRoot(pass);
+  if (typeof pass !== 'string' || !pass || pass.length > 300) return { ok: false, error: 'Escribe la contraseña' };
+  const r = await revisarPass(pass);
   if (!r.ok) {
-    if (r.error === 'Contraseña incorrecta') intentos.push(ahora);
-    bitacora.registrar('Protector de pantalla', 'Intento de quitar el aviso', r.error);
-    return r;
+    bitacora.registrar('Protector de pantalla', 'Intento de quitar el aviso', r.detalle || r.error);
+    return { ok: false, error: r.error };
   }
   const tipo = activo.tipo;
-  activo = null; intentos = [];
+  activo = null;
   guardarEstado();
   cerrarVentanas();
-  bitacora.registrar('Protector de pantalla', 'Se quitó el aviso', AVISOS[tipo].titulo);
+  bitacora.registrar('Protector de pantalla', 'Se quitó el aviso', AVISOS[tipo].titulo + ' · con la contraseña de ' + r.cual);
   for (const w of BrowserWindow.getAllWindows()) if (!w.isDestroyed()) w.webContents.send('prot-cambio', null);
   return { ok: true };
 });
@@ -273,6 +297,6 @@ module.exports = {
   configurar: (o) => { if (o && typeof o.envolver === 'function') envolver = o.envolver; },
   iniciar: () => { vigilarPantallas(); restaurar(); },
   activo: () => activo,
-  AVISOS, revisarRoot, _VERIFICADOR: VERIFICADOR
+  AVISOS, revisarRoot, revisarSudo, revisarPass, _VERIFICADOR: VERIFICADOR
 };
 console.log('[protector] protector de pantalla listo');
