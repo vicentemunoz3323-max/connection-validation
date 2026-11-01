@@ -74,8 +74,16 @@ body.f-oscuro .burbuja { background: radial-gradient(circle at 32% 28%, rgba(255
 @keyframes mece { from { margin-left: calc(var(--m) * -1); } to { margin-left: var(--m); } }
 .pez { position: absolute; left: 0; top: 0; will-change: transform; opacity: .6; filter: drop-shadow(0 6px 10px rgba(0,0,0,.12)); }   /* pasa detrás del texto: medio transparente para que se lea */
 .pez svg { display: block; overflow: visible; }
-.pez .cola { transform-origin: 30px 40px; animation: cola .45s ease-in-out infinite alternate; }
-.pez .aleta { transform-origin: 70px 46px; animation: aleta .7s ease-in-out infinite alternate; }
+.pez .cola { animation: cola .45s ease-in-out infinite alternate; }
+.pez .aleta { animation: aleta .7s ease-in-out infinite alternate; }
+.pz-ballena .cola { animation-duration: 1.6s; } .pz-ballena .aleta { animation-duration: 2.2s; }
+.pz-orca .cola, .pz-tiburon .cola { animation-duration: .8s; }
+.pz-cebra .cola { animation-duration: .25s; }
+.pez.rapido .cola { animation-duration: .16s; }
+.susto { position: absolute; transform: translateX(-50%); font: 900 22px var(--font); color: #dc2626; text-shadow: 0 2px 0 #fff, 0 0 8px #fff; animation: susto .9s ease-out forwards; }
+@keyframes susto { 0% { transform: translate(-50%, 6px) scale(.4); opacity: 0; } 20% { transform: translate(-50%, 0) scale(1.25); opacity: 1; } 100% { transform: translate(-50%, -18px) scale(1); opacity: 0; } }
+.chorro { position: absolute; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.75); background: rgba(255,255,255,.18); animation: chorro 2.6s ease-out forwards; opacity: 0; }
+@keyframes chorro { 0% { transform: translateY(0); opacity: 0; } 15% { opacity: .9; } 100% { transform: translateY(-220px); opacity: 0; } }
 @keyframes cola { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
 @keyframes aleta { from { transform: rotate(-12deg); } to { transform: rotate(18deg); } }
 .previa { position: fixed; left: 50%; top: 24px; transform: translateX(-50%); display: none; align-items: center; gap: 12px; padding: 8px 8px 8px 16px; border-radius: 999px; background: #111827; color: #fff; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.25); }
@@ -158,12 +166,16 @@ async function cargar() {
   tic();
 }
 
-/* ---- Burbujas transparentes y peces ---- */
+/* ---- Burbujas transparentes y acuario ----
+   Todos los animales son dibujos propios (SVG). Miran a la derecha; para nadar a la
+   izquierda se voltean con scaleX(-1). El tiburón espanta a los peces que tiene cerca. */
 const rnd = (a, b) => a + Math.random() * (b - a);
-let peces = [], animando = false;
+const rndi = (a, b) => Math.floor(rnd(a, b + 1));
+let animales = [], animando = false, uid = 0;
+
 function agua(v) {
   const caja = $('agua');
-  caja.innerHTML = ''; peces = [];
+  caja.innerHTML = ''; animales = [];
   if (v.burbujas !== false) {
     const n = v.nBurbujas || 26;
     for (let k = 0; k < n; k++) {
@@ -174,52 +186,194 @@ function agua(v) {
       caja.appendChild(b);
     }
   }
-  if (v.pez !== false) for (let k = 0; k < (v.nPeces || 1); k++) peces.push(nuevoPez(caja, k));
-  if (peces.length && !animando) { animando = true; requestAnimationFrame(nadar); }
+  if (v.pez !== false) {
+    const d = Math.max(1, Math.min(5, v.nPeces || 1));
+    const e = Object.assign({ comun: true, cebra: true, payaso: true, espada: true, tiburon: true, orca: true, ballena: true }, v.especies || {});
+    const cuantos = { comun: d, cebra: d, payaso: d + 1, espada: Math.ceil(d / 2), tiburon: d >= 4 ? 2 : 1, orca: 1, ballena: 1 };
+    for (const t of Object.keys(ESPECIES)) if (e[t]) for (let k = 0; k < cuantos[t]; k++) animales.push(nuevoAnimal(caja, t, true));
+  }
+  if (animales.length && !animando) { animando = true; ultimo = performance.now(); requestAnimationFrame(nadar); }
 }
-function svgPez(id) {
-  return `<svg viewBox="0 0 150 80" width="100%" height="100%">
-    <defs><linearGradient id="g${id}" x1="0" y1="0" x2="0" y2="1">
+
+// ---------- Dibujos ----------
+const SVG = {
+  comun: (i) => `<svg viewBox="0 0 150 80"><defs><linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" style="stop-color:color-mix(in srgb, var(--c) 55%, #fff)"/><stop offset=".55" style="stop-color:var(--c)"/><stop offset="1" style="stop-color:color-mix(in srgb, var(--c) 70%, #000)"/></linearGradient></defs>
-    <path class="cola" d="M34 40 L4 14 Q12 40 4 66 Z" fill="url(#g${id})" opacity=".9"/>
-    <path d="M66 22 Q80 4 100 18 Q86 20 80 26 Z" fill="url(#g${id})" opacity=".85"/>
-    <ellipse cx="82" cy="40" rx="54" ry="27" fill="url(#g${id})"/>
+    <path class="cola" style="transform-origin:34px 40px" d="M34 40 L4 14 Q12 40 4 66 Z" fill="url(#g${i})" opacity=".9"/>
+    <path d="M66 22 Q80 4 100 18 Q86 20 80 26 Z" fill="url(#g${i})" opacity=".85"/>
+    <ellipse cx="82" cy="40" rx="54" ry="27" fill="url(#g${i})"/>
     <path d="M60 18 Q50 40 60 62" stroke="rgba(255,255,255,.45)" stroke-width="3" fill="none"/>
-    <path d="M74 15 Q64 40 74 65" stroke="rgba(255,255,255,.3)" stroke-width="3" fill="none"/>
-    <path class="aleta" d="M72 46 Q66 62 84 60 Q80 52 82 46 Z" fill="rgba(255,255,255,.55)"/>
+    <path class="aleta" style="transform-origin:82px 46px" d="M72 46 Q66 62 84 60 Q80 52 82 46 Z" fill="rgba(255,255,255,.55)"/>
     <circle cx="116" cy="34" r="7" fill="#fff"/><circle cx="118" cy="34" r="3.6" fill="#111827"/><circle cx="119.5" cy="32.5" r="1.2" fill="#fff"/>
-    <path d="M131 46 Q127 49 122 47" stroke="rgba(0,0,0,.45)" stroke-width="2" fill="none" stroke-linecap="round"/>
-  </svg>`;
+    <path d="M131 46 Q127 49 122 47" stroke="rgba(0,0,0,.45)" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  // pez cebra: alargado, con rayas azules y blancas a lo largo
+  cebra: (i) => `<svg viewBox="0 0 120 40"><defs><clipPath id="c${i}"><path d="M16 20 Q40 6 80 9 Q106 12 114 20 Q106 28 80 31 Q40 34 16 20 Z"/></clipPath></defs>
+    <path class="cola" style="transform-origin:18px 20px" d="M18 20 L2 8 Q7 20 2 32 Z" fill="#c7d2fe"/>
+    <path d="M16 20 Q40 6 80 9 Q106 12 114 20 Q106 28 80 31 Q40 34 16 20 Z" fill="#eef2ff"/>
+    <g clip-path="url(#c${i})" fill="#1e3a8a"><rect x="0" y="11" width="120" height="3"/><rect x="0" y="17" width="120" height="3"/><rect x="0" y="23" width="120" height="3"/><rect x="0" y="28" width="120" height="2"/></g>
+    <path d="M58 9 Q66 2 74 9 Z" fill="#c7d2fe"/>
+    <circle cx="102" cy="17" r="3.4" fill="#fff"/><circle cx="103" cy="17" r="1.8" fill="#111827"/></svg>`,
+  // pez payaso (la especie): naranja con tres franjas blancas
+  payaso: (i) => `<svg viewBox="0 0 120 70"><defs><clipPath id="c${i}"><ellipse cx="62" cy="35" rx="46" ry="24"/></clipPath>
+      <linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9a3c"/><stop offset="1" stop-color="#f06414"/></linearGradient></defs>
+    <path class="cola" style="transform-origin:20px 35px" d="M20 35 Q4 18 2 22 Q8 35 2 48 Q4 52 20 35 Z" fill="#f97316" stroke="#1f2937" stroke-width="2"/>
+    <path d="M40 14 Q56 0 80 12 Z" fill="#f97316" stroke="#1f2937" stroke-width="2"/>
+    <ellipse cx="62" cy="35" rx="46" ry="24" fill="url(#g${i})"/>
+    <g clip-path="url(#c${i})" fill="#fff" stroke="#1f2937" stroke-width="2.4">
+      <path d="M34 0 Q42 35 34 70 L46 70 Q54 35 46 0 Z"/><path d="M64 0 Q72 35 64 70 L74 70 Q82 35 74 0 Z"/><path d="M92 0 Q98 35 92 70 L100 70 Q104 35 100 0 Z"/></g>
+    <ellipse cx="62" cy="35" rx="46" ry="24" fill="none" stroke="#1f2937" stroke-width="2"/>
+    <path class="aleta" style="transform-origin:66px 44px" d="M62 44 Q58 60 72 58 Q68 50 70 44 Z" fill="#fb923c" stroke="#1f2937" stroke-width="1.6"/>
+    <circle cx="96" cy="30" r="5.5" fill="#fff"/><circle cx="97.5" cy="30" r="3" fill="#111827"/><circle cx="98.5" cy="29" r="1" fill="#fff"/>
+    <path d="M106 40 Q103 43 99 41" stroke="#1f2937" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`,
+  // pez espada
+  espada: (i) => `<svg viewBox="0 0 260 90"><defs><linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e3a5f"/><stop offset=".5" stop-color="#3b6b9a"/><stop offset=".62" stop-color="#cbd5e1"/><stop offset="1" stop-color="#f1f5f9"/></linearGradient></defs>
+    <path class="cola" style="transform-origin:46px 48px" d="M46 48 Q24 30 10 6 Q30 26 28 48 Q30 70 10 88 Q24 66 46 48 Z" fill="#1e3a5f"/>
+    <path d="M44 48 Q80 22 150 26 Q182 28 196 44 L258 46 L196 50 Q182 66 150 68 Q80 72 44 48 Z" fill="url(#g${i})"/>
+    <path d="M98 30 Q106 0 132 4 Q122 16 126 27 Z" fill="#1e3a5f"/>
+    <path class="aleta" style="transform-origin:138px 58px" d="M134 58 Q124 80 150 76 Q144 66 146 58 Z" fill="#3b6b9a"/>
+    <circle cx="180" cy="42" r="6" fill="#fff"/><circle cx="181.5" cy="42" r="3.4" fill="#0f172a"/><circle cx="182.5" cy="41" r="1.1" fill="#fff"/></svg>`,
+  // tiburón (con sonrisa traviesa)
+  tiburon: (i) => `<svg viewBox="0 0 260 110"><defs><linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#475569"/><stop offset=".55" stop-color="#7c8aa0"/><stop offset=".6" stop-color="#e2e8f0"/><stop offset="1" stop-color="#f8fafc"/></linearGradient></defs>
+    <path class="cola" style="transform-origin:50px 56px" d="M50 56 Q30 34 14 4 Q40 30 36 56 Q40 74 22 100 Q38 78 50 56 Z" fill="#475569"/>
+    <path d="M46 56 Q90 22 170 26 Q226 30 252 58 Q226 82 170 84 Q90 88 46 56 Z" fill="url(#g${i})"/>
+    <path d="M118 28 Q130 -6 150 0 Q144 14 150 28 Z" fill="#475569"/>
+    <path class="aleta" style="transform-origin:150px 74px" d="M144 74 Q126 106 168 96 Q160 86 162 74 Z" fill="#64748b"/>
+    <path d="M196 46 v14 M204 45 v15 M212 46 v13" stroke="#334155" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="226" cy="46" r="5.5" fill="#fff"/><circle cx="227.5" cy="46.5" r="3" fill="#0f172a"/>
+    <path d="M206 68 Q230 78 248 64" fill="#fff" stroke="#334155" stroke-width="2"/>
+    <path d="M212 70 l3 5 l3 -4 l3 5 l3 -4 l3 5 l3 -4 l3 4" fill="none" stroke="#94a3b8" stroke-width="1.2"/></svg>`,
+  // orca
+  orca: (i) => `<svg viewBox="0 0 260 120">
+    <path class="cola" style="transform-origin:42px 62px" d="M42 62 Q24 44 6 34 Q22 50 22 62 Q22 74 6 90 Q24 80 42 62 Z" fill="#0f172a"/>
+    <path d="M38 62 Q84 28 166 30 Q226 32 252 64 Q228 92 166 92 Q84 94 38 62 Z" fill="#0f172a"/>
+    <path d="M108 66 Q160 92 236 74 Q214 90 166 90 Q120 90 108 66 Z" fill="#f8fafc"/>
+    <path d="M118 32 Q118 -6 136 0 Q132 18 144 30 Z" fill="#0f172a"/>
+    <ellipse cx="206" cy="52" rx="16" ry="6.5" transform="rotate(-8 206 52)" fill="#f8fafc"/>
+    <path d="M94 40 Q120 34 140 42 Q118 46 94 40 Z" fill="#94a3b8" opacity=".6"/>
+    <path class="aleta" style="transform-origin:160px 80px" d="M154 80 Q140 112 176 104 Q168 92 170 80 Z" fill="#0f172a"/>
+    <circle cx="222" cy="60" r="2.6" fill="#f8fafc"/>
+    <path d="M232 72 Q242 74 250 66" stroke="#334155" stroke-width="2" fill="none" stroke-linecap="round"/></svg>`,
+  // ballena
+  ballena: (i) => `<svg viewBox="0 0 400 160"><defs><linearGradient id="g${i}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d4e89"/><stop offset=".6" stop-color="#3c78b8"/><stop offset=".62" stop-color="#9ec5e8"/><stop offset="1" stop-color="#cfe3f5"/></linearGradient></defs>
+    <path class="cola" style="transform-origin:60px 84px" d="M60 84 Q40 60 6 52 Q26 70 30 84 Q26 98 6 116 Q40 108 60 84 Z" fill="#1d4e89"/>
+    <path d="M54 84 Q120 30 250 34 Q350 38 392 92 Q360 130 250 130 Q120 132 54 84 Z" fill="url(#g${i})"/>
+    <g stroke="#7fb0dc" stroke-width="2.4" fill="none" opacity=".8"><path d="M250 112 Q320 120 372 104"/><path d="M244 120 Q316 128 362 114"/><path d="M240 104 Q318 112 380 96"/></g>
+    <path class="aleta" style="transform-origin:236px 112px" d="M228 112 Q200 158 262 146 Q248 130 250 112 Z" fill="#1d4e89"/>
+    <path d="M150 38 Q160 22 176 34 Z" fill="#1d4e89"/>
+    <circle cx="332" cy="84" r="5" fill="#0f172a"/><circle cx="333.5" cy="83" r="1.6" fill="#fff"/>
+    <path d="M346 96 Q362 102 380 94" stroke="#0f2a4a" stroke-width="2.4" fill="none" stroke-linecap="round"/></svg>`
+};
+const ALTO = { comun: 80 / 150, cebra: 40 / 120, payaso: 70 / 120, espada: 90 / 260, tiburon: 110 / 260, orca: 120 / 260, ballena: 160 / 400 };
+
+// ancho (px a 1600 de pantalla), velocidad (px/s), ondulación, profundidad (0 arriba … 1 abajo), opacidad
+const ESPECIES = {
+  ballena: { ancho: [560, 700], vel: [26, 38], amp: [8, 16], prof: [.5, .78], op: .42, pausa: [8, 25], chorro: true },
+  orca:    { ancho: [300, 380], vel: [70, 110], amp: [30, 60], prof: [.25, .75], op: .55, pausa: [3, 12] },
+  tiburon: { ancho: [280, 360], vel: [70, 95], amp: [10, 24], prof: [.2, .8], op: .6, depredador: true },
+  espada:  { ancho: [240, 310], vel: [150, 220], amp: [6, 14], prof: [.15, .85], op: .6, pausa: [2, 10] },
+  comun:   { ancho: [110, 170], vel: [55, 110], amp: [14, 36], prof: [.12, .85], op: .62 },
+  payaso:  { ancho: [64, 90], vel: [45, 85], amp: [10, 26], prof: [.15, .9], op: .75 },
+  cebra:   { ancho: [58, 78], vel: [95, 140], amp: [12, 26], prof: [.12, .88], op: .75, grupo: [5, 9] }
+};
+const escala = () => Math.max(.55, Math.min(1.4, innerWidth / 1600));
+
+function nuevoAnimal(caja, tipo, primera) {
+  const E = ESPECIES[tipo], s = escala();
+  const w = rnd(E.ancho[0], E.ancho[1]) * s, h = w * ALTO[tipo];
+  const n = E.grupo ? rndi(E.grupo[0], E.grupo[1]) : 1;
+  const els = [];
+  for (let k = 0; k < n; k++) {
+    const el = document.createElement('div');
+    el.className = 'pez pz-' + tipo;
+    const f = k ? rnd(.8, 1.05) : 1;
+    el.style.width = (w * f) + 'px'; el.style.height = (h * f) + 'px'; el.style.opacity = E.op;
+    el.innerHTML = SVG[tipo](++uid);
+    caja.appendChild(el);
+    // en el cardumen cada uno va un poco atrás y arriba/abajo del primero
+    els.push({ el, ox: k ? rnd(.6, 3.2) * w : 0, oy: k ? rnd(-1.6, 1.6) * h * 1.6 : 0, fase: rnd(0, 6.28), w: w * f, h: h * f });
+  }
+  const a = { tipo, E, els, w, h, dir: Math.random() < .5 ? 1 : -1, x: 0, y0: 0, fase: rnd(0, 6.28), amp: rnd(E.amp[0], E.amp[1]) * s,
+    base: rnd(E.vel[0], E.vel[1]) * s, vel: 0, susto: 0, espera: 0, chorroT: rnd(2, 5) };
+  salida(a, primera);
+  return a;
 }
-function nuevoPez(caja, k) {
-  const el = document.createElement('div');
-  el.className = 'pez';
-  const w = rnd(110, 190) * (k ? rnd(.55, .9) : 1);
-  el.style.width = w + 'px'; el.style.height = (w * 80 / 150) + 'px';
-  el.innerHTML = svgPez(k);
-  caja.appendChild(el);
-  const p = { el, w, dir: Math.random() < .5 ? 1 : -1, vel: rnd(55, 110), fase: rnd(0, 6.28), amp: rnd(14, 40), y0: 0, x: 0 };
-  salida(p, true);
-  return p;
+function ancho(a) { return a.w + Math.max(0, ...a.els.map((e) => e.ox)); }
+function salida(a, primera) {   // empieza fuera de la pantalla (o ya dentro la primera vez)
+  const W = innerWidth, H = innerHeight, E = a.E;
+  a.y0 = rnd(H * E.prof[0], H * E.prof[1]) - a.h / 2;
+  a.base = rnd(E.vel[0], E.vel[1]) * escala();
+  a.vel = a.base;
+  if (primera && !E.pausa) a.x = rnd(0, W - a.w);
+  else a.x = a.dir > 0 ? -a.w - 20 : W + 20;
+  a.espera = !primera && E.pausa ? rnd(E.pausa[0], E.pausa[1]) : (primera && E.pausa ? rnd(0, E.pausa[1]) : 0);
 }
-function salida(p, primera) {   // empieza fuera de la pantalla (o en medio la primera vez)
-  const W = innerWidth, H = innerHeight;
-  p.y0 = rnd(H * .12, H * .82);
-  p.x = primera ? rnd(0, W) : (p.dir > 0 ? -p.w - 40 : W + 40);
-  p.vel = rnd(55, 110);
+function centro(a) { return { x: a.x + a.w / 2, y: a.y0 + Math.sin(a.fase) * a.amp + a.h / 2 }; }
+
+// "¡!" encima del pez asustado
+function asustar(a, tib) {
+  const c = centro(a), t = centro(tib);
+  a.dir = c.x >= t.x ? 1 : -1;               // huye hacia el lado contrario
+  a.y0 += (c.y >= t.y ? 1 : -1) * rnd(30, 70) * escala();
+  a.y0 = Math.max(10, Math.min(innerHeight - a.h - 10, a.y0));
+  if (a.susto <= 0) {
+    const m = document.createElement('b');
+    m.className = 'susto'; m.textContent = '¡!';
+    m.style.left = c.x + 'px'; m.style.top = (c.y - a.h / 2 - 26) + 'px';
+    $('agua').appendChild(m);
+    setTimeout(() => m.remove(), 900);
+  }
+  a.susto = 1.6;
 }
+function chorro(a) {           // la ballena echa burbujas por arriba
+  const c = centro(a);
+  const hx = a.dir > 0 ? a.x + a.w * .72 : a.x + a.w * .28;
+  for (let k = 0; k < 7; k++) {
+    const b = document.createElement('i');
+    b.className = 'chorro';
+    const t = rnd(6, 16);
+    b.style.cssText = `left:${hx + rnd(-14, 14)}px;top:${c.y - a.h * .35}px;width:${t}px;height:${t}px;animation-delay:${k * .12}s`;
+    $('agua').appendChild(b);
+    setTimeout(() => b.remove(), 3200);
+  }
+}
+
 let ultimo = performance.now();
 function nadar(t) {
   const dt = Math.min(.05, (t - ultimo) / 1000); ultimo = t;
-  for (const p of peces) {
-    p.x += p.dir * p.vel * dt;
-    p.fase += dt * 1.6;
-    const y = p.y0 + Math.sin(p.fase) * p.amp;
-    const incl = Math.cos(p.fase) * 6 * p.dir;
-    p.el.style.transform = `translate(${p.x}px, ${y}px) scaleX(${p.dir}) rotate(${incl * p.dir}deg)`;
-    if ((p.dir > 0 && p.x > innerWidth + 60) || (p.dir < 0 && p.x < -p.w - 60)) { p.dir *= -1; salida(p, false); }
+  const W = innerWidth, tiburones = animales.filter((a) => a.E.depredador && a.espera <= 0);
+  const radio = 230 * escala();
+  for (const a of animales) {
+    if (a.espera > 0) { a.espera -= dt; for (const e of a.els) e.el.style.visibility = 'hidden'; continue; }
+    // el tiburón espanta a los peces chicos (y se emociona y acelera)
+    if (!a.E.depredador && !['ballena', 'orca'].includes(a.tipo)) {
+      for (const s of tiburones) {
+        const c = centro(a), d = centro(s);
+        const cerca = Math.hypot(c.x - d.x, c.y - d.y) < radio + a.w / 2;
+        if (cerca) { asustar(a, s); s.caza = 1.2; }
+      }
+    }
+    if (a.susto > 0) a.susto -= dt;
+    if (a.caza > 0) a.caza -= dt;
+    const objetivo = a.base * (a.susto > 0 ? 2.8 : 1) * (a.caza > 0 ? 1.45 : 1);
+    a.vel += (objetivo - a.vel) * Math.min(1, dt * 3);
+    a.x += a.dir * a.vel * dt;
+    a.fase += dt * (a.susto > 0 ? 4 : 1.5);
+    if (a.E.chorro && (a.chorroT -= dt) <= 0) { chorro(a); a.chorroT = rnd(4, 8); }
+    const incl = Math.cos(a.fase) * (a.tipo === 'ballena' ? 2 : 6);
+    for (const e of a.els) {
+      const ex = a.x - a.dir * e.ox + (e.ox ? Math.sin(a.fase * 1.3 + e.fase) * 6 : 0);
+      const ey = a.y0 + e.oy + Math.sin(a.fase + e.fase * (e.ox ? 1 : 0)) * a.amp;
+      e.el.style.visibility = '';
+      e.el.style.transform = `translate(${ex}px, ${ey}px) scaleX(${a.dir}) rotate(${incl}deg)`;
+      e.el.classList.toggle('rapido', a.susto > 0 || a.caza > 0);
+    }
+    const fuera = a.dir > 0 ? a.x - Math.max(0, ...a.els.map((e) => e.ox)) > W + 30 : a.x + a.w + Math.max(0, ...a.els.map((e) => e.ox)) < -30;
+    if (fuera) { a.dir *= -1; salida(a, false); }
   }
-  if (peces.length) requestAnimationFrame(nadar); else animando = false;
+  if (animales.length) requestAnimationFrame(nadar); else animando = false;
 }
 $('cerrar-previa').onclick = () => window.protector.cerrarPrevia && window.protector.cerrarPrevia();
 setInterval(tic, 1000);

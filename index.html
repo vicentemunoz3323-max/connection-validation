@@ -1865,7 +1865,10 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .pp-check { display: flex; align-items: center; gap: 8px; font-size: 13px; margin: 4px 0 6px; cursor: pointer; }
 .pp-rango { display: grid; grid-template-columns: 70px 1fr 28px; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); margin: 0 0 10px 24px; }
 .pp-rango b { font: 12px var(--mono); color: var(--text); text-align: right; }
-.pp-rango.off { opacity: .4; pointer-events: none; }
+.pp-rango.off, .pp-especies.off { opacity: .4; pointer-events: none; }
+.pp-especies { display: flex; flex-wrap: wrap; gap: 6px; margin: -2px 0 12px 24px; }
+.pp-especies button { padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: #fff; font: 500 12px var(--font); color: var(--muted); cursor: pointer; }
+.pp-especies button.on { border-color: var(--blue, #1d5ccf); background: rgba(29, 92, 207, .1); color: var(--blue, #1d5ccf); }
 .pp-img { display: grid; grid-template-columns: 96px 1fr; grid-template-rows: auto auto; gap: 6px 12px; align-items: center; }
 .pp-img img { grid-row: 1 / 3; width: 96px; height: 80px; object-fit: contain; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
 .pp-img .pp-seg { margin: 0; }
@@ -3057,8 +3060,17 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
               </div>
               <label class="pp-check"><input type="checkbox" id="pp-burbujas"> Burbujas flotando</label>
               <label class="pp-rango">Cantidad <input type="range" id="pp-nburbujas" min="4" max="80"><b id="pp-nburbujas-v"></b></label>
-              <label class="pp-check"><input type="checkbox" id="pp-pez"> Pez nadando</label>
-              <label class="pp-rango">Peces <input type="range" id="pp-npeces" min="1" max="5"><b id="pp-npeces-v"></b></label>
+              <label class="pp-check"><input type="checkbox" id="pp-pez"> Peces y animales nadando</label>
+              <label class="pp-rango">Cantidad <input type="range" id="pp-npeces" min="1" max="5"><b id="pp-npeces-v"></b></label>
+              <div class="pp-especies" id="pp-especies">
+                <button type="button" data-esp="comun">🐟 De colores</button>
+                <button type="button" data-esp="cebra">🦓 Peces cebra</button>
+                <button type="button" data-esp="payaso">🧡 Peces payaso</button>
+                <button type="button" data-esp="espada">🗡️ Pez espada</button>
+                <button type="button" data-esp="tiburon" title="Espanta a los peces que tiene cerca">🦈 Tiburón</button>
+                <button type="button" data-esp="orca">🐋 Orca</button>
+                <button type="button" data-esp="ballena">🐳 Ballena</button>
+              </div>
               <label class="pp-check"><input type="checkbox" id="pp-reloj"> Mostrar reloj</label>
               <div class="pp-campo">Imagen
                 <div class="pp-img">
@@ -7667,6 +7679,8 @@ function pintarSeleccionIzumi() {
     $p('pp-npeces').value = cfg.nPeces; $p('pp-npeces-v').textContent = cfg.nPeces;
     $p('pp-nburbujas').parentElement.classList.toggle('off', !cfg.burbujas);
     $p('pp-npeces').parentElement.classList.toggle('off', !cfg.pez);
+    $p('pp-especies').classList.toggle('off', !cfg.pez);
+    document.querySelectorAll('#pp-especies button').forEach((b) => b.classList.toggle('on', !cfg.especies || cfg.especies[b.dataset.esp] !== false));
     const img = $p('pp-img-prev');
     img.hidden = cfg.imagen === 'ninguna';
     img.src = cfg.imagen === 'propia' && propia ? propia : 'protector.png';
@@ -7696,6 +7710,11 @@ function pintarSeleccionIzumi() {
     else if (r && r.error) msg(r.error);
   }
   $p('pp-elegir').onclick = elegir;
+  document.querySelectorAll('#pp-especies button').forEach((b) => b.onclick = () => {
+    cfg.especies = { ...(cfg.especies || {}) };
+    cfg.especies[b.dataset.esp] = cfg.especies[b.dataset.esp] === false;
+    pintarPantalla();
+  });
   $p('pp-previa').onclick = () => s.protVistaPrevia(actual, cfg);
   $p('pp-guardar').onclick = async () => {
     const r = await s.protConfigGuardar(cfg);

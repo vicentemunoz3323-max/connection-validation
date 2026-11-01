@@ -25,14 +25,16 @@ const AVISOS = {
 };
 
 /* ---------- Personalización (se guarda en <userData>/protector-config.json) ---------- */
-const CONFIG_BASE = { burbujas: true, nBurbujas: 26, pez: true, nPeces: 1, reloj: true, fondo: 'claro', imagen: 'original', avisos: {} };
+const ESPECIES = ['comun', 'cebra', 'payaso', 'espada', 'tiburon', 'orca', 'ballena'];
+const CONFIG_BASE = { burbujas: true, nBurbujas: 26, pez: true, nPeces: 2, reloj: true, fondo: 'claro', imagen: 'original', avisos: {},
+  especies: Object.fromEntries(ESPECIES.map((k) => [k, true])) };
 const archivoConfig = () => path.join(app.getPath('userData'), 'protector-config.json');
 const dirImagen = () => path.join(app.getPath('userData'), 'protector-imagen');
 const COLOR_OK = /^#[0-9a-f]{6}$/i;
 function leerConfig() {
   let c = {};
   try { c = JSON.parse(fs.readFileSync(archivoConfig(), 'utf8')) || {}; } catch (e) {}
-  return { ...CONFIG_BASE, ...c, avisos: { ...(c.avisos || {}) } };
+  return { ...CONFIG_BASE, ...c, avisos: { ...(c.avisos || {}) }, especies: { ...CONFIG_BASE.especies, ...(c.especies || {}) } };
 }
 function limpiarConfig(o) {
   const c = leerConfig(), n = (v, a, b, d) => { v = parseInt(v, 10); return Number.isFinite(v) ? Math.max(a, Math.min(b, v)) : d; };
@@ -41,7 +43,8 @@ function limpiarConfig(o) {
     burbujas: o.burbujas !== false, nBurbujas: n(o.nBurbujas, 4, 80, CONFIG_BASE.nBurbujas),
     pez: o.pez !== false, nPeces: n(o.nPeces, 1, 5, 1), reloj: o.reloj !== false,
     fondo: ['claro', 'oscuro', 'agua'].includes(o.fondo) ? o.fondo : 'claro',
-    imagen: ['original', 'propia', 'ninguna'].includes(o.imagen) ? o.imagen : c.imagen, avisos: {}
+    imagen: ['original', 'propia', 'ninguna'].includes(o.imagen) ? o.imagen : c.imagen, avisos: {},
+    especies: Object.fromEntries(ESPECIES.map((k) => [k, !(o.especies && o.especies[k] === false)]))
   };
   for (const k of Object.keys(AVISOS)) {
     const a = (o.avisos && o.avisos[k]) || {};
@@ -68,7 +71,7 @@ function datosVisuales(cfg) {
   let imagen = 'protector.png';
   if (c.imagen === 'ninguna') imagen = null;
   else if (c.imagen === 'propia') imagen = imagenPropia() || 'protector.png';
-  return { burbujas: c.burbujas, nBurbujas: c.nBurbujas, pez: c.pez, nPeces: c.nPeces, reloj: c.reloj, fondo: c.fondo, imagen };
+  return { burbujas: c.burbujas, nBurbujas: c.nBurbujas, pez: c.pez, nPeces: c.nPeces, especies: c.especies, reloj: c.reloj, fondo: c.fondo, imagen };
 }
 
 let envolver = async (cmd) => cmd;      // main.js lo cambia para salir del "no new privileges" (systemd-run)
