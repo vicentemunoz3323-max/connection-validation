@@ -1944,18 +1944,18 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 #engineout.fin-err .eo-barra i { background: var(--red); }
 .eo-acc { display: flex; gap: 8px; justify-content: flex-end; }
 .eo-go { min-width: 190px; font-size: 14px; padding: 10px 18px; }
-.eo-grid { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
-.eo-paso { position: relative; display: flex; flex-direction: column; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; transition: border-color .2s, box-shadow .2s, background .2s; }
+.eo-grid { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 9px; }
+.eo-paso { position: relative; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 8px 10px 10px; transition: border-color .2s, box-shadow .2s, background .2s; }
 .eo-paso-cab { display: flex; justify-content: space-between; align-items: center; }
-.eo-num { font: 700 11px var(--mono); color: var(--muted); letter-spacing: .05em; }
-.eo-ico { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--font); border: 2px solid var(--line); color: transparent; background: #fff; }
-.eo-img { height: 92px; border-radius: 10px; display: grid; place-items: center; background: var(--bg-soft); color: #8a94a3; transition: background .25s, color .25s; }
-.eo-img svg { width: 120px; height: 76px; overflow: visible; }
-.eo-nom { font-size: 14px; font-weight: 700; }
-.eo-cmd { font: 11px var(--mono); color: var(--muted); word-break: break-all; line-height: 1.4; }
+.eo-num { font: 700 10px var(--mono); color: var(--muted); letter-spacing: .05em; }
+.eo-ico { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--font); border: 2px solid var(--line); color: transparent; background: #fff; }
+.eo-img { height: 56px; border-radius: 8px; display: grid; place-items: center; background: var(--bg-soft); color: #8a94a3; transition: background .25s, color .25s; }
+.eo-img svg { width: 78px; height: 50px; overflow: visible; }
+.eo-nom { font-size: 12.5px; font-weight: 700; line-height: 1.25; }
+.eo-cmd { font: 10px var(--mono); color: var(--muted); word-break: break-all; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .eo-der { display: flex; align-items: center; gap: 8px; }
-.eo-t { font: 11px var(--mono); color: var(--muted); }
-.eo-err { font-size: 12px; color: var(--red); background: rgba(200,38,29,.07); border-left: 3px solid var(--red); padding: 6px 9px; border-radius: 0 6px 6px 0; white-space: pre-wrap; font-family: var(--mono); max-height: 110px; overflow: auto; }
+.eo-t { font: 10px var(--mono); color: var(--muted); }
+.eo-err { font-size: 10.5px; color: var(--red); background: rgba(200,38,29,.07); border-left: 3px solid var(--red); padding: 6px 9px; border-radius: 0 6px 6px 0; white-space: pre-wrap; font-family: var(--mono); max-height: 110px; overflow: auto; }
 .eo-err[hidden] { display: none; }
 .eo-paso.ejecutando { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint); }
 .eo-paso.ejecutando .eo-img { background: var(--blue-tint); color: var(--blue); }
@@ -1994,20 +1994,18 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .eo-rep.stop .eo-rep-ico { background: var(--yellow); }
 .eo-campo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
 .eo-campo input, .eo-campo textarea, .eo-campo select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: 13.5px var(--font); color: var(--text); background: #fff; resize: vertical; }
-.eo-correo-fila { display: flex; gap: 8px; align-items: flex-end; }
-.eo-correo-fila .eo-campo { flex: 1; }
-.eo-correo-fila .btn { padding: 9px 16px; }
+.eo-pdf-fila { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: space-between; }
+.eo-estilos { display: inline-flex; border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.eo-estilos button { border: 0; background: #fff; padding: 8px 12px; font: 600 12.5px var(--font); color: var(--muted); cursor: pointer; border-left: 1px solid var(--line); }
+.eo-estilos button:first-child { border-left: 0; }
+.eo-estilos button.on { background: var(--blue-tint); color: var(--blue); }
+#eo-pdf { padding: 9px 20px; }
 .eo-msg { font-size: 13px; padding: 8px 10px; border-radius: 8px; }
 .eo-msg[hidden] { display: none; }
 .eo-msg.ok { background: rgba(18,137,74,.1); color: var(--green); }
 .eo-msg.err { background: rgba(200,38,29,.08); color: var(--red); }
 .eo-msg.info { background: var(--blue-tint); color: var(--blue); }
 .eo-rep-acc { display: flex; gap: 8px; flex-wrap: wrap; }
-.eo-cfg { border-top: 1px solid var(--line); padding-top: 10px; }
-.eo-cfg summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
-.eo-cfg-ayuda { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
-.eo-cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
-.eo-cfg-acc { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
 .eo-con-wrap { display: grid; gap: 8px; justify-items: start; }
 .eo-con { width: 100%; box-sizing: border-box; margin: 0; height: 240px; overflow: auto; background: var(--panel, #1a2029); color: #d4d4d4; font: 11.5px/1.45 var(--mono); padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; word-break: break-all; }
 .eo-con[hidden] { display: none; }
@@ -3106,7 +3104,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <div class="inst-header-text">
             <span class="inst-eyebrow">Mantenimiento</span>
             <h1>EngineOut</h1>
-            <p class="lead">Reinicia DHCP y servicios, revisa equipos y Jolt, paso a paso. Al final genera el reporte y lo puedes mandar por correo.</p>
+            <p class="lead">Reinicia DHCP y servicios, revisa equipos y Jolt, paso a paso. Al final genera el reporte en PDF.</p>
           </div>
         </div>
       </div>
@@ -3147,29 +3145,20 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           </div>
         </div>
         <label class="eo-campo">Notas para el reporte (opcional)<textarea id="eo-notas" rows="2" maxlength="600" placeholder="Ej.: Se cambió cable del Juniper, rack queda en línea"></textarea></label>
-        <div class="eo-correo-fila">
-          <label class="eo-campo">Enviar a<input id="eo-para" type="text" placeholder="correo@empresa.com, otro@empresa.com"></label>
-          <button class="btn" type="button" id="eo-enviar">Enviar por correo</button>
+        <div class="eo-pdf-fila">
+          <div class="eo-estilos" id="eo-estilos" role="radiogroup" aria-label="Diseño del PDF">
+            <button type="button" data-estilo="1" class="on">Diseño 1 · Tarjetas</button>
+            <button type="button" data-estilo="2">Diseño 2 · Formato</button>
+            <button type="button" data-estilo="3">Diseño 3 · Visual</button>
+          </div>
+          <button class="btn" type="button" id="eo-pdf">Generar PDF</button>
         </div>
         <div class="eo-msg" id="eo-msg" hidden></div>
         <div class="eo-rep-acc">
-          <button class="btn btn-secundario btn-mini" type="button" id="eo-ver-rep">Ver reporte</button>
-          <button class="btn btn-secundario btn-mini" type="button" id="eo-mailto" title="Abre tu programa de correo con el reporte escrito">Abrir en mi correo</button>
+          <button class="btn btn-secundario btn-mini" type="button" id="eo-ver-rep" hidden>Abrir último PDF</button>
+          <button class="btn btn-secundario btn-mini" type="button" id="eo-carpeta">Carpeta de reportes</button>
           <button class="btn btn-secundario btn-mini" type="button" id="eo-log">Abrir log</button>
         </div>
-        <details class="eo-cfg" id="eo-cfg">
-          <summary>⚙ Configurar correo (servidor SMTP)</summary>
-          <p class="eo-cfg-ayuda">Para Gmail: servidor <b>smtp.gmail.com</b>, puerto <b>587</b>, STARTTLS, tu correo y una <b>contraseña de aplicación</b> (no la normal). Para Outlook/Office 365: <b>smtp.office365.com</b>, 587, STARTTLS. La contraseña se guarda cifrada en esta PC.</p>
-          <div class="eo-cfg-grid">
-            <label class="eo-campo">Servidor<input id="eo-c-host" type="text" placeholder="smtp.gmail.com"></label>
-            <label class="eo-campo">Puerto<input id="eo-c-puerto" type="number" min="1" max="65535" value="587"></label>
-            <label class="eo-campo">Seguridad<select id="eo-c-seg"><option value="starttls">STARTTLS (587)</option><option value="ssl">SSL (465)</option><option value="ninguna">Sin cifrar (25)</option></select></label>
-            <label class="eo-campo">Usuario<input id="eo-c-user" type="text" placeholder="tucorreo@gmail.com" autocomplete="off"></label>
-            <label class="eo-campo">Contraseña<input id="eo-c-pass" type="password" placeholder="••••••" autocomplete="new-password"></label>
-            <label class="eo-campo">Enviar desde<input id="eo-c-de" type="text" placeholder="igual que el usuario"></label>
-          </div>
-          <div class="eo-cfg-acc"><span id="eo-c-msg"></span><button class="btn btn-secundario btn-mini" type="button" id="eo-c-guardar">Guardar</button></div>
-        </details>
       </div>
 
       <div class="eo-con-wrap">
@@ -7931,7 +7920,7 @@ function pintarSeleccionIzumi() {
    12 pasos fijos. Se corren con la misma máquina de comandos de la app (terminal real,
    sudo con contraseña recordada o llave USB). Cada paso se palomea al terminar;
    si falla se marca en rojo con el motivo y se sigue con el siguiente.
-   Al terminar se genera el reporte (~/Ghostfish-Logs/engineout) y se puede mandar por correo. */
+   Al terminar se genera el reporte en PDF (~/Ghostfish-Logs/engineout). */
 (function () {
   const $e = (id) => document.getElementById(id);
   if (!$e('engineout')) return;
@@ -8021,12 +8010,10 @@ function pintarSeleccionIzumi() {
     $e('eo-ip').textContent = equipo.ip || '—';
     if (!$e('eo-rack').value) $e('eo-rack').value = lsGet('eo_rack') || equipo.rack || '';
     $e('eo-quien').value = $e('eo-quien').value || lsGet('eo_quien');
-    $e('eo-para').value = $e('eo-para').value || lsGet('eo_para');
     pintarFecha();
   }
   $e('eo-rack').addEventListener('change', () => lsSet('eo_rack', $e('eo-rack').value.trim() === String(equipo.rack) ? '' : $e('eo-rack').value.trim()));
   $e('eo-quien').addEventListener('change', () => lsSet('eo_quien', $e('eo-quien').value.trim()));
-  $e('eo-para').addEventListener('change', () => lsSet('eo_para', $e('eo-para').value.trim()));
   setInterval(() => { if (!inicio) pintarFecha(); }, 30000);
 
   /* ---------- Errores entendibles ---------- */
@@ -8233,139 +8220,162 @@ function pintarSeleccionIzumi() {
   });
   $e('eo-log').addEventListener('click', () => api() && api().cmdsAbrirLog());
 
-  /* ---------- Reporte ---------- */
+  /* ---------- Reporte en PDF (3 diseños) ---------- */
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const corto = (t, n) => { t = String(t || ''); return t.length > n ? t.slice(0, n - 1) + '…' : t; };
   function datosReporte() {
     const { ok, fallos } = cuenta();
-    const resultado = fallos ? 'CON ERRORES (' + fallos + ')' : fase === 'detenido' ? 'DETENIDO' : 'COMPLETADO';
+    const resultado = fallos ? 'CON ERRORES' : fase === 'detenido' ? 'DETENIDO' : 'COMPLETADO';
     return {
       rack: rack() || '—', quien: $e('eo-quien').value.trim(), host: equipo.hostname, ip: equipo.ip, usuario: equipo.usuario,
       fecha: fechaTxt(inicio || new Date()), inicio: horaTxt(inicio || new Date()), fin: fin ? horaTxt(fin) : '—',
-      duracion: inicio && fin ? duracion(fin - inicio) : '—', ok, fallos, resultado, notas: $e('eo-notas').value.trim()
+      duracion: inicio && fin ? duracion(fin - inicio) : '—', ok, fallos, resultado, notas: $e('eo-notas').value.trim(),
+      color: fallos ? '#c8261d' : fase === 'detenido' ? '#d48806' : '#12894a',
+      generado: new Date().toLocaleString('es-MX', { hour12: false })
     };
   }
   const estTxt = (e) => ({ ok: 'OK', fallo: 'FALLÓ', detenido: 'DETENIDO', ejecutando: 'CORRIENDO', pendiente: 'NO SE CORRIÓ' })[e] || e;
-  function asunto(d) { return 'EngineOut · Rack ' + d.rack + ' · ' + d.fecha + ' ' + d.inicio.slice(0, 5) + ' · ' + (d.fallos ? d.fallos + ' error(es)' : d.resultado === 'DETENIDO' ? 'detenido' : 'OK'); }
-  function reporteTexto(d) {
-    const L = [];
-    L.push('REPORTE ENGINEOUT', '');
-    L.push('Rack:        ' + d.rack);
-    L.push('Fecha:       ' + d.fecha);
-    L.push('Hora:        ' + d.inicio + ' a ' + d.fin + ' (' + d.duracion + ')');
-    L.push('Equipo:      ' + (d.host || '—') + ' · IP ' + (d.ip || '—'));
-    if (d.quien) L.push('Hecho por:   ' + d.quien);
-    L.push('Resultado:   ' + d.resultado + ' · ' + d.ok + ' de ' + PASOS.length + ' pasos correctos', '');
-    L.push('Lo que se le hizo:');
-    PASOS.forEach((p, i) => {
-      const x = pasos[i];
-      L.push((x.est === 'ok' ? ' [✓] ' : x.est === 'fallo' ? ' [✕] ' : ' [ ] ') + String(i + 1).padStart(2, ' ') + '. ' + p.n + ' — ' + estTxt(x.est) + (x.t ? ' (' + x.t + ')' : ''));
-      L.push('        $ ' + p.v);
-      if (x.est === 'fallo' && x.err) L.push('        ' + x.err.split('\n').join('\n        '));
-    });
-    if (d.notas) L.push('', 'Notas: ' + d.notas);
-    L.push('', 'Generado por Connection Validation · EngineOut');
-    return L.join('\n');
-  }
-  function reporteHtml(d) {
-    const color = d.fallos ? '#c8261d' : d.resultado === 'DETENIDO' ? '#d48806' : '#12894a';
-    const fila = (k, v) => `<tr><td style="padding:4px 14px 4px 0;color:#5b6676;font-size:13px;white-space:nowrap">${k}</td><td style="padding:4px 0;font-size:14px;font-weight:600;color:#16202b">${v}</td></tr>`;
-    const filas = PASOS.map((p, i) => {
-      const x = pasos[i];
-      const c = x.est === 'ok' ? '#12894a' : x.est === 'fallo' ? '#c8261d' : '#8a94a3';
-      const ico = x.est === 'ok' ? '✓' : x.est === 'fallo' ? '✕' : '–';
-      return `<tr style="border-top:1px solid #e3e7ec">
-        <td style="padding:9px 8px;text-align:center"><span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:11px;background:${c};color:#fff;font-weight:700;font-size:13px">${ico}</span></td>
-        <td style="padding:9px 8px;font-size:13.5px;color:#16202b"><b>${i + 1}. ${esc(p.n)}</b><div style="font-family:monospace;font-size:11.5px;color:#5b6676;margin-top:2px">${esc(p.v)}</div>${x.est === 'fallo' && x.err ? `<div style="margin-top:6px;padding:6px 8px;background:#fbecea;border-left:3px solid #c8261d;color:#c8261d;font-family:monospace;font-size:12px;white-space:pre-wrap">${esc(x.err)}</div>` : ''}</td>
-        <td style="padding:9px 8px;font-size:12px;font-weight:700;color:${c};white-space:nowrap">${estTxt(x.est)}</td>
-        <td style="padding:9px 8px;font-family:monospace;font-size:12px;color:#5b6676;white-space:nowrap">${esc(x.t)}</td></tr>`;
-    }).join('');
-    return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(asunto(d))}</title></head>
-<body style="margin:0;padding:24px 12px;background:#eceff3;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;color:#16202b">
-<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #d8dde4;border-radius:14px;overflow:hidden">
-  <div style="padding:20px 24px;border-bottom:4px solid ${color}">
-    <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#1d5ccf;font-weight:700">Connection Validation</div>
-    <div style="font-size:24px;font-weight:800;margin-top:4px">Reporte EngineOut · Rack ${esc(d.rack)}</div>
-    <div style="display:inline-block;margin-top:10px;padding:5px 12px;border-radius:99px;background:${color};color:#fff;font-size:13px;font-weight:700">${esc(d.resultado)} · ${d.ok} de ${PASOS.length} correctos</div>
-  </div>
-  <div style="padding:16px 24px">
-    <table style="border-collapse:collapse">${fila('Rack', esc(d.rack))}${fila('Fecha', esc(d.fecha))}${fila('Hora', esc(d.inicio) + ' a ' + esc(d.fin) + ' <span style="color:#5b6676;font-weight:400">(' + esc(d.duracion) + ')</span>')}${fila('Equipo', esc(d.host || '—') + ' · ' + esc(d.ip || '—'))}${d.quien ? fila('Hecho por', esc(d.quien)) : ''}</table>
-  </div>
-  <div style="padding:0 24px 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#5b6676;font-weight:700">Lo que se le hizo</div>
-  <table style="width:100%;border-collapse:collapse">${filas}</table>
-  ${d.notas ? `<div style="margin:16px 24px 0;padding:10px 12px;background:#f4f6f9;border-radius:8px;font-size:13.5px"><b>Notas:</b> ${esc(d.notas)}</div>` : ''}
-  <div style="padding:18px 24px;color:#8a94a3;font-size:11.5px">Generado por Connection Validation · EngineOut · ${esc(d.usuario || '')}@${esc(d.host || '')}</div>
-</div></body></html>`;
-  }
-  const nombreArchivo = (d) => 'reporte_rack' + String(d.rack).replace(/\W+/g, '') + '_' + (inicio || new Date()).toISOString().slice(0, 19).replace(/[T:]/g, '-');
+  const colorEst = (e) => (e === 'ok' ? '#12894a' : e === 'fallo' ? '#c8261d' : e === 'detenido' ? '#d48806' : '#8a94a3');
+  const icoEst = (e) => (e === 'ok' ? '✓' : e === 'fallo' ? '✕' : e === 'detenido' ? '■' : '–');
+  const errCorto = (x) => esc(corto(x.err.replace(/\n+/g, ' · '), 170));
+  const pagina = (titulo, css, cuerpo) => `<!doctype html><html lang="es"><head><meta charset="utf-8"><title>${esc(titulo)}</title>
+<style>@page{size:Letter;margin:0}*{box-sizing:border-box}html,body{margin:0}body{width:8.5in;min-height:11in;font-family:Inter,"DejaVu Sans",Arial,sans-serif;color:#16202b;-webkit-print-color-adjust:exact;print-color-adjust:exact}.mono{font-family:"DejaVu Sans Mono",monospace}${css}</style></head><body>${cuerpo}</body></html>`;
 
-  async function guardarReporte() {
-    if (!window.sistema || typeof window.sistema.eoReporteGuardar !== 'function') return null;
+  // Diseño 1 · Tarjetas: limpio, cada paso en una fila
+  function diseno1(d) {
+    const filas = PASOS.map((p, i) => {
+      const x = pasos[i], c = colorEst(x.est);
+      return `<tr><td class="ic"><span style="background:${c}">${icoEst(x.est)}</span></td>
+        <td><b>${i + 1}. ${esc(p.n)}</b><div class="mono cmd">${esc(corto(p.v, 90))}</div>${x.est === 'fallo' && x.err ? `<div class="mono err">${errCorto(x)}</div>` : ''}</td>
+        <td class="st" style="color:${c}">${estTxt(x.est)}</td><td class="mono t">${esc(x.t)}</td></tr>`;
+    }).join('');
+    return pagina('Reporte EngineOut', `
+      .hoja{padding:.45in .55in}.cab{border:1px solid #d8dde4;border-radius:14px;overflow:hidden}
+      .top{padding:18px 22px;border-bottom:4px solid ${d.color}}.eb{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#1d5ccf;font-weight:700}
+      h1{margin:4px 0 0;font-size:24px}.pill{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:${d.color};color:#fff;font-size:12px;font-weight:700}
+      .datos{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 22px}.datos div span{display:block;font-size:9.5px;color:#5b6676;text-transform:uppercase;letter-spacing:.08em;font-weight:700}.datos div b{font-size:13px}
+      h2{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#5b6676;margin:16px 0 6px}
+      table{width:100%;border-collapse:collapse;border:1px solid #d8dde4;border-radius:10px}td{padding:6px 8px;border-top:1px solid #e6e9ee;font-size:12px;vertical-align:middle}
+      tr:first-child td{border-top:0}.ic{width:30px;text-align:center}.ic span{display:inline-block;width:18px;height:18px;line-height:18px;border-radius:9px;color:#fff;font-weight:700;font-size:11px}
+      .cmd{font-size:9.5px;color:#5b6676;margin-top:1px}.err{margin-top:3px;padding:3px 6px;background:#fbecea;border-left:3px solid #c8261d;color:#c8261d;font-size:9.5px}
+      .st{font-weight:700;font-size:11px;white-space:nowrap;width:80px}.t{font-size:10.5px;color:#5b6676;white-space:nowrap;width:60px;text-align:right}
+      .notas{margin-top:12px;padding:9px 12px;background:#f4f6f9;border-radius:8px;font-size:12px}.pie{margin-top:14px;font-size:9.5px;color:#8a94a3;display:flex;justify-content:space-between}`,
+    `<div class="hoja"><div class="cab"><div class="top"><div class="eb">Connection Validation · EngineOut</div><h1>Reporte de EngineOut · Rack ${esc(d.rack)}</h1>
+      <div class="pill">${d.resultado} · ${d.ok} de ${PASOS.length} correctos</div></div>
+      <div class="datos"><div><span>Rack</span><b>${esc(d.rack)}</b></div><div><span>Fecha</span><b>${esc(d.fecha)}</b></div><div><span>Hora</span><b>${esc(d.inicio.slice(0, 5))} – ${esc(d.fin.slice(0, 5))}</b></div><div><span>Duración</span><b>${esc(d.duracion)}</b></div>
+      <div><span>Equipo</span><b class="mono" style="font-size:11px">${esc(d.host || '—')}</b></div><div><span>IP</span><b class="mono" style="font-size:11px">${esc(d.ip || '—')}</b></div><div><span>Hecho por</span><b>${esc(d.quien || '—')}</b></div><div><span>Usuario PC</span><b>${esc(d.usuario || '—')}</b></div></div></div>
+      <h2>Lo que se le hizo</h2><table>${filas}</table>
+      ${d.notas ? `<div class="notas"><b>Notas:</b> ${esc(d.notas)}</div>` : ''}
+      <div class="pie"><span>Generado por Connection Validation · ${esc(d.generado)}</span><span>Log: ~/Ghostfish-Logs/engineout</span></div></div>`);
+  }
+
+  // Diseño 2 · Formato: documento formal con folio y firmas
+  function diseno2(d) {
+    const folio = 'EO-' + String(d.rack).replace(/\W/g, '').padStart(3, '0') + '-' + (inicio || new Date()).toISOString().slice(0, 10).replace(/-/g, '') + '-' + d.inicio.replace(/:/g, '').slice(0, 4);
+    const filas = PASOS.map((p, i) => {
+      const x = pasos[i], c = colorEst(x.est);
+      return `<tr><td class="n">${String(i + 1).padStart(2, '0')}</td><td>${esc(p.n)}${x.est === 'fallo' && x.err ? `<div class="err">${errCorto(x)}</div>` : ''}</td>
+        <td class="mono cmd">${esc(corto(p.v, 58))}</td><td class="r" style="color:${c}">${icoEst(x.est)} ${estTxt(x.est)}</td><td class="mono t">${esc(x.t)}</td></tr>`;
+    }).join('');
+    return pagina('Reporte EngineOut', `
+      .hoja{padding:.5in .6in;font-size:11.5px}.enc{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #16202b;padding-bottom:8px}
+      .enc h1{margin:0;font-size:19px;letter-spacing:.02em}.enc small{display:block;font-size:10px;color:#5b6676;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+      .folio{text-align:right;font-size:10px;color:#5b6676}.folio b{display:block;font:700 13px "DejaVu Sans Mono",monospace;color:#16202b}
+      .grid{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid #16202b;border-top:0;margin-bottom:14px}.grid div{padding:6px 9px;border-top:1px solid #16202b;border-left:1px solid #16202b}.grid div:nth-child(3n+1){border-left:0}
+      .grid span{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.1em;color:#5b6676;font-weight:700}.grid b{font-size:12.5px}
+      .grid span.res{display:inline-block;padding:2px 8px;border:2px solid ${d.color};color:${d.color};font-weight:800;font-size:11px;letter-spacing:0;text-transform:none}
+      h2{font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;margin:0 0 5px}
+      table{width:100%;border-collapse:collapse}th{background:#16202b;color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;padding:5px 7px;text-align:left}
+      td{border:1px solid #c2c9d3;padding:5px 7px;vertical-align:top}.n{width:28px;text-align:center;font-weight:700}.cmd{font-size:9px;color:#3b4654;width:38%}
+      .r{font-weight:800;font-size:10.5px;white-space:nowrap;width:92px}.t{font-size:9.5px;white-space:nowrap;width:56px;text-align:right}.err{margin-top:3px;color:#c8261d;font-size:9.5px}
+      .obs{margin-top:12px;border:1px solid #16202b;min-height:58px;padding:6px 9px}.obs span{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.1em;color:#5b6676;font-weight:700;margin-bottom:3px}
+      .firmas{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:40px;text-align:center;font-size:10.5px}.firmas div{border-top:1px solid #16202b;padding-top:5px}
+      .pie{margin-top:16px;font-size:9px;color:#8a94a3;text-align:center}`,
+    `<div class="hoja"><div class="enc"><div><small>Reporte de mantenimiento</small><h1>ENGINEOUT · RACK ${esc(d.rack)}</h1></div><div class="folio">Folio<b>${esc(folio)}</b></div></div>
+      <div class="grid"><div><span>Rack</span><b>${esc(d.rack)}</b></div><div><span>Fecha</span><b>${esc(d.fecha)}</b></div><div><span>Horario</span><b>${esc(d.inicio)} – ${esc(d.fin)}</b></div>
+      <div><span>Equipo</span><b class="mono" style="font-size:11px">${esc(d.host || '—')}</b></div><div><span>IP</span><b class="mono" style="font-size:11px">${esc(d.ip || '—')}</b></div><div><span>Duración</span><b>${esc(d.duracion)}</b></div>
+      <div><span>Realizó</span><b>${esc(d.quien || '—')}</b></div><div><span>Pasos correctos</span><b>${d.ok} de ${PASOS.length}</b></div><div><span>Resultado</span><b><span class="res">${d.resultado}${d.fallos ? ' (' + d.fallos + ')' : ''}</span></b></div></div>
+      <h2>Actividades realizadas</h2>
+      <table><tr><th>#</th><th>Actividad</th><th>Comando</th><th>Resultado</th><th>Tiempo</th></tr>${filas}</table>
+      <div class="obs"><span>Observaciones</span>${esc(d.notas)}</div>
+      <div class="firmas"><div>Realizó<br><b>${esc(d.quien || '')}</b></div><div>Revisó</div></div>
+      <div class="pie">Connection Validation · EngineOut · generado ${esc(d.generado)}</div></div>`);
+  }
+
+  // Diseño 3 · Visual: banda con el rack, dibujos de cada paso y resumen grande
+  function diseno3(d) {
+    const pct = Math.round(d.ok / PASOS.length * 100);
+    const tarj = PASOS.map((p, i) => {
+      const x = pasos[i], c = colorEst(x.est);
+      return `<div class="tj" style="border-color:${x.est === 'fallo' ? c : '#e1e5ea'}"><div class="ti" style="color:${c};background:${c}14">${p.img}</div>
+        <div class="tn"><span class="nn">${String(i + 1).padStart(2, '0')}</span>${esc(p.n)}</div><div class="te" style="color:${c}">${icoEst(x.est)} ${estTxt(x.est)}<span>${esc(x.t)}</span></div></div>`;
+    }).join('');
+    const errores = PASOS.map((p, i) => pasos[i].est === 'fallo' ? `<li><b>${i + 1}. ${esc(p.n)}:</b> ${errCorto(pasos[i])}</li>` : '').join('');
+    return pagina('Reporte EngineOut', `
+      .banda{background:#16202b;color:#fff;padding:.4in .55in .3in;display:flex;justify-content:space-between;align-items:center}
+      .banda small{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#7fb0ff;font-weight:700}.banda h1{margin:2px 0 0;font-size:30px}
+      .banda .sub{margin-top:6px;font-size:12px;color:#c7cfda}.rack{text-align:center;border:2px solid #3a4656;border-radius:14px;padding:8px 18px}
+      .rack span{display:block;font-size:9.5px;letter-spacing:.14em;color:#9aa6b6;font-weight:700}.rack b{font-size:38px;line-height:1}
+      .res{display:flex;gap:16px;align-items:center;padding:16px .55in;border-bottom:1px solid #e1e5ea}
+      .ring{width:74px;height:74px;border-radius:50%;background:conic-gradient(${d.color} ${pct}%,#e6e9ee 0);display:grid;place-items:center}
+      .ring div{width:56px;height:56px;border-radius:50%;background:#fff;display:grid;place-items:center;font-weight:800;font-size:15px}
+      .res h2{margin:0;font-size:19px;color:${d.color}}.res p{margin:3px 0 0;font-size:11.5px;color:#5b6676}
+      .datos{margin-left:auto;display:grid;grid-template-columns:auto auto;gap:3px 12px;font-size:11px}.datos span{color:#5b6676}
+      .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:14px .55in 0}
+      .tj{border:1.5px solid #e1e5ea;border-radius:10px;padding:7px}.ti{height:46px;border-radius:7px;display:grid;place-items:center}.ti svg{width:70px;height:44px}
+      .tn{font-size:10.5px;font-weight:700;margin-top:5px;min-height:26px;line-height:1.2}.nn{font:700 9px "DejaVu Sans Mono",monospace;color:#8a94a3;margin-right:4px}
+      .te{font-size:9.5px;font-weight:800;display:flex;justify-content:space-between}.te span{font:400 9px "DejaVu Sans Mono",monospace;color:#8a94a3}
+      .err{margin:12px .55in 0;padding:8px 12px;border-radius:8px;background:#fbecea;color:#c8261d;font-size:10.5px}.err ul{margin:4px 0 0;padding-left:16px}
+      .notas{margin:10px .55in 0;padding:8px 12px;border-radius:8px;background:#f4f6f9;font-size:11px}
+      .pie{margin:12px .55in 0;font-size:9px;color:#8a94a3}`,
+    `<div class="banda"><div><small>EngineOut · Reporte</small><h1>Rack ${esc(d.rack)}</h1><div class="sub">${esc(d.fecha)} · ${esc(d.inicio.slice(0, 5))} – ${esc(d.fin.slice(0, 5))} · ${esc(d.duracion)}</div></div><div class="rack"><span>RACK</span><b>${esc(d.rack)}</b></div></div>
+      <div class="res"><div class="ring"><div>${d.ok}/${PASOS.length}</div></div><div><h2>${d.fallos ? d.fallos + (d.fallos === 1 ? ' paso falló' : ' pasos fallaron') : d.resultado === 'DETENIDO' ? 'Se detuvo' : 'Todo salió bien'}</h2><p>${d.ok} de ${PASOS.length} pasos correctos</p></div>
+      <div class="datos"><span>Equipo</span><b>${esc(d.host || '—')}</b><span>IP</span><b>${esc(d.ip || '—')}</b><span>Hecho por</span><b>${esc(d.quien || '—')}</b></div></div>
+      <div class="grid">${tarj}</div>
+      ${errores ? `<div class="err"><b>Errores</b><ul>${errores}</ul></div>` : ''}
+      ${d.notas ? `<div class="notas"><b>Notas:</b> ${esc(d.notas)}</div>` : ''}
+      <div class="pie">Generado por Connection Validation · ${esc(d.generado)}</div>`);
+  }
+
+  const DISENOS = { 1: diseno1, 2: diseno2, 3: diseno3 };
+  let estilo = lsGet('eo_estilo') || '1';
+  if (!DISENOS[estilo]) estilo = '1';
+  const pintarEstilos = () => document.querySelectorAll('#eo-estilos button').forEach((b) => b.classList.toggle('on', b.dataset.estilo === estilo));
+  document.querySelectorAll('#eo-estilos button').forEach((b) => b.addEventListener('click', () => { estilo = b.dataset.estilo; lsSet('eo_estilo', estilo); pintarEstilos(); }));
+  pintarEstilos();
+  window.eoReporteHtml = (n) => DISENOS[n || estilo](datosReporte());   // para pruebas
+
+  const nombreArchivo = (d) => 'reporte_rack' + String(d.rack).replace(/\W+/g, '') + '_' + fechaArchivo(inicio || new Date());
+  const fechaArchivo = (f) => f.getFullYear() + '-' + String(f.getMonth() + 1).padStart(2, '0') + '-' + String(f.getDate()).padStart(2, '0') + '_' + horaTxt(f).replace(/:/g, '-');
+
+  async function generarPdf(abrir) {
+    if (!window.sistema || typeof window.sistema.eoReportePdf !== 'function') { mensaje('err', 'Abre la app con Electron para generar el PDF.'); return null; }
+    const b = $e('eo-pdf');
+    b.disabled = true; b.textContent = 'Generando…';
     const d = datosReporte();
-    const r = await window.sistema.eoReporteGuardar({ nombre: nombreArchivo(d), html: reporteHtml(d), texto: reporteTexto(d) }).catch(() => null);
-    if (r && r.ok) rutaReporte = r.ruta;
+    const r = await window.sistema.eoReportePdf({ nombre: nombreArchivo(d), html: DISENOS[estilo](d), abrir }).catch((e) => ({ ok: false, error: e.message }));
+    b.disabled = false; b.textContent = 'Generar PDF';
+    if (r && r.ok) {
+      rutaReporte = r.ruta;
+      $e('eo-ver-rep').hidden = false;
+      mensaje('ok', '✓ PDF guardado: ' + r.ruta);
+      if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Reporte PDF', r.ruta);
+    } else mensaje('err', '✕ No se pudo generar el PDF: ' + ((r && r.error) || 'error desconocido'));
     return r;
   }
 
   async function terminado() {
     fin = new Date();
     pintar();
-    const r = await guardarReporte();
-    if (r && r.ok) mensaje('info', 'Reporte guardado en ' + r.ruta);
+    await generarPdf(false);   // se guarda solo al terminar
     $e('eo-rep').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  $e('eo-ver-rep').addEventListener('click', async () => {
-    const r = await guardarReporte();
-    if (r && r.ok) window.sistema.eoReporteAbrir(r.ruta);
-    else { const w = window.open('', '_blank'); if (w) { w.document.write(reporteHtml(datosReporte())); w.document.close(); } }
-  });
-  $e('eo-mailto').addEventListener('click', () => {
-    const d = datosReporte();
-    if (window.sistema && typeof window.sistema.eoCorreoMailto === 'function') window.sistema.eoCorreoMailto({ para: $e('eo-para').value, asunto: asunto(d), texto: reporteTexto(d) });
-  });
-  $e('eo-enviar').addEventListener('click', async () => {
-    if (!window.sistema || typeof window.sistema.eoCorreoEnviar !== 'function') { mensaje('err', 'Abre la app con Electron para enviar correos.'); return; }
-    const para = $e('eo-para').value.trim();
-    if (!para) { $e('eo-para').focus(); mensaje('err', 'Escribe a qué correo se manda.'); return; }
-    lsSet('eo_para', para);
-    const b = $e('eo-enviar');
-    b.disabled = true; b.textContent = 'Enviando…';
-    mensaje('info', 'Enviando reporte a ' + para + '…');
-    const d = datosReporte();
-    await guardarReporte();
-    const r = await window.sistema.eoCorreoEnviar({ para, asunto: asunto(d), html: reporteHtml(d), texto: reporteTexto(d), nombre: nombreArchivo(d), logPath }).catch((e) => ({ ok: false, error: e.message }));
-    b.disabled = false; b.textContent = 'Enviar por correo';
-    if (r && r.ok) {
-      mensaje('ok', '✓ Reporte enviado a ' + r.para.join(', '));
-      if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Reporte enviado', r.para.join(', '));
-    } else {
-      mensaje('err', '✕ No se pudo enviar: ' + ((r && r.error) || 'error desconocido'));
-      if (/configurar el servidor|remitente/i.test((r && r.error) || '')) $e('eo-cfg').open = true;
-    }
-  });
-
-  /* ---------- Configuración del correo ---------- */
-  async function cargarCfg() {
-    if (!window.sistema || typeof window.sistema.eoCorreoConfig !== 'function') return;
-    const c = await window.sistema.eoCorreoConfig().catch(() => null);
-    if (!c) return;
-    $e('eo-c-host').value = c.host; $e('eo-c-puerto').value = c.puerto; $e('eo-c-seg').value = c.seguridad;
-    $e('eo-c-user').value = c.usuario; $e('eo-c-de').value = c.de;
-    $e('eo-c-pass').placeholder = c.hayPass ? '(guardada) · escribe para cambiarla' : 'Contraseña o contraseña de aplicación';
-    if (!$e('eo-para').value && c.para) $e('eo-para').value = c.para;
-  }
-  $e('eo-c-seg').addEventListener('change', () => { $e('eo-c-puerto').value = { ssl: 465, starttls: 587, ninguna: 25 }[$e('eo-c-seg').value]; });
-  $e('eo-c-guardar').addEventListener('click', async () => {
-    const r = await window.sistema.eoCorreoConfigGuardar({
-      host: $e('eo-c-host').value, puerto: $e('eo-c-puerto').value, seguridad: $e('eo-c-seg').value,
-      usuario: $e('eo-c-user').value, pass: $e('eo-c-pass').value, de: $e('eo-c-de').value, para: $e('eo-para').value
-    }).catch((e) => ({ ok: false, error: e.message }));
-    $e('eo-c-msg').textContent = r && r.ok ? '✓ Guardado' : '✕ ' + ((r && r.error) || 'No se pudo guardar');
-    if (r && r.ok) { $e('eo-c-pass').value = ''; cargarCfg(); }
-  });
+  $e('eo-pdf').addEventListener('click', () => generarPdf(true));
+  $e('eo-ver-rep').addEventListener('click', () => window.sistema && window.sistema.eoReporteAbrir(rutaReporte));
+  $e('eo-carpeta').addEventListener('click', () => window.sistema && window.sistema.eoReporteAbrir(null));
 
   cargarEquipo();
-  cargarCfg();
   pintar();
 })();
 </script>

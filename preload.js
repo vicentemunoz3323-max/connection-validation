@@ -41,12 +41,8 @@ contextBridge.exposeInMainWorld('sistema', {
   cmdsAbrirLog: () => ipcRenderer.invoke('cmds-open-log'),
   // EngineOut
   eoInfo: () => ipcRenderer.invoke('eo-info'),
-  eoReporteGuardar: (datos) => ipcRenderer.invoke('eo-reporte-guardar', datos),
+  eoReportePdf: (datos) => ipcRenderer.invoke('eo-reporte-pdf', datos),
   eoReporteAbrir: (ruta) => ipcRenderer.invoke('eo-reporte-abrir', ruta),
-  eoCorreoConfig: () => ipcRenderer.invoke('eo-correo-config'),
-  eoCorreoConfigGuardar: (cfg) => ipcRenderer.invoke('eo-correo-config-guardar', cfg),
-  eoCorreoEnviar: (datos) => ipcRenderer.invoke('eo-correo-enviar', datos),
-  eoCorreoMailto: (datos) => ipcRenderer.invoke('eo-correo-mailto', datos),
   onCmdsEstado: (cb) => ipcRenderer.on('cmds-state', (_e, s) => cb(s)),
   onCmdsSalida: (cb) => ipcRenderer.on('cmds-output', (_e, lineas) => cb(lineas)),
   // CFG-INICIO
