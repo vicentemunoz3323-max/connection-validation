@@ -2068,6 +2068,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
             <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
             <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar test case"><span class="lbl-full">Generar test case</span><span class="lbl-corto">Test case</span></a>
+            <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
           </div>
         </div>
         <div class="nav-grupo" data-grupo="izumis">
@@ -2077,7 +2078,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <a href="#files-dhcp" class="nav-link" data-section="files-dhcp" title="Files DHCP"><span class="lbl-full">Files DHCP</span><span class="lbl-corto">DHCP</span></a>
           </div>
         </div>
-        <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
       </nav>
     </div>
   </header>
@@ -6783,6 +6783,16 @@ function pintarSeleccionIzumi() {
   function valido(o) { return o && Array.isArray(o.top) && o.sub && typeof o.sub === 'object'; }
   let guardado = null;
   try { guardado = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  // v1.5.33: Recursos se movió dentro de Configuración general (una sola vez, respeta lo demás)
+  try {
+    if (valido(guardado) && !localStorage.getItem('menu_mig_recursos')) {
+      guardado.top = guardado.top.filter((t) => t !== 's:recursos');
+      for (const g of Object.keys(guardado.sub)) guardado.sub[g] = (guardado.sub[g] || []).filter((id) => id !== 'recursos');
+      (guardado.sub.config = guardado.sub.config || []).push('recursos');
+      localStorage.setItem(KEY, JSON.stringify(guardado));
+    }
+    localStorage.setItem('menu_mig_recursos', '1');
+  } catch (e) {}
   aplicar(valido(guardado) ? guardado : ORIGINAL);
 
   /* ---- Ventana ---- */
