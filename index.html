@@ -1917,9 +1917,99 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .mc-flechas button:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); }
 .mc-flechas button:disabled { opacity: .35; cursor: default; }
 .mc-item select { padding: 5px 8px; font: 12.5px var(--font); border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+/* ===== Campanita (Centro de notificaciones) ===== */
+.nav-inner { padding-right: 196px; }
+#btn-notif.nav-link { padding: 0; font-weight: 400; }
+#btn-notif.nav-link.active { color: var(--blue); border-color: var(--blue); background: var(--blue-tint); }
+#btn-notif:hover svg { animation: campana .6s ease-in-out; transform-origin: 50% 10%; }
+@keyframes campana { 25% { transform: rotate(14deg); } 50% { transform: rotate(-12deg); } 75% { transform: rotate(6deg); } }
+
+/* ===== EngineOut ===== */
+.btn-eo { display: inline-flex; align-items: center; gap: 7px; background: var(--panel, #1a2029); }
+.btn-eo:hover { background: #262e3a; }
+.btn-eo svg { width: 15px; height: 15px; }
+.btn-eo { white-space: nowrap; }
+.btn-eo .eo-mini { white-space: nowrap; font: 600 11px var(--mono); background: rgba(255,255,255,.14); padding: 1px 6px; border-radius: 5px; }
+.btn-eo.corre svg { animation: giro 1.2s linear infinite; }
+.btn-eo.mal { background: var(--red); }
+.btn-eo.bien { background: var(--green); }
+.eo-dlg { width: min(780px, 100%); display: flex; flex-direction: column; gap: 12px; }
+.eo-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.eo-x { border: 0; background: transparent; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+.eo-x:hover { background: var(--bg-soft); color: var(--text); }
+.eo-prog { display: flex; flex-direction: column; gap: 6px; }
+.eo-prog-top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.eo-prog-top span:last-child { font-family: var(--mono); color: var(--muted); }
+.eo-barra { height: 8px; border-radius: 99px; background: var(--bg-soft); overflow: hidden; border: 1px solid var(--line); }
+.eo-barra i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .35s; }
+.eo-dlg.fin-ok .eo-barra i { background: var(--green); }
+.eo-dlg.fin-err .eo-barra i { background: var(--red); }
+.eo-lista { max-height: 50vh; overflow-y: auto; list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.eo-paso { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); background: #fff; transition: background .2s; }
+.eo-paso:first-child { border-top: 0; }
+.eo-ico { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--mono); border: 2px solid var(--line); color: var(--muted); background: #fff; }
+.eo-nom { font-size: 13.5px; font-weight: 600; }
+.eo-cmd { font: 11.5px var(--mono); color: var(--muted); margin-top: 2px; word-break: break-all; }
+.eo-t { font: 11.5px var(--mono); color: var(--muted); white-space: nowrap; }
+.eo-err { grid-column: 2 / 4; font-size: 12.5px; color: var(--red); background: rgba(200,38,29,.07); border-left: 3px solid var(--red); padding: 6px 9px; border-radius: 0 6px 6px 0; white-space: pre-wrap; font-family: var(--mono); }
+.eo-err[hidden] { display: none; }
+.eo-paso.ejecutando { background: var(--blue-tint); }
+.eo-paso.ejecutando .eo-ico { border-color: var(--blue); border-top-color: transparent; color: transparent; animation: giro .9s linear infinite; }
+.eo-paso.ok .eo-ico { border-color: var(--green); background: var(--green); color: #fff; animation: tcPop .25s ease-out; }
+.eo-paso.fallo .eo-ico { border-color: var(--red); background: var(--red); color: #fff; animation: tcSacude .4s; }
+.eo-paso.detenido .eo-ico { border-color: var(--yellow); color: var(--yellow); }
+.eo-paso.fallo { background: rgba(200,38,29,.04); }
+.eo-pide { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: #3a3220; color: #e5c07b; font-size: 13px; }
+.eo-pide[hidden] { display: none; }
+.eo-pide-txt { flex: 1 1 100%; font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eo-pide input[type=password], .eo-pide input[type=text] { flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 7px; border: 1px solid #e5c07b; background: #1a1712; color: #fff; font: 13px var(--mono); }
+.eo-pide label { font-size: 12px; display: flex; gap: 5px; align-items: center; color: #d9cfae; }
+.eo-res { font-size: 13.5px; padding: 10px 12px; border-radius: 10px; font-weight: 600; }
+.eo-res[hidden] { display: none; }
+.eo-res.ok { background: rgba(18,137,74,.1); color: var(--green); }
+.eo-res.err { background: rgba(200,38,29,.08); color: var(--red); }
+.eo-res.stop { background: rgba(212,136,6,.1); color: var(--yellow); }
+.eo-con { margin: 0; height: 190px; overflow: auto; background: var(--panel, #1a2029); color: #d4d4d4; font: 11.5px/1.45 var(--mono); padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; word-break: break-all; }
+.eo-con[hidden] { display: none; }
+.eo-con .s { color: #4ec9b0; } .eo-con .e { color: #f48771; }
+.eo-acc { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
+.eo-acc .eo-izq { margin-right: auto; display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.btn.btn-rojo { background: var(--red); } .btn.btn-rojo:hover { background: #a91f17; }
 </style>
 </head>
 <body>
+  <!-- ===== EngineOut: pasos con palomita ===== -->
+  <div class="manual-modal srv-modal" id="eo-modal" hidden>
+    <div class="srv-dlg eo-dlg" role="dialog" aria-label="EngineOut">
+      <div class="eo-cab">
+        <div>
+          <div class="srv-dlg-tit">EngineOut</div>
+          <p class="srv-dlg-sub" id="eo-sub">Corre los 12 pasos en orden y palomea cada uno al terminar. Si uno falla te dice por qué y sigue con el siguiente.</p>
+        </div>
+        <button type="button" class="eo-x" id="eo-cerrar-x" title="Cerrar (si está corriendo sigue en segundo plano)">×</button>
+      </div>
+      <div class="eo-prog">
+        <div class="eo-prog-top"><span id="eo-estado">Listo para iniciar</span><span id="eo-pct">0 / 12</span></div>
+        <div class="eo-barra"><i id="eo-barra"></i></div>
+      </div>
+      <ol class="eo-lista" id="eo-lista"></ol>
+      <form class="eo-pide" id="eo-pide" hidden autocomplete="off">
+        <span class="eo-pide-txt" id="eo-pide-txt">El comando pide contraseña</span>
+        <input type="password" id="eo-pide-in" placeholder="Escribe y presiona Enter" spellcheck="false">
+        <button class="btn" type="submit">Enviar</button>
+        <label id="eo-rec-lbl"><input type="checkbox" id="eo-recordar" checked> Recordar mientras la app esté abierta</label>
+      </form>
+      <div class="eo-res" id="eo-res" hidden></div>
+      <pre class="eo-con" id="eo-con" hidden></pre>
+      <div class="eo-acc">
+        <div class="eo-izq"><button class="btn btn-secundario btn-mini" type="button" id="eo-ver">Ver salida</button><button class="btn btn-secundario btn-mini" type="button" id="eo-log" hidden>Abrir log</button></div>
+        <button class="btn btn-secundario" type="button" id="eo-reintentar" hidden>Reintentar los que fallaron</button>
+        <button class="btn btn-secundario" type="button" id="eo-cerrar">Cerrar</button>
+        <button class="btn" type="button" id="eo-go">Iniciar EngineOut</button>
+      </div>
+    </div>
+  </div>
+
   <div class="manual-modal" id="manual-modal" hidden>
     <div class="manual-box" role="dialog" aria-label="Manual de usuario">
       <div class="manual-head">
@@ -1949,6 +2039,9 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <img class="brand-logo" src="icons/nav-46.png" srcset="icons/nav-46.png 1x, icons/nav-92.png 2x" width="46" height="46" alt="Connection Validation" title="Connection Validation">
       </span>
       <div class="upd">
+        <a href="#notificaciones" id="btn-notif" class="upd-btn nav-link" data-section="notificaciones" title="Centro de notificaciones" aria-label="Centro de notificaciones">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        </a>
         <button id="btn-manual" class="upd-btn" type="button" title="Manual de usuario" aria-label="Manual de usuario">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H19"/><path d="M9 7h6M9 10.5h4"/></svg>
         </button>
@@ -1981,7 +2074,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           </div>
         </div>
         <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
-        <a href="#notificaciones" class="nav-link" data-section="notificaciones" title="Centro de notificaciones"><span class="lbl-full">Centro de notificaciones</span><span class="lbl-corto">Avisos</span><span class="beta-tag">BETA</span></a>
       </nav>
     </div>
   </header>
@@ -2000,6 +2092,10 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <div class="status-actions">
               <button id="test-btn" class="btn">Probar conexión</button>
               <button id="toggle-console-btn" class="btn btn-secundario">Consola</button>
+              <button id="eo-btn" class="btn btn-eo" type="button" title="Reinicia DHCP y servicios, revisa equipos y Jolt paso a paso">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/><path d="M10 9l5 3-5 3z"/></svg>
+                <span>EngineOut</span><span class="eo-mini" id="eo-mini" hidden></span>
+              </button>
             </div>
             <div class="status-links">
               <button id="open-opentest" class="link-btn lb-ot" type="button" title="Abrir http://127.0.0.1:8090 en Chrome">
@@ -2117,7 +2213,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 <div class="instrument-top">
                   <div style="display:flex; align-items:center; gap:8px;">
                     <span class="instrument-name">TROSS</span>
-                    <span class="instrument-ip">10.254.128.2</span>
+                    <span class="instrument-ip" id="tros-ip" title="Se le hace ping a la .2 y, si no contesta, a la .3">10.254.128.2 / .3</span>
                   </div>
                   <span class="instrument-type">Controlador de rectificadores</span>
                 </div>
@@ -3269,7 +3365,16 @@ function aplicarInstrumentos(estado) {
     }
     const hora = new Date(r.hora).toLocaleTimeString('es');
     const texto = r.vivo ? 'En línea' : 'Sin respuesta';
-    setEstadoInstrumento(eq.id, r.vivo ? 'online' : 'offline', texto, `${eq.ip} - ${texto} · ${hora}`);
+    const alternas = r.alternas || [];
+    const ipVista = r.vivo && r.ipResp ? r.ipResp : eq.ip;
+    const tip = alternas.length
+      ? (r.vivo ? `${ipVista} contesta` + (ipVista !== eq.ip ? ` (la ${eq.ip} no)` : '') : `No contesta ni ${eq.ip} ni ${alternas.join(' ni ')}`) + ` · ${hora}`
+      : `${eq.ip} - ${texto} · ${hora}`;
+    setEstadoInstrumento(eq.id, r.vivo ? 'online' : 'offline', texto, tip);
+    if (eq.id === 'dot-tros' && $('tros-ip')) {
+      $('tros-ip').textContent = r.vivo ? ipVista : eq.ip + ' / .' + (alternas[0] || '').split('.').pop();
+      $('tros-ip').title = tip;
+    }
   }
 }
 
@@ -4242,9 +4347,15 @@ renderComandos();
 pintarArmado();
 aplicarEstadoCmds({ fase: 'reposo' });
 if (window.sistema && typeof window.sistema.onCmdsEstado === 'function') {
-  window.sistema.onCmdsEstado(aplicarEstadoCmds);
-  window.sistema.onCmdsSalida(recibirLineas);
-  window.sistema.cmdsEstado().then(aplicarEstadoCmds).catch(() => {});
+  // La misma "máquina" de comandos la usan Rectificadores y EngineOut: cada quien ve lo suyo
+  const repartirEstado = (s) => {
+    window.origenCmds = (s && s.origen) || 'rect';
+    if (typeof window.eoEstado === 'function') window.eoEstado(s);
+    if (window.origenCmds !== 'engineout') aplicarEstadoCmds(s);
+  };
+  window.sistema.onCmdsEstado(repartirEstado);
+  window.sistema.onCmdsSalida((l) => { if (window.origenCmds === 'engineout') { if (typeof window.eoLineas === 'function') window.eoLineas(l); } else recibirLineas(l); });
+  window.sistema.cmdsEstado().then(repartirEstado).catch(() => {});
 }
 
 /* ===================== REMPLAZAR IZUMI ===================== */
@@ -7733,6 +7844,255 @@ function pintarSeleccionIzumi() {
     const r = await s.protLanzar(b.dataset.prot, document.getElementById('prot-nota').value.trim());
     if (r && r.ok) s.protEstado().then(pintar); else alert((r && r.error) || 'No se pudo poner el aviso');
   }));
+})();
+</script>
+<script>
+/* ===================== ENGINEOUT =====================
+   12 pasos fijos. Se corren con la misma máquina de comandos de la app (terminal real,
+   sudo con contraseña recordada o llave USB). Cada paso se palomea al terminar;
+   si falla se marca en rojo con el motivo y se sigue con el siguiente. */
+(function () {
+  const $e = (id) => document.getElementById(id);
+  if (!$e('eo-modal')) return;
+  const api = () => window.sistema && typeof window.sistema.cmdsEjecutar === 'function' ? window.sistema : null;
+
+  const tresVeces = (svc) => `for i in 1 2 3; do echo "— reinicio $i de 3"; sudo systemctl restart ${svc} || exit $?; sleep 2; done; systemctl is-active ${svc}`;
+  const reinicio = (svc) => `sudo systemctl restart ${svc} && sleep 2 && systemctl is-active ${svc}`;
+  const ping = (ip) => `ping -c 4 -W 2 ${ip}`;
+  const script = (f) => `cd ~ || exit 1; if [ ! -f ./${f} ]; then echo "No se encontró ~/${f}"; exit 127; fi; if [ -x ./${f} ]; then ./${f}; else python3 ./${f}; fi`;
+  const jolt = `V=~/vrmu_util; if [ ! -x "$V" ]; then echo "No se encontró ~/vrmu_util"; exit 127; fi; for h in 10.254.128.3 10.254.128.2; do echo "— leyendo versión en $h"; if timeout 60 "$V" --hostname=$h --envelope_enabled=false | grep -a4 version; then exit 0; fi; done; echo "Ni la .3 ni la .2 regresaron la versión"; exit 1`;
+
+  const PASOS = [
+    { n: 'Reinicia el servidor DHCP', v: 'sudo systemctl restart isc-dhcp-server  ×3', c: tresVeces('isc-dhcp-server') },
+    { n: 'Reinicia el servidor DHCP6', v: 'sudo systemctl restart isc-dhcp-server6  ×3', c: tresVeces('isc-dhcp-server6') },
+    { n: 'Ping ZPE', v: 'ping 10.0.0.253', c: ping('10.0.0.253'), sinRed: 'El ZPE (10.0.0.253) no contestó el ping' },
+    { n: 'Ping Juniper', v: 'ping 10.0.0.254', c: ping('10.0.0.254'), sinRed: 'El Juniper (10.0.0.254) no contestó el ping' },
+    { n: 'Ping DAQ', v: 'ping 10.0.0.100', c: ping('10.0.0.100'), sinRed: 'El DAQ (10.0.0.100) no contestó el ping' },
+    { n: 'Valida versión de Jolt', v: '~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 version', c: jolt },
+    { n: 'Reboot Izumis', v: './reboot.py', c: script('reboot.py') },
+    { n: 'Valida servicios', v: './connection_validation.py', c: script('connection_validation.py') },
+    { n: 'Reinicio opentest', v: 'sudo systemctl restart opentest', c: reinicio('opentest') },
+    { n: 'Reinicio chillermonitor', v: 'sudo systemctl restart chillermonitor', c: reinicio('chillermonitor') },
+    { n: 'Reinicio Preboot', v: 'sudo systemctl restart ist-screening', c: reinicio('ist-screening') },
+    { n: 'Reinicio servicios Jolt', v: 'sudo systemctl restart vinsweepmonitor.service', c: reinicio('vinsweepmonitor.service') }
+  ];
+  const LIMITE_MIN = 15;   // ningún paso se queda colgado para siempre
+
+  // Estado de cada paso en pantalla
+  const pasos = PASOS.map(() => ({ est: 'pendiente', t: '', err: '', salida: [] }));
+  let indices = [];        // en la corrida actual: posición → número de paso
+  let fase = 'reposo', actual = -1, corriendo = false, logPath = null, preguntaHora = null;
+  const conLineas = [];
+
+  const lista = $e('eo-lista');
+  PASOS.forEach((p, i) => {
+    const li = document.createElement('li');
+    li.className = 'eo-paso pendiente';
+    li.innerHTML = '<span class="eo-ico"></span><div><div class="eo-nom"></div><div class="eo-cmd"></div></div><span class="eo-t"></span><div class="eo-err" hidden></div>';
+    li.querySelector('.eo-ico').textContent = i + 1;
+    li.querySelector('.eo-nom').textContent = p.n;
+    li.querySelector('.eo-cmd').textContent = p.v;
+    lista.appendChild(li);
+  });
+
+  function explicar(i, linea) {
+    const p = PASOS[i], d = pasos[i];
+    const m = /FALLÓ \((.*)\)/.exec(linea || '');
+    const motivo = m ? m[1] : 'falló';
+    const cod = /código (-?\d+)/.exec(motivo);
+    const c = cod ? Number(cod[1]) : null;
+    const ult = d.salida.filter((l) => l.trim()).slice(-3).join('\n');
+    let msg;
+    if (/tiempo límite/.test(motivo)) msg = 'Se tardó más de ' + LIMITE_MIN + ' min y se detuvo.';
+    else if (c === 127) msg = 'No se encontró el comando o el archivo.';
+    else if (p.sinRed && (c === 1 || c === 2)) msg = p.sinRed + '.';
+    else if (/incorrect password|sorry, try again|contraseña incorrecta/i.test(d.salida.join('\n'))) msg = 'La contraseña de sudo es incorrecta.';
+    else msg = 'Error (' + motivo + ').';
+    return msg + (ult ? '\n' + ult.slice(-400) : '');
+  }
+
+  function pintar() {
+    lista.querySelectorAll('.eo-paso').forEach((li, i) => {
+      const d = pasos[i];
+      li.className = 'eo-paso ' + d.est;
+      li.querySelector('.eo-ico').textContent = d.est === 'ok' ? '✓' : d.est === 'fallo' ? '✕' : d.est === 'detenido' ? '■' : i + 1;
+      li.querySelector('.eo-t').textContent = d.est === 'ejecutando' ? 'corriendo…' : d.t;
+      const er = li.querySelector('.eo-err');
+      er.hidden = !(d.est === 'fallo' && d.err);
+      er.textContent = d.err;
+    });
+    const hechos = pasos.filter((d) => d.est === 'ok' || d.est === 'fallo').length;
+    const fallos = pasos.filter((d) => d.est === 'fallo').length;
+    const enCurso = corriendo ? indices[actual] : -1;
+    $e('eo-pct').textContent = hechos + ' / ' + PASOS.length;
+    $e('eo-barra').style.width = (hechos / PASOS.length * 100) + '%';
+    $e('eo-estado').textContent = corriendo
+      ? 'Paso ' + (enCurso + 1) + ' de ' + PASOS.length + ': ' + (PASOS[enCurso] ? PASOS[enCurso].n : '')
+      : fase === 'reposo' ? 'Listo para iniciar'
+      : fallos ? 'Terminó con ' + fallos + (fallos === 1 ? ' error' : ' errores')
+      : fase === 'detenido' ? 'Detenido' : 'Completado';
+    const dlg = document.querySelector('.eo-dlg');
+    dlg.classList.toggle('fin-ok', !corriendo && fase === 'listo' && !fallos);
+    dlg.classList.toggle('fin-err', !corriendo && fallos > 0);
+    const res = $e('eo-res');
+    res.hidden = corriendo || fase === 'reposo';
+    if (!res.hidden) {
+      const malos = pasos.map((d, i) => d.est === 'fallo' ? (i + 1) + '. ' + PASOS[i].n : null).filter(Boolean);
+      res.className = 'eo-res ' + (malos.length ? 'err' : fase === 'detenido' ? 'stop' : 'ok');
+      res.textContent = malos.length ? '✕ Fallaron: ' + malos.join(' · ')
+        : fase === 'detenido' ? '■ Se detuvo antes de terminar.' : '✓ EngineOut completado: los 12 pasos salieron bien.';
+    }
+    const go = $e('eo-go');
+    go.textContent = corriendo ? 'Detener' : fase === 'reposo' ? 'Iniciar EngineOut' : 'Correr todo de nuevo';
+    go.classList.toggle('btn-rojo', corriendo);
+    $e('eo-reintentar').hidden = corriendo || !fallos;
+    $e('eo-log').hidden = !logPath;
+    // Botón de la pantalla principal
+    const b = $e('eo-btn'), mini = $e('eo-mini');
+    b.classList.toggle('corre', corriendo);
+    b.classList.toggle('mal', !corriendo && fallos > 0);
+    b.classList.toggle('bien', !corriendo && fase === 'listo' && !fallos);
+    mini.hidden = !corriendo && fase === 'reposo';
+    mini.textContent = corriendo ? (enCurso + 1) + '/' + PASOS.length : fallos ? '✕ ' + fallos : '✓';
+  }
+
+  function pintarPregunta(p) {
+    const f = $e('eo-pide');
+    f.hidden = !(corriendo && p);
+    if (!p || !corriendo) { preguntaHora = null; return; }
+    if (preguntaHora === p.hora) return;
+    preguntaHora = p.hora;
+    const esPass = p.tipo === 'password';
+    $e('eo-pide-txt').textContent = (esPass ? '🔑 ' : '› ') + p.texto;
+    const inp = $e('eo-pide-in');
+    inp.type = esPass ? 'password' : 'text';
+    inp.value = '';
+    $e('eo-rec-lbl').hidden = !esPass;
+    if (!$e('eo-modal').hidden) setTimeout(() => inp.focus(), 30);
+    // Si hay llave USB con la contraseña de sudo, se contesta sola
+    if (esPass && p.sudo && window.sistema && typeof window.sistema.llaveLeer === 'function') {
+      window.sistema.llaveLeer().then((r) => {
+        if (r && r.ok && r.pass && r.pass.sudo && preguntaHora === p.hora) {
+          window.sistema.cmdsResponder(r.pass.sudo, { secreto: true, recordar: true });
+          agregarCon([{ t: 'sys', s: '🔑 Contraseña de sudo tomada de la llave USB' }]);
+        }
+      }).catch(() => {});
+    }
+  }
+
+  window.eoEstado = function (s) {
+    if (!s) return;
+    const mio = s.origen === 'engineout';
+    if (!mio) { if (s.fase === 'ejecutando' && corriendo) { corriendo = false; pintar(); } return; }
+    fase = s.fase || 'reposo';
+    corriendo = fase === 'ejecutando';
+    actual = s.actual;
+    if (s.logPath) logPath = s.logPath;
+    if (s.nombres && s.nombres.length && !indices.length) indices = s.nombres.map((n) => PASOS.findIndex((p) => p.n === n));
+    (s.resultados || []).forEach((r, k) => {
+      const i = indices[k];
+      if (i == null || i < 0) return;
+      if (r === 'pendiente' && pasos[i].est !== 'pendiente' && corriendo && k > s.actual) pasos[i].est = 'pendiente';
+      else if (r !== 'pendiente') pasos[i].est = r;
+    });
+    if (!corriendo) for (const d of pasos) if (d.est === 'ejecutando') d.est = 'detenido';
+    pintarPregunta(s.pide);
+    pintar();
+  };
+
+  function agregarCon(arr) {
+    const con = $e('eo-con');
+    const abajo = con.scrollTop + con.clientHeight >= con.scrollHeight - 8;
+    for (const l of arr) {
+      conLineas.push(l);
+      const sp = document.createElement('span');
+      if (l.t === 'sys') sp.className = 's'; else if (l.t === 'err') sp.className = 'e';
+      sp.textContent = l.s + '\n';
+      con.appendChild(sp);
+    }
+    while (con.childNodes.length > 1500) con.removeChild(con.firstChild);
+    if (abajo) con.scrollTop = con.scrollHeight;
+  }
+
+  window.eoLineas = function (arr) {
+    if (!Array.isArray(arr)) return;
+    for (const l of arr) {
+      const m = l.t === 'sys' && /^\[(\d+)\/(\d+)\] (OK|FALLÓ.*|DETENIDO) · ([\d.]+) s$/.exec(l.s);
+      if (m) {
+        const i = indices[Number(m[1]) - 1];
+        if (i != null && i >= 0) {
+          pasos[i].t = Number(m[4]) >= 60 ? Math.floor(m[4] / 60) + ' min ' + Math.round(m[4] % 60) + ' s' : Math.round(m[4] * 10) / 10 + ' s';
+          if (m[3].startsWith('FALLÓ')) { pasos[i].est = 'fallo'; pasos[i].err = explicar(i, m[3]); }
+          else if (m[3] === 'OK') pasos[i].est = 'ok';
+        }
+      } else if (l.t !== 'sys' && corriendo) {
+        const i = indices[actual];
+        if (i != null && i >= 0) { pasos[i].salida.push(String(l.s)); if (pasos[i].salida.length > 60) pasos[i].salida.shift(); }
+      }
+    }
+    agregarCon(arr);
+    pintar();
+  };
+
+  async function correr(cuales) {
+    const s = api();
+    if (!s) { mostrarRes('err', 'Abre la app con Electron para correr EngineOut.'); return; }
+    indices = cuales.slice();
+    for (const i of cuales) pasos[i] = { est: 'pendiente', t: '', err: '', salida: [] };
+    logPath = null;
+    $e('eo-con').textContent = '';
+    agregarCon([{ t: 'sys', s: '— EngineOut · ' + new Date().toLocaleString('es') + ' —' }]);
+    corriendo = true; fase = 'ejecutando'; actual = 0;
+    pintar();
+    try {
+      const r = await s.cmdsEjecutar(cuales.map((i) => PASOS[i].c), false, LIMITE_MIN, { origen: 'engineout', nombres: cuales.map((i) => PASOS[i].n) });
+      if (r && r.ok === false) {
+        corriendo = false; fase = 'reposo';
+        pintar();
+        mostrarRes('err', '✕ No se pudo iniciar: ' + (r.error || 'error desconocido') + (/en curso/.test(r.error || '') ? ' (espera a que termine la actualización de rectificadores)' : ''));
+      } else if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Inició', cuales.length + ' paso(s)');
+    } catch (e) {
+      corriendo = false; fase = 'reposo'; pintar();
+      mostrarRes('err', '✕ Error al iniciar: ' + e.message);
+    }
+  }
+  function mostrarRes(cls, txt) { const r = $e('eo-res'); r.hidden = false; r.className = 'eo-res ' + cls; r.textContent = txt; }
+
+  const abrir = () => { $e('eo-modal').hidden = false; pintar(); };
+  const cerrar = () => { $e('eo-modal').hidden = true; };
+  $e('eo-btn').addEventListener('click', abrir);
+  $e('eo-cerrar').addEventListener('click', cerrar);
+  $e('eo-cerrar-x').addEventListener('click', cerrar);
+  $e('eo-modal').addEventListener('mousedown', (e) => { if (e.target === $e('eo-modal')) cerrar(); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$e('eo-modal').hidden) cerrar(); });
+  $e('eo-go').addEventListener('click', () => {
+    if (corriendo) {
+      if (confirm('¿Detener EngineOut? El paso que está corriendo se corta.')) api() && api().cmdsDetener();
+      return;
+    }
+    if (!confirm('Se van a reiniciar DHCP, opentest, chillermonitor, Preboot y los servicios de Jolt, y se reinician las Izumis. ¿Iniciar EngineOut?')) return;
+    correr(PASOS.map((_, i) => i));
+  });
+  $e('eo-reintentar').addEventListener('click', () => {
+    const malos = pasos.map((d, i) => d.est === 'fallo' ? i : -1).filter((i) => i >= 0);
+    if (malos.length) correr(malos);
+  });
+  $e('eo-ver').addEventListener('click', () => {
+    const c = $e('eo-con'); c.hidden = !c.hidden;
+    $e('eo-ver').textContent = c.hidden ? 'Ver salida' : 'Ocultar salida';
+    if (!c.hidden) c.scrollTop = c.scrollHeight;
+  });
+  $e('eo-log').addEventListener('click', () => api() && api().cmdsAbrirLog());
+  $e('eo-pide').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const s = api(); if (!s) return;
+    const inp = $e('eo-pide-in');
+    const secreto = inp.type === 'password';
+    const r = await s.cmdsResponder(inp.value, { secreto, recordar: secreto && $e('eo-recordar').checked });
+    if (r && r.ok) { inp.value = ''; $e('eo-pide').hidden = true; }
+    else if (r && r.error) mostrarRes('err', r.error);
+  });
+  pintar();
 })();
 </script>
 </body>

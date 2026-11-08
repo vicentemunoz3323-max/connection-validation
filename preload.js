@@ -32,7 +32,7 @@ contextBridge.exposeInMainWorld('sistema', {
   onInstrumentos: (cb) => ipcRenderer.on('instrumentos-state', (_e, s) => cb(s)),
 
   // Actualización de rectificadores (comandos en segundo plano)
-  cmdsEjecutar: (comandos, detenerSiFalla, limiteMin) => ipcRenderer.invoke('cmds-run', { comandos, detenerSiFalla, limiteMin }),
+  cmdsEjecutar: (comandos, detenerSiFalla, limiteMin, extra) => ipcRenderer.invoke('cmds-run', { comandos, detenerSiFalla, limiteMin, ...(extra || {}) }),
   cmdsResponder: (texto, datos) => ipcRenderer.invoke('cmds-input', texto, datos || {}),
   cmdsSudoOlvidar: () => ipcRenderer.invoke('cmds-sudo-olvidar'),
   cmdsSudoHay: () => ipcRenderer.invoke('cmds-sudo-hay'),

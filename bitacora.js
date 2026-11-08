@@ -22,7 +22,7 @@ const os = require('os');
 const path = require('path');
 
 const BASE = process.env.CV_LOGS_DIR || path.join(os.homedir(), 'Ghostfish-Logs');
-const CARPETAS = ['actividad', 'validacion', 'izumis', 'rectificadores', 'testcase', 'configuracion', 'chiller', 'server', 'setvalve', 'consolas-izumi', 'remplazo-izumi'];
+const CARPETAS = ['actividad', 'validacion', 'izumis', 'rectificadores', 'testcase', 'configuracion', 'chiller', 'server', 'setvalve', 'consolas-izumi', 'remplazo-izumi', 'engineout'];
 
 const dos = (n) => String(n).padStart(2, '0');
 const fecha = (d = new Date()) => d.getFullYear() + '-' + dos(d.getMonth() + 1) + '-' + dos(d.getDate());

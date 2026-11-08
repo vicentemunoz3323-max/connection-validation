@@ -76,6 +76,8 @@ const PASADAS_RECT = 5;   // lecturas seguidas de los rectificadores en cada "Pr
    aunque la ventana esté minimizada o en otra pestaña.
    ============================================================ */
 const IPS_INSTRUMENTOS = ['10.0.0.100', '10.0.0.254', '10.0.0.253','10.254.128.2'];
+// Si la IP principal no contesta se prueba la alterna (el controlador de rectificadores está en la .2 o en la .3)
+const IPS_ALTERNAS = { '10.254.128.2': [VRMU_HOST_ALT] };
 const INTERVALO_PING_MS = 5000;   // cada cuántos segundos se revisan
 const TIMEOUT_PING_MS = 2000;     // espera máxima por respuesta
 const REGEX_IPV4 = /^(\d{1,3}\.){3}\d{1,3}$/;
@@ -143,15 +145,20 @@ async function cicloPing() {
   cicloEnCurso = true;
   try {
     const resultados = await Promise.all(
-      IPS_INSTRUMENTOS.map(async (ip) => [ip, await hacerPing(ip)])
+      IPS_INSTRUMENTOS.map(async (ip) => {
+        if (await hacerPing(ip)) return [ip, true, ip];
+        for (const alt of IPS_ALTERNAS[ip] || []) if (await hacerPing(alt)) return [ip, true, alt];
+        return [ip, false, null];
+      })
     );
     const hora = Date.now();
     const nuevo = { ...estadoInstrumentos };
-    for (const [ip, vivo] of resultados) {
-      if (!estadoInstrumentos[ip] || estadoInstrumentos[ip].vivo !== vivo) {
-        console.log(`[ping] ${ip} -> ${vivo ? 'EN LÍNEA' : 'sin respuesta'}`);
+    for (const [ip, vivo, contesto] of resultados) {
+      const antes = estadoInstrumentos[ip];
+      if (!antes || antes.vivo !== vivo || antes.ipResp !== contesto) {
+        console.log(`[ping] ${ip} -> ${vivo ? 'EN LÍNEA' + (contesto !== ip ? ' (contestó ' + contesto + ')' : '') : 'sin respuesta'}`);
       }
-      nuevo[ip] = { vivo, hora };
+      nuevo[ip] = { vivo, hora, ipResp: contesto, alternas: IPS_ALTERNAS[ip] || [] };
     }
     estadoInstrumentos = nuevo;
     emitirInstrumentos();
@@ -783,26 +790,32 @@ function correrComando(cmd, opciones = {}) {
   });
 }
 
-async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
+const ORIGENES = {
+  rect: { modulo: 'Rectificadores', titulo: 'Actualización de rectificadores', log: 'actualizacion', carpeta: 'rectificadores' },
+  engineout: { modulo: 'EngineOut', titulo: 'EngineOut', log: 'engineout', carpeta: 'engineout' }
+};
+
+async function ejecutarComandos(lista, detenerSiFalla, limiteMs, origen = 'rect', nombres = null) {
+  const O = ORIGENES[origen] || ORIGENES.rect;
   const total = lista.length;
   const resultados = lista.map(() => 'pendiente');
   let logPath = null;
 
   try {
-    logPath = path.join(bitacora.dir('rectificadores'), `actualizacion_${bitacora.sello()}.log`);
+    logPath = path.join(bitacora.dir(O.carpeta), `${O.log}_${bitacora.sello()}.log`);
     logStream = fs.createWriteStream(logPath, { flags: 'a' });
     logStream.on('error', (e) => console.log('[cmds] no se pudo escribir el log:', e.message));   // disco lleno, etc.: no debe tumbar la app
-    logStream.write('# Actualización de rectificadores · ' + bitacora.fecha() + ' ' + bitacora.hora() + '\n# Comandos:\n' + lista.map((c, i) => '#   ' + (i + 1) + '. ' + c).join('\n') + '\n\n');
+    logStream.write('# ' + O.titulo + ' · ' + bitacora.fecha() + ' ' + bitacora.hora() + '\n# Comandos:\n' + lista.map((c, i) => '#   ' + (i + 1) + '. ' + (nombres && nombres[i] ? nombres[i] + ' → ' : '') + c).join('\n') + '\n\n');
   } catch (e) {
     logStream = null;
   }
 
   ejecCmds = { abortado: false, proc: null };
-  bitacora.registrar('Rectificadores', 'Inició actualización', total + ' comando(s): ' + lista.join(' ; '));
+  bitacora.registrar(O.modulo, origen === 'rect' ? 'Inició actualización' : 'Inició EngineOut', total + ' comando(s): ' + lista.join(' ; '));
   emitirCmds({
     fase: 'ejecutando', total, completados: 0, actual: 0, pide: null,
     resultados: [...resultados], inicio: Date.now(), fin: null, error: null, logPath,
-    terminal: !!SCRIPT_PTY, limiteMs: limiteMs || 0
+    terminal: !!SCRIPT_PTY, limiteMs: limiteMs || 0, origen, nombres: nombres || null
   });
 
   const fueraDeLaApp = await probarSystemdRun();
@@ -817,7 +830,7 @@ async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
     if (ejecCmds.abortado) break;
     resultados[i] = 'ejecutando';
     emitirCmds({ actual: i, resultados: [...resultados], pide: null, progreso: null });
-    emitirLinea('sys', `[${i + 1}/${total}] $ ${lista[i]}`);
+    emitirLinea('sys', `[${i + 1}/${total}] ${nombres && nombres[i] ? nombres[i] + ' · ' : ''}$ ${lista[i]}`);
 
     const t0 = Date.now();
     const { codigo, tiempoAgotado } = await correrComando(lista[i], { limiteMs, fueraDeLaApp });
@@ -851,13 +864,13 @@ async function ejecutarComandos(lista, detenerSiFalla, limiteMs) {
     fase, resultados: [...resultados], fin: Date.now(), pide: null,
     error: hayFallos ? 'Uno o más comandos fallaron' : null
   });
-  avisarFinActualizacion(fase, resultados);
-  bitacora.registrar('Rectificadores', fase === 'listo' ? 'Terminó bien' : fase === 'detenido' ? 'Detenida por el usuario' : 'Terminó con errores',
+  avisarFinActualizacion(fase, resultados, O.titulo);
+  bitacora.registrar(O.modulo, fase === 'listo' ? 'Terminó bien' : fase === 'detenido' ? 'Detenida por el usuario' : 'Terminó con errores',
     resultados.filter((r) => r === 'ok').length + ' de ' + total + ' correctos' + (logPath ? ' · ' + logPath : ''));
 }
 
 // Notificación de Ubuntu al terminar (por si no estás viendo la pantalla)
-function avisarFinActualizacion(fase, resultados) {
+function avisarFinActualizacion(fase, resultados, titulo) {
   try {
     if (!Notification.isSupported()) return;
     const ok = resultados.filter((r) => r === 'ok').length;
@@ -865,7 +878,7 @@ function avisarFinActualizacion(fase, resultados) {
     const cuerpo = fase === 'listo' ? `Completada: ${ok} de ${resultados.length} comandos correctos.`
       : fase === 'detenido' ? `Detenida por el usuario (${ok} de ${resultados.length} completados).`
       : `Terminó con errores: ${fallos} comando${fallos === 1 ? '' : 's'} falló.`;
-    new Notification({ title: 'Actualización de rectificadores', body: cuerpo }).show();
+    new Notification({ title: titulo || 'Actualización de rectificadores', body: cuerpo }).show();
   } catch (e) {}
 }
 
@@ -878,7 +891,9 @@ ipcMain.handle('cmds-run', (_e, datos) => {
 
   const limiteMin = Number(datos && datos.limiteMin);
   const limiteMs = Number.isFinite(limiteMin) && limiteMin > 0 ? Math.min(limiteMin, 24 * 60) * 60000 : 0;
-  ejecutarComandos(lista, !datos || datos.detenerSiFalla !== false, limiteMs).catch((err) => {
+  const origen = datos && ORIGENES[datos.origen] ? datos.origen : 'rect';
+  const nombres = datos && Array.isArray(datos.nombres) && datos.nombres.length === lista.length ? datos.nombres.map((n) => String(n).slice(0, 80)) : null;
+  ejecutarComandos(lista, !datos || datos.detenerSiFalla !== false, limiteMs, origen, nombres).catch((err) => {
     emitirLinea('err', 'Error interno: ' + err.message);
     flushSalida();
     if (logStream) { logStream.end(); logStream = null; }
