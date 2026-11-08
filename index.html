@@ -1925,91 +1925,96 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 @keyframes campana { 25% { transform: rotate(14deg); } 50% { transform: rotate(-12deg); } 75% { transform: rotate(6deg); } }
 
 /* ===== EngineOut ===== */
-.btn-eo { display: inline-flex; align-items: center; gap: 7px; background: var(--panel, #1a2029); }
-.btn-eo:hover { background: #262e3a; }
-.btn-eo svg { width: 15px; height: 15px; }
-.btn-eo { white-space: nowrap; }
-.btn-eo .eo-mini { white-space: nowrap; font: 600 11px var(--mono); background: rgba(255,255,255,.14); padding: 1px 6px; border-radius: 5px; }
-.btn-eo.corre svg { animation: giro 1.2s linear infinite; }
-.btn-eo.mal { background: var(--red); }
-.btn-eo.bien { background: var(--green); }
-.eo-dlg { width: min(780px, 100%); display: flex; flex-direction: column; gap: 12px; }
-.eo-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.eo-x { border: 0; background: transparent; font-size: 22px; line-height: 1; color: var(--muted); cursor: pointer; padding: 2px 6px; border-radius: 6px; }
-.eo-x:hover { background: var(--bg-soft); color: var(--text); }
+.btn.btn-rojo { background: var(--red); } .btn.btn-rojo:hover { background: #a91f17; }
+.eo-top { display: grid; gap: 14px; border-radius: 14px; margin-bottom: 14px; }
+.eo-datos { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-end; }
+.eo-datos label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.eo-datos input { width: 120px; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font: 600 15px var(--font); color: var(--text); text-transform: none; letter-spacing: 0; }
+.eo-datos label:nth-child(2) input { width: 200px; font-weight: 500; font-size: 14px; }
+.eo-datos input:focus { outline: 2px solid var(--blue-tint); border-color: var(--blue); }
+.eo-dato { display: flex; flex-direction: column; gap: 4px; padding-bottom: 6px; }
+.eo-dato span { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.eo-dato b { font: 600 13.5px var(--mono); }
 .eo-prog { display: flex; flex-direction: column; gap: 6px; }
-.eo-prog-top { display: flex; justify-content: space-between; font-size: 13px; font-weight: 600; }
+.eo-prog-top { display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
 .eo-prog-top span:last-child { font-family: var(--mono); color: var(--muted); }
-.eo-barra { height: 8px; border-radius: 99px; background: var(--bg-soft); overflow: hidden; border: 1px solid var(--line); }
+.eo-barra { height: 10px; border-radius: 99px; background: var(--bg-soft); overflow: hidden; border: 1px solid var(--line); }
 .eo-barra i { display: block; height: 100%; width: 0; background: var(--blue); transition: width .35s; }
-.eo-dlg.fin-ok .eo-barra i { background: var(--green); }
-.eo-dlg.fin-err .eo-barra i { background: var(--red); }
-.eo-lista { max-height: 50vh; overflow-y: auto; list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
-.eo-paso { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; align-items: center; padding: 8px 12px; border-top: 1px solid var(--line); background: #fff; transition: background .2s; }
-.eo-paso:first-child { border-top: 0; }
-.eo-ico { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 12px var(--mono); border: 2px solid var(--line); color: var(--muted); background: #fff; }
-.eo-nom { font-size: 13.5px; font-weight: 600; }
-.eo-cmd { font: 11.5px var(--mono); color: var(--muted); margin-top: 2px; word-break: break-all; }
-.eo-t { font: 11.5px var(--mono); color: var(--muted); white-space: nowrap; }
-.eo-err { grid-column: 2 / 4; font-size: 12.5px; color: var(--red); background: rgba(200,38,29,.07); border-left: 3px solid var(--red); padding: 6px 9px; border-radius: 0 6px 6px 0; white-space: pre-wrap; font-family: var(--mono); }
+#engineout.fin-ok .eo-barra i { background: var(--green); }
+#engineout.fin-err .eo-barra i { background: var(--red); }
+.eo-acc { display: flex; gap: 8px; justify-content: flex-end; }
+.eo-go { min-width: 190px; font-size: 14px; padding: 10px 18px; }
+.eo-grid { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.eo-paso { position: relative; display: flex; flex-direction: column; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px 14px; transition: border-color .2s, box-shadow .2s, background .2s; }
+.eo-paso-cab { display: flex; justify-content: space-between; align-items: center; }
+.eo-num { font: 700 11px var(--mono); color: var(--muted); letter-spacing: .05em; }
+.eo-ico { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; font: 700 13px var(--font); border: 2px solid var(--line); color: transparent; background: #fff; }
+.eo-img { height: 92px; border-radius: 10px; display: grid; place-items: center; background: var(--bg-soft); color: #8a94a3; transition: background .25s, color .25s; }
+.eo-img svg { width: 120px; height: 76px; overflow: visible; }
+.eo-nom { font-size: 14px; font-weight: 700; }
+.eo-cmd { font: 11px var(--mono); color: var(--muted); word-break: break-all; line-height: 1.4; }
+.eo-der { display: flex; align-items: center; gap: 8px; }
+.eo-t { font: 11px var(--mono); color: var(--muted); }
+.eo-err { font-size: 12px; color: var(--red); background: rgba(200,38,29,.07); border-left: 3px solid var(--red); padding: 6px 9px; border-radius: 0 6px 6px 0; white-space: pre-wrap; font-family: var(--mono); max-height: 110px; overflow: auto; }
 .eo-err[hidden] { display: none; }
-.eo-paso.ejecutando { background: var(--blue-tint); }
-.eo-paso.ejecutando .eo-ico { border-color: var(--blue); border-top-color: transparent; color: transparent; animation: giro .9s linear infinite; }
+.eo-paso.ejecutando { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint); }
+.eo-paso.ejecutando .eo-img { background: var(--blue-tint); color: var(--blue); }
+.eo-paso.ejecutando .eo-ico { border-color: var(--blue); border-top-color: transparent; animation: giro .9s linear infinite; }
+.eo-paso.ok .eo-img { background: rgba(18,137,74,.09); color: var(--green); }
 .eo-paso.ok .eo-ico { border-color: var(--green); background: var(--green); color: #fff; animation: tcPop .25s ease-out; }
+.eo-paso.fallo { border-color: rgba(200,38,29,.45); }
+.eo-paso.fallo .eo-img { background: rgba(200,38,29,.08); color: var(--red); }
 .eo-paso.fallo .eo-ico { border-color: var(--red); background: var(--red); color: #fff; animation: tcSacude .4s; }
 .eo-paso.detenido .eo-ico { border-color: var(--yellow); color: var(--yellow); }
-.eo-paso.fallo { background: rgba(200,38,29,.04); }
-.eo-pide { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 10px; background: #3a3220; color: #e5c07b; font-size: 13px; }
+/* animaciones de los dibujos mientras corre el paso */
+.eo-paso .a-gira { transform-box: fill-box; transform-origin: center; }
+.eo-paso.ejecutando .a-gira { animation: giro 1.4s linear infinite; }
+.eo-paso .a-onda { opacity: .25; }
+.eo-paso.ejecutando .a-onda { animation: eoOnda 1.2s ease-in-out infinite; }
+.eo-paso.ejecutando .a-onda.d2 { animation-delay: .2s; } .eo-paso.ejecutando .a-onda.d3 { animation-delay: .4s; }
+.eo-paso.ok .a-onda, .eo-paso.fallo .a-onda { opacity: 1; }
+.eo-paso.fallo .a-onda { opacity: .2; }
+.eo-paso.ejecutando .a-late { animation: daqLatido 1s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.eo-paso.ejecutando .a-corre { stroke-dasharray: 6 5; animation: eoCorre .8s linear infinite; }
+@keyframes eoOnda { 0%, 100% { opacity: .2; } 50% { opacity: 1; } }
+@keyframes eoCorre { to { stroke-dashoffset: -22; } }
+.eo-pide { position: sticky; top: 70px; z-index: 20; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 10px 12px; margin-bottom: 14px; border-radius: 12px; background: #3a3220; color: #e5c07b; font-size: 13px; box-shadow: 0 10px 30px rgba(0,0,0,.2); }
 .eo-pide[hidden] { display: none; }
 .eo-pide-txt { flex: 1 1 100%; font-family: var(--mono); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .eo-pide input[type=password], .eo-pide input[type=text] { flex: 1; min-width: 180px; padding: 7px 10px; border-radius: 7px; border: 1px solid #e5c07b; background: #1a1712; color: #fff; font: 13px var(--mono); }
 .eo-pide label { font-size: 12px; display: flex; gap: 5px; align-items: center; color: #d9cfae; }
-.eo-res { font-size: 13.5px; padding: 10px 12px; border-radius: 10px; font-weight: 600; }
-.eo-res[hidden] { display: none; }
-.eo-res.ok { background: rgba(18,137,74,.1); color: var(--green); }
-.eo-res.err { background: rgba(200,38,29,.08); color: var(--red); }
-.eo-res.stop { background: rgba(212,136,6,.1); color: var(--yellow); }
-.eo-con { margin: 0; height: 190px; overflow: auto; background: var(--panel, #1a2029); color: #d4d4d4; font: 11.5px/1.45 var(--mono); padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; word-break: break-all; }
+.eo-pide label[hidden] { display: none; }
+.eo-rep { border-radius: 14px; display: grid; gap: 12px; margin-bottom: 14px; }
+.eo-rep[hidden] { display: none; }
+.eo-rep-cab { display: flex; gap: 12px; align-items: center; }
+.eo-rep-cab h2 { margin: 0; font-size: 17px; }
+.eo-rep-cab p { margin: 2px 0 0; font-size: 13px; color: var(--muted); }
+.eo-rep-ico { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-size: 20px; font-weight: 700; color: #fff; background: var(--green); flex: none; }
+.eo-rep.err .eo-rep-ico { background: var(--red); }
+.eo-rep.stop .eo-rep-ico { background: var(--yellow); }
+.eo-campo { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.eo-campo input, .eo-campo textarea, .eo-campo select { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; font: 13.5px var(--font); color: var(--text); background: #fff; resize: vertical; }
+.eo-correo-fila { display: flex; gap: 8px; align-items: flex-end; }
+.eo-correo-fila .eo-campo { flex: 1; }
+.eo-correo-fila .btn { padding: 9px 16px; }
+.eo-msg { font-size: 13px; padding: 8px 10px; border-radius: 8px; }
+.eo-msg[hidden] { display: none; }
+.eo-msg.ok { background: rgba(18,137,74,.1); color: var(--green); }
+.eo-msg.err { background: rgba(200,38,29,.08); color: var(--red); }
+.eo-msg.info { background: var(--blue-tint); color: var(--blue); }
+.eo-rep-acc { display: flex; gap: 8px; flex-wrap: wrap; }
+.eo-cfg { border-top: 1px solid var(--line); padding-top: 10px; }
+.eo-cfg summary { cursor: pointer; font-size: 13px; font-weight: 600; color: var(--muted); }
+.eo-cfg-ayuda { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.eo-cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.eo-cfg-acc { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+.eo-con-wrap { display: grid; gap: 8px; justify-items: start; }
+.eo-con { width: 100%; box-sizing: border-box; margin: 0; height: 240px; overflow: auto; background: var(--panel, #1a2029); color: #d4d4d4; font: 11.5px/1.45 var(--mono); padding: 10px 12px; border-radius: 10px; white-space: pre-wrap; word-break: break-all; }
 .eo-con[hidden] { display: none; }
 .eo-con .s { color: #4ec9b0; } .eo-con .e { color: #f48771; }
-.eo-acc { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; align-items: center; }
-.eo-acc .eo-izq { margin-right: auto; display: flex; gap: 8px; align-items: center; font-size: 12.5px; color: var(--muted); }
-.btn.btn-rojo { background: var(--red); } .btn.btn-rojo:hover { background: #a91f17; }
 </style>
 </head>
 <body>
-  <!-- ===== EngineOut: pasos con palomita ===== -->
-  <div class="manual-modal srv-modal" id="eo-modal" hidden>
-    <div class="srv-dlg eo-dlg" role="dialog" aria-label="EngineOut">
-      <div class="eo-cab">
-        <div>
-          <div class="srv-dlg-tit">EngineOut</div>
-          <p class="srv-dlg-sub" id="eo-sub">Corre los 12 pasos en orden y palomea cada uno al terminar. Si uno falla te dice por qué y sigue con el siguiente.</p>
-        </div>
-        <button type="button" class="eo-x" id="eo-cerrar-x" title="Cerrar (si está corriendo sigue en segundo plano)">×</button>
-      </div>
-      <div class="eo-prog">
-        <div class="eo-prog-top"><span id="eo-estado">Listo para iniciar</span><span id="eo-pct">0 / 12</span></div>
-        <div class="eo-barra"><i id="eo-barra"></i></div>
-      </div>
-      <ol class="eo-lista" id="eo-lista"></ol>
-      <form class="eo-pide" id="eo-pide" hidden autocomplete="off">
-        <span class="eo-pide-txt" id="eo-pide-txt">El comando pide contraseña</span>
-        <input type="password" id="eo-pide-in" placeholder="Escribe y presiona Enter" spellcheck="false">
-        <button class="btn" type="submit">Enviar</button>
-        <label id="eo-rec-lbl"><input type="checkbox" id="eo-recordar" checked> Recordar mientras la app esté abierta</label>
-      </form>
-      <div class="eo-res" id="eo-res" hidden></div>
-      <pre class="eo-con" id="eo-con" hidden></pre>
-      <div class="eo-acc">
-        <div class="eo-izq"><button class="btn btn-secundario btn-mini" type="button" id="eo-ver">Ver salida</button><button class="btn btn-secundario btn-mini" type="button" id="eo-log" hidden>Abrir log</button></div>
-        <button class="btn btn-secundario" type="button" id="eo-reintentar" hidden>Reintentar los que fallaron</button>
-        <button class="btn btn-secundario" type="button" id="eo-cerrar">Cerrar</button>
-        <button class="btn" type="button" id="eo-go">Iniciar EngineOut</button>
-      </div>
-    </div>
-  </div>
-
   <div class="manual-modal" id="manual-modal" hidden>
     <div class="manual-box" role="dialog" aria-label="Manual de usuario">
       <div class="manual-head">
@@ -2058,6 +2063,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       </div>
       <nav aria-label="Principal" id="nav-principal">
         <a href="#connection-validation" class="nav-link" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
+        <a href="#engineout" class="nav-link" data-section="engineout" title="EngineOut"><span class="lbl-full">EngineOut</span><span class="lbl-corto">EngineOut</span></a>
         <div class="nav-grupo" data-grupo="config">
           <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Configuración general</span><span class="lbl-corto">Config.</span><span class="nav-flecha" aria-hidden="true"></span></button>
           <div class="nav-menu" role="menu">
@@ -2092,10 +2098,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <div class="status-actions">
               <button id="test-btn" class="btn">Probar conexión</button>
               <button id="toggle-console-btn" class="btn btn-secundario">Consola</button>
-              <button id="eo-btn" class="btn btn-eo" type="button" title="Reinicia DHCP y servicios, revisa equipos y Jolt paso a paso">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/><path d="M10 9l5 3-5 3z"/></svg>
-                <span>EngineOut</span><span class="eo-mini" id="eo-mini" hidden></span>
-              </button>
             </div>
             <div class="status-links">
               <button id="open-opentest" class="link-btn lb-ot" type="button" title="Abrir http://127.0.0.1:8090 en Chrome">
@@ -3095,6 +3097,84 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <div class="ra-fila" data-k="disco"><span class="ra-nom">Disco</span><div class="ra-barra"><i></i></div><span class="ra-val">—</span></div>
         </div>
         <p class="ra-nota">Lo que usa Connection Validation (todos sus procesos). Disco = archivos de la app, sus datos y ~/Ghostfish-Logs.</p>
+      </div>
+    </section>
+
+    <section id="engineout" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Mantenimiento</span>
+            <h1>EngineOut</h1>
+            <p class="lead">Reinicia DHCP y servicios, revisa equipos y Jolt, paso a paso. Al final genera el reporte y lo puedes mandar por correo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card eo-top">
+        <div class="eo-datos">
+          <label>Rack<input id="eo-rack" type="text" inputmode="numeric" maxlength="6" placeholder="—"></label>
+          <label>Hecho por<input id="eo-quien" type="text" maxlength="60" placeholder="Tu nombre"></label>
+          <div class="eo-dato"><span>Equipo</span><b id="eo-host">—</b></div>
+          <div class="eo-dato"><span>IP</span><b id="eo-ip">—</b></div>
+          <div class="eo-dato"><span>Fecha</span><b id="eo-fecha">—</b></div>
+        </div>
+        <div class="eo-prog">
+          <div class="eo-prog-top"><span id="eo-estado">Listo para iniciar</span><span id="eo-pct">0 / 12</span></div>
+          <div class="eo-barra"><i id="eo-barra"></i></div>
+        </div>
+        <div class="eo-acc">
+          <button class="btn btn-secundario" type="button" id="eo-reintentar" hidden>Reintentar los que fallaron</button>
+          <button class="btn eo-go" type="button" id="eo-go">Iniciar EngineOut</button>
+        </div>
+      </div>
+
+      <form class="eo-pide" id="eo-pide" hidden autocomplete="off">
+        <span class="eo-pide-txt" id="eo-pide-txt">El comando pide contraseña</span>
+        <input type="password" id="eo-pide-in" placeholder="Escribe y presiona Enter" spellcheck="false">
+        <button class="btn" type="submit">Enviar</button>
+        <label id="eo-rec-lbl"><input type="checkbox" id="eo-recordar" checked> Recordar mientras la app esté abierta</label>
+      </form>
+
+      <ol class="eo-grid" id="eo-lista"></ol>
+
+      <div class="card eo-rep" id="eo-rep" hidden>
+        <div class="eo-rep-cab">
+          <div class="eo-rep-ico" id="eo-rep-ico">✓</div>
+          <div>
+            <h2 id="eo-rep-tit">Reporte</h2>
+            <p id="eo-rep-sub">—</p>
+          </div>
+        </div>
+        <label class="eo-campo">Notas para el reporte (opcional)<textarea id="eo-notas" rows="2" maxlength="600" placeholder="Ej.: Se cambió cable del Juniper, rack queda en línea"></textarea></label>
+        <div class="eo-correo-fila">
+          <label class="eo-campo">Enviar a<input id="eo-para" type="text" placeholder="correo@empresa.com, otro@empresa.com"></label>
+          <button class="btn" type="button" id="eo-enviar">Enviar por correo</button>
+        </div>
+        <div class="eo-msg" id="eo-msg" hidden></div>
+        <div class="eo-rep-acc">
+          <button class="btn btn-secundario btn-mini" type="button" id="eo-ver-rep">Ver reporte</button>
+          <button class="btn btn-secundario btn-mini" type="button" id="eo-mailto" title="Abre tu programa de correo con el reporte escrito">Abrir en mi correo</button>
+          <button class="btn btn-secundario btn-mini" type="button" id="eo-log">Abrir log</button>
+        </div>
+        <details class="eo-cfg" id="eo-cfg">
+          <summary>⚙ Configurar correo (servidor SMTP)</summary>
+          <p class="eo-cfg-ayuda">Para Gmail: servidor <b>smtp.gmail.com</b>, puerto <b>587</b>, STARTTLS, tu correo y una <b>contraseña de aplicación</b> (no la normal). Para Outlook/Office 365: <b>smtp.office365.com</b>, 587, STARTTLS. La contraseña se guarda cifrada en esta PC.</p>
+          <div class="eo-cfg-grid">
+            <label class="eo-campo">Servidor<input id="eo-c-host" type="text" placeholder="smtp.gmail.com"></label>
+            <label class="eo-campo">Puerto<input id="eo-c-puerto" type="number" min="1" max="65535" value="587"></label>
+            <label class="eo-campo">Seguridad<select id="eo-c-seg"><option value="starttls">STARTTLS (587)</option><option value="ssl">SSL (465)</option><option value="ninguna">Sin cifrar (25)</option></select></label>
+            <label class="eo-campo">Usuario<input id="eo-c-user" type="text" placeholder="tucorreo@gmail.com" autocomplete="off"></label>
+            <label class="eo-campo">Contraseña<input id="eo-c-pass" type="password" placeholder="••••••" autocomplete="new-password"></label>
+            <label class="eo-campo">Enviar desde<input id="eo-c-de" type="text" placeholder="igual que el usuario"></label>
+          </div>
+          <div class="eo-cfg-acc"><span id="eo-c-msg"></span><button class="btn btn-secundario btn-mini" type="button" id="eo-c-guardar">Guardar</button></div>
+        </details>
+      </div>
+
+      <div class="eo-con-wrap">
+        <button class="btn btn-secundario btn-mini" type="button" id="eo-ver">Ver salida de los comandos</button>
+        <pre class="eo-con" id="eo-con" hidden></pre>
       </div>
     </section>
 
@@ -7850,51 +7930,106 @@ function pintarSeleccionIzumi() {
 /* ===================== ENGINEOUT =====================
    12 pasos fijos. Se corren con la misma máquina de comandos de la app (terminal real,
    sudo con contraseña recordada o llave USB). Cada paso se palomea al terminar;
-   si falla se marca en rojo con el motivo y se sigue con el siguiente. */
+   si falla se marca en rojo con el motivo y se sigue con el siguiente.
+   Al terminar se genera el reporte (~/Ghostfish-Logs/engineout) y se puede mandar por correo. */
 (function () {
   const $e = (id) => document.getElementById(id);
-  if (!$e('eo-modal')) return;
+  if (!$e('engineout')) return;
   const api = () => window.sistema && typeof window.sistema.cmdsEjecutar === 'function' ? window.sistema : null;
+  const lsGet = (k) => { try { return localStorage.getItem(k) || ''; } catch (e) { return ''; } };
+  const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 
+  /* ---------- Dibujos (uno por paso) ---------- */
+  const T = (x, y, t, s) => `<text x="${x}" y="${y}" font-size="${s || 10}" font-family="DejaVu Sans Mono, monospace" font-weight="700" fill="currentColor" stroke="none" text-anchor="middle">${t}</text>`;
+  const G = (inner) => `<svg viewBox="0 0 120 76" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+  const flechaGira = (cx, cy, r) => `<g class="a-gira"><path d="M${cx + r} ${cy}a${r} ${r} 0 1 1-${r * 0.6} -${r * 0.8}"/><path d="M${cx + r * 0.35} ${cy - r * 1.2}l${r * 0.1} ${r * 0.45} ${r * 0.45} -${r * 0.15}"/></g>`;
+  const servidor = `<rect x="18" y="10" width="54" height="16" rx="3"/><rect x="18" y="30" width="54" height="16" rx="3"/><rect x="18" y="50" width="54" height="16" rx="3"/>
+    <g class="a-late"><circle cx="27" cy="18" r="2" fill="currentColor"/><circle cx="27" cy="38" r="2" fill="currentColor"/><circle cx="27" cy="58" r="2" fill="currentColor"/></g>
+    <path d="M36 18h26M36 38h26M36 58h26"/>`;
+  const dhcp = (v6) => G(servidor + flechaGira(94, 36, 13) + T(94, 72, v6 ? 'v6 ×3' : '×3', 10));
+  const pc = `<rect x="4" y="22" width="26" height="19" rx="2"/><path d="M12 47h10M17 41v6"/>`;
+  const ondas = `<path class="a-onda" d="M40 32h6"/><path class="a-onda d2" d="M52 32h6"/><path class="a-onda d3" d="M64 32h6"/>
+    <path class="a-onda d3" d="M42 26q12-8 24 0" opacity=".6"/>`;
+  const ping = (equipo, nombre) => G(pc + ondas + equipo + T(98, 72, nombre, 9.5));
+  const zpe = `<rect x="78" y="18" width="40" height="28" rx="3"/><path d="M84 26h4M92 26h4M100 26h4M108 26h4M84 34h4M92 34h4M100 34h4M108 34h4"/><circle cx="84" cy="41" r="1.5" fill="currentColor"/>`;
+  const juniper = `<rect x="76" y="22" width="42" height="18" rx="2"/><path d="M80 28v6M85 28v6M90 28v6M95 28v6M100 28v6M105 28v6"/><circle cx="112" cy="31" r="2" fill="currentColor"/>`;
+  const daq = `<rect x="78" y="14" width="40" height="34" rx="3"/><rect x="83" y="19" width="30" height="18" rx="1.5"/><path class="a-corre" d="M85 28c3-7 5-7 7 0s5 7 7 0 5-7 7 0"/><circle cx="88" cy="43" r="1.6" fill="currentColor"/><circle cx="95" cy="43" r="1.6" fill="currentColor"/>`;
+  const PASOS_IMG = {
+    jolt: G(`<rect x="34" y="14" width="40" height="40" rx="5"/><path d="M42 8v6M50 8v6M58 8v6M66 8v6M42 54v6M50 54v6M58 54v6M66 54v6M28 22h6M28 30h6M28 38h6M28 46h6M74 22h6M74 30h6M74 38h6M74 46h6"/>${T(54, 39, 'JOLT', 10)}
+      <g class="a-late"><path d="M86 20h24l6 8-6 8H86z"/>${T(99, 32, 'ver', 9)}</g>`),
+    izumi: G(`<g class="a-late"><path d="M60 8v14"/><path d="M48 13a17 17 0 1 0 24 0"/></g>
+      <rect x="10" y="50" width="26" height="18" rx="2"/><rect x="47" y="50" width="26" height="18" rx="2"/><rect x="84" y="50" width="26" height="18" rx="2"/>
+      <path class="a-corre" d="M23 50v-6h74v6M60 44v-4"/>`),
+    servicios: G(`<rect x="36" y="8" width="48" height="62" rx="4"/><path d="M50 8v-2h20v2"/><path d="M45 26l4 4 7-8M45 42l4 4 7-8M45 58l4 4 7-8"/><path class="a-onda" d="M62 27h14"/><path class="a-onda d2" d="M62 43h14"/><path class="a-onda d3" d="M62 59h14"/>`),
+    opentest: G(`<path d="M50 8h20M53 8v20L38 58a5 5 0 0 0 4.5 8h35a5 5 0 0 0 4.5-8L67 28V8"/><path d="M44 48h32"/><circle class="a-onda" cx="54" cy="56" r="2.5"/><circle class="a-onda d2" cx="64" cy="52" r="2"/><circle class="a-onda d3" cx="60" cy="40" r="1.6"/>` + flechaGira(98, 22, 9)),
+    chiller: G(`<g class="a-gira"><path d="M56 6v62M30 21l52 32M82 21L30 53"/><path d="M50 12l6 6 6-6M50 62l6-6 6 6M30 30l8-2-2-8M82 44l-8 2 2 8M36 54l2-8-8-2M76 20l-2 8 8 2"/></g>` + flechaGira(100, 22, 9)),
+    preboot: G(`<rect x="16" y="10" width="62" height="42" rx="3"/><path d="M36 64h22M47 52v12"/><path class="a-corre" d="M24 22h30M24 30h22M24 38h26"/><g class="a-late"><circle cx="78" cy="44" r="11"/><path d="M86 52l10 10"/></g>` + flechaGira(104, 18, 8)),
+    joltsvc: G(`<g class="a-gira"><circle cx="50" cy="38" r="20"/><path d="M50 10v8M50 58v8M22 38h8M70 38h8M30 18l6 6M64 52l6 6M30 58l6-6M64 24l6-6"/></g><path d="M53 26l-8 13h9l-7 13" stroke-width="3"/>` + flechaGira(100, 22, 9))
+  };
+
+  /* ---------- Pasos ---------- */
   const tresVeces = (svc) => `for i in 1 2 3; do echo "— reinicio $i de 3"; sudo systemctl restart ${svc} || exit $?; sleep 2; done; systemctl is-active ${svc}`;
   const reinicio = (svc) => `sudo systemctl restart ${svc} && sleep 2 && systemctl is-active ${svc}`;
-  const ping = (ip) => `ping -c 4 -W 2 ${ip}`;
+  const hacerPing = (ip) => `ping -c 4 -W 2 ${ip}`;
   const script = (f) => `cd ~ || exit 1; if [ ! -f ./${f} ]; then echo "No se encontró ~/${f}"; exit 127; fi; if [ -x ./${f} ]; then ./${f}; else python3 ./${f}; fi`;
   const jolt = `V=~/vrmu_util; if [ ! -x "$V" ]; then echo "No se encontró ~/vrmu_util"; exit 127; fi; for h in 10.254.128.3 10.254.128.2; do echo "— leyendo versión en $h"; if timeout 60 "$V" --hostname=$h --envelope_enabled=false | grep -a4 version; then exit 0; fi; done; echo "Ni la .3 ni la .2 regresaron la versión"; exit 1`;
 
   const PASOS = [
-    { n: 'Reinicia el servidor DHCP', v: 'sudo systemctl restart isc-dhcp-server  ×3', c: tresVeces('isc-dhcp-server') },
-    { n: 'Reinicia el servidor DHCP6', v: 'sudo systemctl restart isc-dhcp-server6  ×3', c: tresVeces('isc-dhcp-server6') },
-    { n: 'Ping ZPE', v: 'ping 10.0.0.253', c: ping('10.0.0.253'), sinRed: 'El ZPE (10.0.0.253) no contestó el ping' },
-    { n: 'Ping Juniper', v: 'ping 10.0.0.254', c: ping('10.0.0.254'), sinRed: 'El Juniper (10.0.0.254) no contestó el ping' },
-    { n: 'Ping DAQ', v: 'ping 10.0.0.100', c: ping('10.0.0.100'), sinRed: 'El DAQ (10.0.0.100) no contestó el ping' },
-    { n: 'Valida versión de Jolt', v: '~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 version', c: jolt },
-    { n: 'Reboot Izumis', v: './reboot.py', c: script('reboot.py') },
-    { n: 'Valida servicios', v: './connection_validation.py', c: script('connection_validation.py') },
-    { n: 'Reinicio opentest', v: 'sudo systemctl restart opentest', c: reinicio('opentest') },
-    { n: 'Reinicio chillermonitor', v: 'sudo systemctl restart chillermonitor', c: reinicio('chillermonitor') },
-    { n: 'Reinicio Preboot', v: 'sudo systemctl restart ist-screening', c: reinicio('ist-screening') },
-    { n: 'Reinicio servicios Jolt', v: 'sudo systemctl restart vinsweepmonitor.service', c: reinicio('vinsweepmonitor.service') }
+    { n: 'Reinicia el servidor DHCP', v: 'sudo systemctl restart isc-dhcp-server  ×3', c: tresVeces('isc-dhcp-server'), img: dhcp(false) },
+    { n: 'Reinicia el servidor DHCP6', v: 'sudo systemctl restart isc-dhcp-server6  ×3', c: tresVeces('isc-dhcp-server6'), img: dhcp(true) },
+    { n: 'Ping ZPE', v: 'ping 10.0.0.253', c: hacerPing('10.0.0.253'), sinRed: 'El ZPE (10.0.0.253) no contestó el ping', img: ping(zpe, 'ZPE') },
+    { n: 'Ping Juniper', v: 'ping 10.0.0.254', c: hacerPing('10.0.0.254'), sinRed: 'El Juniper (10.0.0.254) no contestó el ping', img: ping(juniper, 'JUNIPER') },
+    { n: 'Ping DAQ', v: 'ping 10.0.0.100', c: hacerPing('10.0.0.100'), sinRed: 'El DAQ (10.0.0.100) no contestó el ping', img: ping(daq, 'DAQ') },
+    { n: 'Valida versión de Jolt', v: '~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 version', c: jolt, img: PASOS_IMG.jolt },
+    { n: 'Reboot Izumis', v: './reboot.py', c: script('reboot.py'), img: PASOS_IMG.izumi },
+    { n: 'Valida servicios', v: './connection_validation.py', c: script('connection_validation.py'), img: PASOS_IMG.servicios },
+    { n: 'Reinicio opentest', v: 'sudo systemctl restart opentest', c: reinicio('opentest'), img: PASOS_IMG.opentest },
+    { n: 'Reinicio chillermonitor', v: 'sudo systemctl restart chillermonitor', c: reinicio('chillermonitor'), img: PASOS_IMG.chiller },
+    { n: 'Reinicio Preboot', v: 'sudo systemctl restart ist-screening', c: reinicio('ist-screening'), img: PASOS_IMG.preboot },
+    { n: 'Reinicio servicios Jolt', v: 'sudo systemctl restart vinsweepmonitor.service', c: reinicio('vinsweepmonitor.service'), img: PASOS_IMG.joltsvc }
   ];
   const LIMITE_MIN = 15;   // ningún paso se queda colgado para siempre
 
-  // Estado de cada paso en pantalla
-  const pasos = PASOS.map(() => ({ est: 'pendiente', t: '', err: '', salida: [] }));
+  const pasos = PASOS.map(() => ({ est: 'pendiente', t: '', seg: 0, err: '', salida: [] }));
   let indices = [];        // en la corrida actual: posición → número de paso
   let fase = 'reposo', actual = -1, corriendo = false, logPath = null, preguntaHora = null;
-  const conLineas = [];
+  let inicio = null, fin = null, rutaReporte = null;
+  let equipo = { hostname: '', ip: '', rack: '', usuario: '' };
 
   const lista = $e('eo-lista');
   PASOS.forEach((p, i) => {
     const li = document.createElement('li');
     li.className = 'eo-paso pendiente';
-    li.innerHTML = '<span class="eo-ico"></span><div><div class="eo-nom"></div><div class="eo-cmd"></div></div><span class="eo-t"></span><div class="eo-err" hidden></div>';
-    li.querySelector('.eo-ico').textContent = i + 1;
+    li.innerHTML = '<div class="eo-paso-cab"><span class="eo-num"></span><span class="eo-der"><span class="eo-t"></span><span class="eo-ico"></span></span></div><div class="eo-img"></div><div><div class="eo-nom"></div><div class="eo-cmd"></div></div><div class="eo-err" hidden></div>';
+    li.querySelector('.eo-num').textContent = 'PASO ' + String(i + 1).padStart(2, '0');
+    li.querySelector('.eo-img').innerHTML = p.img;
     li.querySelector('.eo-nom').textContent = p.n;
     li.querySelector('.eo-cmd').textContent = p.v;
     lista.appendChild(li);
   });
 
+  /* ---------- Datos del rack ---------- */
+  const fechaTxt = (d) => d.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const horaTxt = (d) => d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  const rack = () => $e('eo-rack').value.trim() || equipo.rack || '';
+  function pintarFecha() { $e('eo-fecha').textContent = fechaTxt(inicio || new Date()) + ' ' + horaTxt(inicio || new Date()).slice(0, 5); }
+  async function cargarEquipo() {
+    if (window.sistema && typeof window.sistema.eoInfo === 'function') {
+      try { equipo = Object.assign(equipo, await window.sistema.eoInfo()); } catch (e) {}
+    }
+    $e('eo-host').textContent = equipo.hostname || '—';
+    $e('eo-ip').textContent = equipo.ip || '—';
+    if (!$e('eo-rack').value) $e('eo-rack').value = lsGet('eo_rack') || equipo.rack || '';
+    $e('eo-quien').value = $e('eo-quien').value || lsGet('eo_quien');
+    $e('eo-para').value = $e('eo-para').value || lsGet('eo_para');
+    pintarFecha();
+  }
+  $e('eo-rack').addEventListener('change', () => lsSet('eo_rack', $e('eo-rack').value.trim() === String(equipo.rack) ? '' : $e('eo-rack').value.trim()));
+  $e('eo-quien').addEventListener('change', () => lsSet('eo_quien', $e('eo-quien').value.trim()));
+  $e('eo-para').addEventListener('change', () => lsSet('eo_para', $e('eo-para').value.trim()));
+  setInterval(() => { if (!inicio) pintarFecha(); }, 30000);
+
+  /* ---------- Errores entendibles ---------- */
   function explicar(i, linea) {
     const p = PASOS[i], d = pasos[i];
     const m = /FALLÓ \((.*)\)/.exec(linea || '');
@@ -7911,18 +8046,23 @@ function pintarSeleccionIzumi() {
     return msg + (ult ? '\n' + ult.slice(-400) : '');
   }
 
+  /* ---------- Pintar ---------- */
+  const cuenta = () => ({
+    ok: pasos.filter((d) => d.est === 'ok').length,
+    fallos: pasos.filter((d) => d.est === 'fallo').length,
+    hechos: pasos.filter((d) => d.est === 'ok' || d.est === 'fallo').length
+  });
   function pintar() {
     lista.querySelectorAll('.eo-paso').forEach((li, i) => {
       const d = pasos[i];
       li.className = 'eo-paso ' + d.est;
-      li.querySelector('.eo-ico').textContent = d.est === 'ok' ? '✓' : d.est === 'fallo' ? '✕' : d.est === 'detenido' ? '■' : i + 1;
+      li.querySelector('.eo-ico').textContent = d.est === 'ok' ? '✓' : d.est === 'fallo' ? '✕' : d.est === 'detenido' ? '■' : '';
       li.querySelector('.eo-t').textContent = d.est === 'ejecutando' ? 'corriendo…' : d.t;
       const er = li.querySelector('.eo-err');
       er.hidden = !(d.est === 'fallo' && d.err);
       er.textContent = d.err;
     });
-    const hechos = pasos.filter((d) => d.est === 'ok' || d.est === 'fallo').length;
-    const fallos = pasos.filter((d) => d.est === 'fallo').length;
+    const { fallos, hechos } = cuenta();
     const enCurso = corriendo ? indices[actual] : -1;
     $e('eo-pct').textContent = hechos + ' / ' + PASOS.length;
     $e('eo-barra').style.width = (hechos / PASOS.length * 100) + '%';
@@ -7930,32 +8070,31 @@ function pintarSeleccionIzumi() {
       ? 'Paso ' + (enCurso + 1) + ' de ' + PASOS.length + ': ' + (PASOS[enCurso] ? PASOS[enCurso].n : '')
       : fase === 'reposo' ? 'Listo para iniciar'
       : fallos ? 'Terminó con ' + fallos + (fallos === 1 ? ' error' : ' errores')
-      : fase === 'detenido' ? 'Detenido' : 'Completado';
-    const dlg = document.querySelector('.eo-dlg');
-    dlg.classList.toggle('fin-ok', !corriendo && fase === 'listo' && !fallos);
-    dlg.classList.toggle('fin-err', !corriendo && fallos > 0);
-    const res = $e('eo-res');
-    res.hidden = corriendo || fase === 'reposo';
-    if (!res.hidden) {
-      const malos = pasos.map((d, i) => d.est === 'fallo' ? (i + 1) + '. ' + PASOS[i].n : null).filter(Boolean);
-      res.className = 'eo-res ' + (malos.length ? 'err' : fase === 'detenido' ? 'stop' : 'ok');
-      res.textContent = malos.length ? '✕ Fallaron: ' + malos.join(' · ')
-        : fase === 'detenido' ? '■ Se detuvo antes de terminar.' : '✓ EngineOut completado: los 12 pasos salieron bien.';
-    }
+      : fase === 'detenido' ? 'Detenido' : 'Completado ✓';
+    const sec = $e('engineout');
+    sec.classList.toggle('fin-ok', !corriendo && fase === 'listo' && !fallos);
+    sec.classList.toggle('fin-err', !corriendo && fallos > 0);
     const go = $e('eo-go');
     go.textContent = corriendo ? 'Detener' : fase === 'reposo' ? 'Iniciar EngineOut' : 'Correr todo de nuevo';
     go.classList.toggle('btn-rojo', corriendo);
     $e('eo-reintentar').hidden = corriendo || !fallos;
-    $e('eo-log').hidden = !logPath;
-    // Botón de la pantalla principal
-    const b = $e('eo-btn'), mini = $e('eo-mini');
-    b.classList.toggle('corre', corriendo);
-    b.classList.toggle('mal', !corriendo && fallos > 0);
-    b.classList.toggle('bien', !corriendo && fase === 'listo' && !fallos);
-    mini.hidden = !corriendo && fase === 'reposo';
-    mini.textContent = corriendo ? (enCurso + 1) + '/' + PASOS.length : fallos ? '✕ ' + fallos : '✓';
+    $e('eo-rack').disabled = corriendo;
+    pintarReporte();
   }
 
+  function pintarReporte() {
+    const rep = $e('eo-rep');
+    rep.hidden = corriendo || fase === 'reposo' || !inicio;
+    if (rep.hidden) return;
+    const { ok, fallos } = cuenta();
+    rep.className = 'card eo-rep ' + (fallos ? 'err' : fase === 'detenido' ? 'stop' : 'ok');
+    $e('eo-rep-ico').textContent = fallos ? '✕' : fase === 'detenido' ? '■' : '✓';
+    $e('eo-rep-tit').textContent = 'Reporte · Rack ' + (rack() || '—') + ' · ' + (fallos ? fallos + (fallos === 1 ? ' paso falló' : ' pasos fallaron') : fase === 'detenido' ? 'detenido' : 'todo bien');
+    $e('eo-rep-sub').textContent = fechaTxt(inicio) + ' · ' + horaTxt(inicio) + (fin ? ' a ' + horaTxt(fin) + ' (' + duracion(fin - inicio) + ')' : '') + ' · ' + ok + ' de ' + PASOS.length + ' correctos';
+    $e('eo-log').hidden = !logPath;
+  }
+
+  /* ---------- Contraseña / preguntas ---------- */
   function pintarPregunta(p) {
     const f = $e('eo-pide');
     f.hidden = !(corriendo && p);
@@ -7968,7 +8107,7 @@ function pintarSeleccionIzumi() {
     inp.type = esPass ? 'password' : 'text';
     inp.value = '';
     $e('eo-rec-lbl').hidden = !esPass;
-    if (!$e('eo-modal').hidden) setTimeout(() => inp.focus(), 30);
+    if ($e('engineout').classList.contains('active')) setTimeout(() => inp.focus(), 30);
     // Si hay llave USB con la contraseña de sudo, se contesta sola
     if (esPass && p.sudo && window.sistema && typeof window.sistema.llaveLeer === 'function') {
       window.sistema.llaveLeer().then((r) => {
@@ -7979,40 +8118,49 @@ function pintarSeleccionIzumi() {
       }).catch(() => {});
     }
   }
+  $e('eo-pide').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const s = api(); if (!s) return;
+    const inp = $e('eo-pide-in');
+    const secreto = inp.type === 'password';
+    const r = await s.cmdsResponder(inp.value, { secreto, recordar: secreto && $e('eo-recordar').checked });
+    if (r && r.ok) { inp.value = ''; $e('eo-pide').hidden = true; }
+  });
 
+  /* ---------- Estado que manda la app ---------- */
   window.eoEstado = function (s) {
-    if (!s) return;
-    const mio = s.origen === 'engineout';
-    if (!mio) { if (s.fase === 'ejecutando' && corriendo) { corriendo = false; pintar(); } return; }
+    if (!s || s.origen !== 'engineout') return;
+    const antes = corriendo;
     fase = s.fase || 'reposo';
     corriendo = fase === 'ejecutando';
     actual = s.actual;
     if (s.logPath) logPath = s.logPath;
     if (s.nombres && s.nombres.length && !indices.length) indices = s.nombres.map((n) => PASOS.findIndex((p) => p.n === n));
+    if (corriendo && !inicio) inicio = new Date(s.inicio || Date.now());
     (s.resultados || []).forEach((r, k) => {
       const i = indices[k];
       if (i == null || i < 0) return;
-      if (r === 'pendiente' && pasos[i].est !== 'pendiente' && corriendo && k > s.actual) pasos[i].est = 'pendiente';
-      else if (r !== 'pendiente') pasos[i].est = r;
+      if (r !== 'pendiente') pasos[i].est = r;
     });
     if (!corriendo) for (const d of pasos) if (d.est === 'ejecutando') d.est = 'detenido';
     pintarPregunta(s.pide);
     pintar();
+    if (antes && !corriendo) terminado();
   };
 
   function agregarCon(arr) {
     const con = $e('eo-con');
     const abajo = con.scrollTop + con.clientHeight >= con.scrollHeight - 8;
     for (const l of arr) {
-      conLineas.push(l);
       const sp = document.createElement('span');
       if (l.t === 'sys') sp.className = 's'; else if (l.t === 'err') sp.className = 'e';
       sp.textContent = l.s + '\n';
       con.appendChild(sp);
     }
-    while (con.childNodes.length > 1500) con.removeChild(con.firstChild);
+    while (con.childNodes.length > 2000) con.removeChild(con.firstChild);
     if (abajo) con.scrollTop = con.scrollHeight;
   }
+  const duracion = (ms) => { const s = Math.round(ms / 1000); return s >= 60 ? Math.floor(s / 60) + ' min ' + (s % 60) + ' s' : s + ' s'; };
 
   window.eoLineas = function (arr) {
     if (!Array.isArray(arr)) return;
@@ -8021,9 +8169,10 @@ function pintarSeleccionIzumi() {
       if (m) {
         const i = indices[Number(m[1]) - 1];
         if (i != null && i >= 0) {
-          pasos[i].t = Number(m[4]) >= 60 ? Math.floor(m[4] / 60) + ' min ' + Math.round(m[4] % 60) + ' s' : Math.round(m[4] * 10) / 10 + ' s';
+          pasos[i].seg = Number(m[4]);
+          pasos[i].t = duracion(pasos[i].seg * 1000);
           if (m[3].startsWith('FALLÓ')) { pasos[i].est = 'fallo'; pasos[i].err = explicar(i, m[3]); }
-          else if (m[3] === 'OK') pasos[i].est = 'ok';
+          else if (m[3] === 'OK') { pasos[i].est = 'ok'; pasos[i].err = ''; }
         }
       } else if (l.t !== 'sys' && corriendo) {
         const i = indices[actual];
@@ -8034,64 +8183,189 @@ function pintarSeleccionIzumi() {
     pintar();
   };
 
-  async function correr(cuales) {
+  /* ---------- Correr ---------- */
+  async function correr(cuales, nuevo) {
     const s = api();
-    if (!s) { mostrarRes('err', 'Abre la app con Electron para correr EngineOut.'); return; }
+    if (!s) { mensaje('err', 'Abre la app con Electron para correr EngineOut.'); return; }
+    if (!rack()) { $e('eo-rack').focus(); mensajeArriba('Escribe el número de rack antes de iniciar.'); return; }
+    if (nuevo) for (let i = 0; i < pasos.length; i++) pasos[i] = { est: 'pendiente', t: '', seg: 0, err: '', salida: [] };
+    else for (const i of cuales) pasos[i] = { est: 'pendiente', t: '', seg: 0, err: '', salida: [] };
     indices = cuales.slice();
-    for (const i of cuales) pasos[i] = { est: 'pendiente', t: '', err: '', salida: [] };
-    logPath = null;
+    logPath = null; rutaReporte = null; fin = null;
+    if (nuevo || !inicio) inicio = new Date();
+    pintarFecha();
     $e('eo-con').textContent = '';
-    agregarCon([{ t: 'sys', s: '— EngineOut · ' + new Date().toLocaleString('es') + ' —' }]);
+    agregarCon([{ t: 'sys', s: '— EngineOut · Rack ' + rack() + ' · ' + new Date().toLocaleString('es-MX') + ' —' }]);
     corriendo = true; fase = 'ejecutando'; actual = 0;
+    $e('eo-msg').hidden = true;
     pintar();
     try {
       const r = await s.cmdsEjecutar(cuales.map((i) => PASOS[i].c), false, LIMITE_MIN, { origen: 'engineout', nombres: cuales.map((i) => PASOS[i].n) });
       if (r && r.ok === false) {
-        corriendo = false; fase = 'reposo';
-        pintar();
-        mostrarRes('err', '✕ No se pudo iniciar: ' + (r.error || 'error desconocido') + (/en curso/.test(r.error || '') ? ' (espera a que termine la actualización de rectificadores)' : ''));
-      } else if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Inició', cuales.length + ' paso(s)');
+        corriendo = false; fase = 'reposo'; inicio = null; pintar();
+        mensajeArriba('No se pudo iniciar: ' + (r.error || 'error desconocido') + (/en curso/.test(r.error || '') ? ' (espera a que termine la actualización de rectificadores)' : ''));
+      } else if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Inició', 'Rack ' + rack() + ' · ' + cuales.length + ' paso(s)');
     } catch (e) {
-      corriendo = false; fase = 'reposo'; pintar();
-      mostrarRes('err', '✕ Error al iniciar: ' + e.message);
+      corriendo = false; fase = 'reposo'; inicio = null; pintar();
+      mensajeArriba('Error al iniciar: ' + e.message);
     }
   }
-  function mostrarRes(cls, txt) { const r = $e('eo-res'); r.hidden = false; r.className = 'eo-res ' + cls; r.textContent = txt; }
+  function mensajeArriba(t) { $e('eo-estado').textContent = '⚠ ' + t; }
+  function mensaje(cls, t) { const m = $e('eo-msg'); m.hidden = false; m.className = 'eo-msg ' + cls; m.textContent = t; }
 
-  const abrir = () => { $e('eo-modal').hidden = false; pintar(); };
-  const cerrar = () => { $e('eo-modal').hidden = true; };
-  $e('eo-btn').addEventListener('click', abrir);
-  $e('eo-cerrar').addEventListener('click', cerrar);
-  $e('eo-cerrar-x').addEventListener('click', cerrar);
-  $e('eo-modal').addEventListener('mousedown', (e) => { if (e.target === $e('eo-modal')) cerrar(); });
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$e('eo-modal').hidden) cerrar(); });
   $e('eo-go').addEventListener('click', () => {
     if (corriendo) {
       if (confirm('¿Detener EngineOut? El paso que está corriendo se corta.')) api() && api().cmdsDetener();
       return;
     }
-    if (!confirm('Se van a reiniciar DHCP, opentest, chillermonitor, Preboot y los servicios de Jolt, y se reinician las Izumis. ¿Iniciar EngineOut?')) return;
-    correr(PASOS.map((_, i) => i));
+    if (!rack()) { $e('eo-rack').focus(); mensajeArriba('Escribe el número de rack antes de iniciar.'); return; }
+    if (!confirm('Rack ' + rack() + ': se van a reiniciar DHCP, opentest, chillermonitor, Preboot y los servicios de Jolt, y se reinician las Izumis.\n\n¿Iniciar EngineOut?')) return;
+    correr(PASOS.map((_, i) => i), true);
   });
   $e('eo-reintentar').addEventListener('click', () => {
     const malos = pasos.map((d, i) => d.est === 'fallo' ? i : -1).filter((i) => i >= 0);
-    if (malos.length) correr(malos);
+    if (malos.length) correr(malos, false);
   });
   $e('eo-ver').addEventListener('click', () => {
     const c = $e('eo-con'); c.hidden = !c.hidden;
-    $e('eo-ver').textContent = c.hidden ? 'Ver salida' : 'Ocultar salida';
+    $e('eo-ver').textContent = c.hidden ? 'Ver salida de los comandos' : 'Ocultar salida';
     if (!c.hidden) c.scrollTop = c.scrollHeight;
   });
   $e('eo-log').addEventListener('click', () => api() && api().cmdsAbrirLog());
-  $e('eo-pide').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const s = api(); if (!s) return;
-    const inp = $e('eo-pide-in');
-    const secreto = inp.type === 'password';
-    const r = await s.cmdsResponder(inp.value, { secreto, recordar: secreto && $e('eo-recordar').checked });
-    if (r && r.ok) { inp.value = ''; $e('eo-pide').hidden = true; }
-    else if (r && r.error) mostrarRes('err', r.error);
+
+  /* ---------- Reporte ---------- */
+  const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  function datosReporte() {
+    const { ok, fallos } = cuenta();
+    const resultado = fallos ? 'CON ERRORES (' + fallos + ')' : fase === 'detenido' ? 'DETENIDO' : 'COMPLETADO';
+    return {
+      rack: rack() || '—', quien: $e('eo-quien').value.trim(), host: equipo.hostname, ip: equipo.ip, usuario: equipo.usuario,
+      fecha: fechaTxt(inicio || new Date()), inicio: horaTxt(inicio || new Date()), fin: fin ? horaTxt(fin) : '—',
+      duracion: inicio && fin ? duracion(fin - inicio) : '—', ok, fallos, resultado, notas: $e('eo-notas').value.trim()
+    };
+  }
+  const estTxt = (e) => ({ ok: 'OK', fallo: 'FALLÓ', detenido: 'DETENIDO', ejecutando: 'CORRIENDO', pendiente: 'NO SE CORRIÓ' })[e] || e;
+  function asunto(d) { return 'EngineOut · Rack ' + d.rack + ' · ' + d.fecha + ' ' + d.inicio.slice(0, 5) + ' · ' + (d.fallos ? d.fallos + ' error(es)' : d.resultado === 'DETENIDO' ? 'detenido' : 'OK'); }
+  function reporteTexto(d) {
+    const L = [];
+    L.push('REPORTE ENGINEOUT', '');
+    L.push('Rack:        ' + d.rack);
+    L.push('Fecha:       ' + d.fecha);
+    L.push('Hora:        ' + d.inicio + ' a ' + d.fin + ' (' + d.duracion + ')');
+    L.push('Equipo:      ' + (d.host || '—') + ' · IP ' + (d.ip || '—'));
+    if (d.quien) L.push('Hecho por:   ' + d.quien);
+    L.push('Resultado:   ' + d.resultado + ' · ' + d.ok + ' de ' + PASOS.length + ' pasos correctos', '');
+    L.push('Lo que se le hizo:');
+    PASOS.forEach((p, i) => {
+      const x = pasos[i];
+      L.push((x.est === 'ok' ? ' [✓] ' : x.est === 'fallo' ? ' [✕] ' : ' [ ] ') + String(i + 1).padStart(2, ' ') + '. ' + p.n + ' — ' + estTxt(x.est) + (x.t ? ' (' + x.t + ')' : ''));
+      L.push('        $ ' + p.v);
+      if (x.est === 'fallo' && x.err) L.push('        ' + x.err.split('\n').join('\n        '));
+    });
+    if (d.notas) L.push('', 'Notas: ' + d.notas);
+    L.push('', 'Generado por Connection Validation · EngineOut');
+    return L.join('\n');
+  }
+  function reporteHtml(d) {
+    const color = d.fallos ? '#c8261d' : d.resultado === 'DETENIDO' ? '#d48806' : '#12894a';
+    const fila = (k, v) => `<tr><td style="padding:4px 14px 4px 0;color:#5b6676;font-size:13px;white-space:nowrap">${k}</td><td style="padding:4px 0;font-size:14px;font-weight:600;color:#16202b">${v}</td></tr>`;
+    const filas = PASOS.map((p, i) => {
+      const x = pasos[i];
+      const c = x.est === 'ok' ? '#12894a' : x.est === 'fallo' ? '#c8261d' : '#8a94a3';
+      const ico = x.est === 'ok' ? '✓' : x.est === 'fallo' ? '✕' : '–';
+      return `<tr style="border-top:1px solid #e3e7ec">
+        <td style="padding:9px 8px;text-align:center"><span style="display:inline-block;width:22px;height:22px;line-height:22px;border-radius:11px;background:${c};color:#fff;font-weight:700;font-size:13px">${ico}</span></td>
+        <td style="padding:9px 8px;font-size:13.5px;color:#16202b"><b>${i + 1}. ${esc(p.n)}</b><div style="font-family:monospace;font-size:11.5px;color:#5b6676;margin-top:2px">${esc(p.v)}</div>${x.est === 'fallo' && x.err ? `<div style="margin-top:6px;padding:6px 8px;background:#fbecea;border-left:3px solid #c8261d;color:#c8261d;font-family:monospace;font-size:12px;white-space:pre-wrap">${esc(x.err)}</div>` : ''}</td>
+        <td style="padding:9px 8px;font-size:12px;font-weight:700;color:${c};white-space:nowrap">${estTxt(x.est)}</td>
+        <td style="padding:9px 8px;font-family:monospace;font-size:12px;color:#5b6676;white-space:nowrap">${esc(x.t)}</td></tr>`;
+    }).join('');
+    return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(asunto(d))}</title></head>
+<body style="margin:0;padding:24px 12px;background:#eceff3;font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;color:#16202b">
+<div style="max-width:720px;margin:0 auto;background:#fff;border:1px solid #d8dde4;border-radius:14px;overflow:hidden">
+  <div style="padding:20px 24px;border-bottom:4px solid ${color}">
+    <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#1d5ccf;font-weight:700">Connection Validation</div>
+    <div style="font-size:24px;font-weight:800;margin-top:4px">Reporte EngineOut · Rack ${esc(d.rack)}</div>
+    <div style="display:inline-block;margin-top:10px;padding:5px 12px;border-radius:99px;background:${color};color:#fff;font-size:13px;font-weight:700">${esc(d.resultado)} · ${d.ok} de ${PASOS.length} correctos</div>
+  </div>
+  <div style="padding:16px 24px">
+    <table style="border-collapse:collapse">${fila('Rack', esc(d.rack))}${fila('Fecha', esc(d.fecha))}${fila('Hora', esc(d.inicio) + ' a ' + esc(d.fin) + ' <span style="color:#5b6676;font-weight:400">(' + esc(d.duracion) + ')</span>')}${fila('Equipo', esc(d.host || '—') + ' · ' + esc(d.ip || '—'))}${d.quien ? fila('Hecho por', esc(d.quien)) : ''}</table>
+  </div>
+  <div style="padding:0 24px 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#5b6676;font-weight:700">Lo que se le hizo</div>
+  <table style="width:100%;border-collapse:collapse">${filas}</table>
+  ${d.notas ? `<div style="margin:16px 24px 0;padding:10px 12px;background:#f4f6f9;border-radius:8px;font-size:13.5px"><b>Notas:</b> ${esc(d.notas)}</div>` : ''}
+  <div style="padding:18px 24px;color:#8a94a3;font-size:11.5px">Generado por Connection Validation · EngineOut · ${esc(d.usuario || '')}@${esc(d.host || '')}</div>
+</div></body></html>`;
+  }
+  const nombreArchivo = (d) => 'reporte_rack' + String(d.rack).replace(/\W+/g, '') + '_' + (inicio || new Date()).toISOString().slice(0, 19).replace(/[T:]/g, '-');
+
+  async function guardarReporte() {
+    if (!window.sistema || typeof window.sistema.eoReporteGuardar !== 'function') return null;
+    const d = datosReporte();
+    const r = await window.sistema.eoReporteGuardar({ nombre: nombreArchivo(d), html: reporteHtml(d), texto: reporteTexto(d) }).catch(() => null);
+    if (r && r.ok) rutaReporte = r.ruta;
+    return r;
+  }
+
+  async function terminado() {
+    fin = new Date();
+    pintar();
+    const r = await guardarReporte();
+    if (r && r.ok) mensaje('info', 'Reporte guardado en ' + r.ruta);
+    $e('eo-rep').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  $e('eo-ver-rep').addEventListener('click', async () => {
+    const r = await guardarReporte();
+    if (r && r.ok) window.sistema.eoReporteAbrir(r.ruta);
+    else { const w = window.open('', '_blank'); if (w) { w.document.write(reporteHtml(datosReporte())); w.document.close(); } }
   });
+  $e('eo-mailto').addEventListener('click', () => {
+    const d = datosReporte();
+    if (window.sistema && typeof window.sistema.eoCorreoMailto === 'function') window.sistema.eoCorreoMailto({ para: $e('eo-para').value, asunto: asunto(d), texto: reporteTexto(d) });
+  });
+  $e('eo-enviar').addEventListener('click', async () => {
+    if (!window.sistema || typeof window.sistema.eoCorreoEnviar !== 'function') { mensaje('err', 'Abre la app con Electron para enviar correos.'); return; }
+    const para = $e('eo-para').value.trim();
+    if (!para) { $e('eo-para').focus(); mensaje('err', 'Escribe a qué correo se manda.'); return; }
+    lsSet('eo_para', para);
+    const b = $e('eo-enviar');
+    b.disabled = true; b.textContent = 'Enviando…';
+    mensaje('info', 'Enviando reporte a ' + para + '…');
+    const d = datosReporte();
+    await guardarReporte();
+    const r = await window.sistema.eoCorreoEnviar({ para, asunto: asunto(d), html: reporteHtml(d), texto: reporteTexto(d), nombre: nombreArchivo(d), logPath }).catch((e) => ({ ok: false, error: e.message }));
+    b.disabled = false; b.textContent = 'Enviar por correo';
+    if (r && r.ok) {
+      mensaje('ok', '✓ Reporte enviado a ' + r.para.join(', '));
+      if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Reporte enviado', r.para.join(', '));
+    } else {
+      mensaje('err', '✕ No se pudo enviar: ' + ((r && r.error) || 'error desconocido'));
+      if (/configurar el servidor|remitente/i.test((r && r.error) || '')) $e('eo-cfg').open = true;
+    }
+  });
+
+  /* ---------- Configuración del correo ---------- */
+  async function cargarCfg() {
+    if (!window.sistema || typeof window.sistema.eoCorreoConfig !== 'function') return;
+    const c = await window.sistema.eoCorreoConfig().catch(() => null);
+    if (!c) return;
+    $e('eo-c-host').value = c.host; $e('eo-c-puerto').value = c.puerto; $e('eo-c-seg').value = c.seguridad;
+    $e('eo-c-user').value = c.usuario; $e('eo-c-de').value = c.de;
+    $e('eo-c-pass').placeholder = c.hayPass ? '(guardada) · escribe para cambiarla' : 'Contraseña o contraseña de aplicación';
+    if (!$e('eo-para').value && c.para) $e('eo-para').value = c.para;
+  }
+  $e('eo-c-seg').addEventListener('change', () => { $e('eo-c-puerto').value = { ssl: 465, starttls: 587, ninguna: 25 }[$e('eo-c-seg').value]; });
+  $e('eo-c-guardar').addEventListener('click', async () => {
+    const r = await window.sistema.eoCorreoConfigGuardar({
+      host: $e('eo-c-host').value, puerto: $e('eo-c-puerto').value, seguridad: $e('eo-c-seg').value,
+      usuario: $e('eo-c-user').value, pass: $e('eo-c-pass').value, de: $e('eo-c-de').value, para: $e('eo-para').value
+    }).catch((e) => ({ ok: false, error: e.message }));
+    $e('eo-c-msg').textContent = r && r.ok ? '✓ Guardado' : '✕ ' + ((r && r.error) || 'No se pudo guardar');
+    if (r && r.ok) { $e('eo-c-pass').value = ''; cargarCfg(); }
+  });
+
+  cargarEquipo();
+  cargarCfg();
   pintar();
 })();
 </script>

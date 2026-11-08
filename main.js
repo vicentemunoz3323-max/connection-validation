@@ -27,6 +27,8 @@ const consolasIzumi = require('./izumi_main.js');
 
 // Remplazar Izumi: lee las MAC actuales de dhcpd.conf y las remplaza
 const remplazoIzumi = require('./remplazo_main.js');
+// EngineOut: reporte y envío por correo
+require('./engineout_main.js');
 // Chiller monitor: scripts bash en segundo plano con salida en la app
 const chillerMonitor = require('./chiller_main.js');
 // Configuración del servidor: gf_provisioning.py parchado, con pasos y preguntas en la app
