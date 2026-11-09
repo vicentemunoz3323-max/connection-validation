@@ -31,7 +31,7 @@ const remplazoIzumi = require('./remplazo_main.js');
 require('./engineout_main.js');
 // Chiller monitor: scripts bash en segundo plano con salida en la app
 const chillerMonitor = require('./chiller_main.js');
-// Configuración del servidor: gf_provisioning.py parchado, con pasos y preguntas en la app
+// Config Engine (server/config_engine.py): servidor, Juniper/ZPE y Tross, con pasos y preguntas en la app
 const servidor = require('./server_main.js');
 require('./llave_main.js');   // llave USB con las contraseñas
 require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO

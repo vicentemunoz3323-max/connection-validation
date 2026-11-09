@@ -191,31 +191,41 @@ echo listo</pre>
     <li><b>Chiller monitor (con OMRON y con termopar):</b> la app ya trae el script de configuración por dentro, el mismo para los dos. Sube el switch cola de rata y presiona <b>Configurar</b>: corre en segundo plano y la barra muestra sus 5 pasos. Solo queda <b>Configurado</b> (en verde) si el script termina sin errores. Si falla o lo detienes, queda <b>Sin configurar</b> y en la consola ves en qué paso se quedó. Al terminar, el switch se apaga solo.</li>
   </ul>
 
-  <h2 id="server">Configurar servidor</h2>
-  <p>Está en <b>Configuración → SERVER</b>. La app trae por dentro el script <code>gf_provisioning.py</code> y lo corre en segundo plano. En un servidor nuevo no hay que instalar nada antes: el <b>paso 2</b> crea la red SFC y enseguida instala lo que necesita la app (<code>python3-pexpect</code> y <code>minicom</code>).</p>
-  <h3>Pasos con palomita</h3>
-  <p>Son 20 pasos. Cada paso que termina bien queda con palomita (se guarda en <code>~/provisioning_state.json</code>). Si se corta o falla, al volver a correr <b>retoma desde el primer paso sin palomita</b>.</p>
+  <h2 id="server">Config Engine: servidor, Juniper/ZPE y Tross</h2>
+  <p>Está en <b>Configuración</b>. La app trae por dentro el script <code>config_engine.py</code> y lo corre en segundo plano. Son tres configuraciones independientes, cada una con sus pasos y palomitas:</p>
   <ul>
-    <li><b>Configurar / Continuar:</b> escribe el número de rack, sube el switch y presiona el botón. Corre todos los pasos que faltan. El botón cambia a <b>Detener</b> mientras corre.</li>
+    <li><b>SERVER</b> (18 pasos): red SFC, seguridad, Ansible, DHCP, netplan, herramientas, Chrome y reinicio. En un servidor nuevo el paso 2 instala lo que necesita la app (<code>python3-pexpect</code> y <code>minicom</code>).</li>
+    <li><b>JUNIPER y ZPE</b> (2 pasos): por cable de consola. Cada uno se puede correr solo.</li>
+    <li><b>TROSS</b> (15 pasos): VRMU util, MAC del Tross y las 13 etapas (U-Boot, Linux, imagen, firmware, voltajes). "Tross desde cero" repite las 13 etapas.</li>
+  </ul>
+  <h3>Pasos con palomita</h3>
+  <p>Cada paso que termina bien queda con palomita: las del servidor y Juniper/ZPE en <code>~/engine_flags.json</code> y las del Tross en <code>~/engine_flags_tross.json</code> (si el rack traía los archivos de antes, se copian solos). Si se corta, falla o se reinicia el servidor, al volver a correr <b>retoma desde el primer paso sin palomita</b>. Se corre una configuración a la vez.</p>
+  <ul>
+    <li><b>Configurar / Continuar:</b> sube el switch y presiona el botón (en SERVER escribe antes el número de rack; en TROSS puedes escribir la MAC). Corre todos los pasos que faltan.</li>
     <li><b>Correr</b> (en cada paso): corre solo ese paso. Si ya tenía palomita, se le quita y se vuelve a hacer.</li>
     <li><b>Desmarcar:</b> le quita la palomita para que el flujo completo lo repita.</li>
   </ul>
-  <h3>Contraseñas</h3>
-  <p>Al correr, una ventana pide solo las contraseñas que necesitan los pasos que faltan (sudo, vault de Ansible, mirror, root del Juniper, admin del ZPE). <b>No se guardan</b>: se usan en esa corrida y se borran. No están escritas en el script.</p>
+  <h3>Valores</h3>
+  <p>Todo lo que antes estaba escrito en el script (ligas, IPs, usuarios, puertos, archivos de TFTP, md5, versiones, voltajes y tiempos) se cambia en la pestaña <b>Valores</b>, sin tocar código. Las contraseñas de Juniper, ZPE y Tross también van ahí y se guardan solo en esa PC; si se dejan vacías, se preguntan al correr.</p>
+  <h3>Contraseñas de sudo, vault y mirror</h3>
+  <p>Al correr, una ventana pide solo las que necesitan los pasos que faltan. <b>No se guardan</b>. Con la llave USB conectada se llenan solas.</p>
   <h3>Lo que te va pidiendo</h3>
   <ul>
-    <li><b>Cable del Juniper y del ZPE:</b> sale un dibujo con el puerto que parpadea (CON en el Juniper, CONSOLE en el ZPE). Conecta el cable, presiona <b>Listo</b>. Si no lo detecta, te lo vuelve a pedir.</li>
-    <li><b>Versión del Juniper incorrecta:</b> te dice qué versión tiene y cuál necesita. Haz el downgrade y vuelve a correr el paso Juniper.</li>
-    <li><b>Reinicio:</b> al terminar la configuración pregunta si reiniciar el servidor ahora o después.</li>
+    <li><b>Cables de consola:</b> dibujo con el puerto que parpadea (CON del Juniper, CONSOLE del ZPE, o CONSOLE del Tross al puerto 17 del ZPE). Conecta y presiona <b>Listo</b>.</li>
+    <li><b>MAC del Tross:</b> si no la escribiste, la pide. Si el DHCP tiene otra, escribe la correcta y la app la corrige sola.</li>
+    <li><b>Reinicia el Tross / Reinicia el ZPE / Reintentar descarga:</b> haz lo que dice y presiona el botón.</li>
+    <li><b>Voltaje bajo:</b> el Tross queda <b>en pausa</b>. Haz power cycle del rack, abre la app y presiona <b>Continuar</b>.</li>
+    <li><b>Versión del Juniper incorrecta:</b> te dice cuál tiene y cuál necesita. Haz el downgrade y vuelve a correr el paso Juniper.</li>
+    <li><b>Reinicio del servidor:</b> al terminar pregunta si reiniciar; si nadie contesta en 5 minutos, reinicia solo.</li>
   </ul>
   <h3>Si falla un paso</h3>
   <p>Arriba de la lista sale un cuadro rojo con el error y <b>pistas de cómo arreglarlo</b> (cable, red, contraseña, apt trabado, Ansible…). Arréglalo y presiona <b>Reintentar este paso</b>. "Ver log" abre el log de la corrida.</p>
   <h3>Consola</h3>
-  <p>Muestra toda la salida del script con colores: rojo error, amarillo aviso, verde bien, azul títulos. Las líneas nuevas se iluminan un momento. Aguanta corridas de miles de líneas; en pantalla se ven las últimas 4000 y el log guarda todo en <code>~/Ghostfish-Logs/server/</code>.</p>
+  <p>Muestra toda la salida del script con colores: rojo error, amarillo aviso, verde bien, azul títulos. Las líneas nuevas se iluminan un momento. Aguanta corridas de miles de líneas; en pantalla se ven las últimas 4000 y el log de cada corrida (<code>engine_server_…</code>, <code>engine_tross_…</code>, <code>engine_equipos_…</code>) guarda todo en <code>~/Ghostfish-Logs/server/</code>; el script además deja <code>~/engine_log_….log</code>.</p>
   <h3>Resultados</h3>
-  <p>La pestaña <b>Resultados</b> muestra cómo quedó el servidor, sacado de <code>~/provisioning_state.json</code>: rack, IP, hostname, MAC de las tarjetas de prueba, consola y estado del Juniper, MAC y consola del ZPE y MAC del Tross. Abajo están todas las banderas (incluidas las de versiones anteriores del script) y el archivo completo. "Copiar resumen" copia todo en texto para pegarlo donde quieras. Si el archivo trae contraseñas guardadas por una versión vieja del script, sale un aviso con un botón para quitarlas.</p>
+  <p>La pestaña <b>Resultados</b> muestra cómo quedó el servidor, sacado de <code>~/engine_flags.json</code>: rack, IP, hostname, MAC de las tarjetas de prueba, consola y estado del Juniper, MAC y consola del ZPE y MAC del Tross. Abajo están todas las banderas (incluidas las de versiones anteriores del script) y el archivo completo. "Copiar resumen" copia todo en texto para pegarlo donde quieras. Si el archivo trae contraseñas guardadas por una versión vieja del script, sale un aviso con un botón para quitarlas.</p>
   <h3>Verificar</h3>
-  <p>La pestaña <b>Verificar</b> comprueba que todo quedó instalado como debe: nombre e IP del servidor, conexión SFC, gateway, mirror e internet, SSH, paquetes base, repos de seguridad y lego-infra, CrowdStrike, Ansible, NoMachine, Goss, Chrome, DHCP, tarjetas de prueba, Test Network, ZPE, Juniper, Tross, vrmu_util, el controlador de rectificadores, U22-Configurationserver y si falta reiniciar. Solo lee: no cambia nada ni pide contraseña. Lo que sale mal dice qué paso lo arregla y tiene un botón para correrlo. El resultado se guarda en <code>~/Ghostfish-Logs/server/</code>.</p>
+  <p>La pestaña <b>Verificar</b> comprueba que todo quedó instalado como debe: nombre e IP del servidor, conexión SFC, gateway, mirror e internet, SSH, paquetes base, repos de seguridad y lego-infra, CrowdStrike, Ansible, NoMachine, Goss, Chrome, DHCP, tarjetas de prueba, Test Network, ZPE, Juniper, Tross, vrmu_util, el controlador de rectificadores, las herramientas de prueba en el home y si falta reiniciar. Solo lee: no cambia nada ni pide contraseña. Lo que sale mal dice qué paso lo arregla y tiene un botón para correrlo. El resultado se guarda en <code>~/Ghostfish-Logs/server/</code>.</p>
   <h3>Valores y Script</h3>
   <ul>
     <li><b>Valores:</b> IPs, nombres de tarjetas, versión de JUNOS, ligas, etc. Lo que cambias queda marcado en naranja. "Valores de fábrica" regresa todo.</li>

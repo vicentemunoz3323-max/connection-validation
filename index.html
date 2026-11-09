@@ -1526,6 +1526,24 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .srv-paso.fallo .om-num { background: var(--red); color: #fff; font-size: 0; }
 .srv-paso.fallo .om-num::after { content: "✕"; font-size: 12px; }
 .srv-paso.siguiente { border-left-color: var(--blue); }
+.srv-paso.pausa { border-left-color: var(--yellow); background: rgba(212, 136, 6, .06); }
+.srv-paso.pausa .om-num { background: var(--yellow); color: #fff; font-size: 0; }
+.srv-paso.pausa .om-num::after { content: "⏸"; font-size: 11px; }
+.srv-paso .srv-etapa { font: 600 10px var(--mono); color: var(--muted); margin-left: 6px; }
+.srv-fallo.pausa { border-color: rgba(212, 136, 6, .45); border-left-color: var(--yellow); }
+.srv-fallo.pausa .srv-fallo-tit { color: #9a6200; }
+.srv-rack.srv-mac input { width: 175px; font-size: 13px; padding: 7px 8px; }
+.srv-rack.srv-mac input.mal { border-color: var(--red); }
+.srv-cero { margin-left: auto; }
+.srv-val-grupo { grid-column: 1 / -1; margin: 10px 0 0; padding-top: 10px; border-top: 1px solid var(--line); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.srv-val-grupo:first-child { margin-top: 0; padding-top: 0; border-top: 0; }
+.srv-valores label.largo { grid-column: 1 / -1; }
+.srv-valores label small { font-weight: 400; color: var(--muted); font: 10.5px var(--mono); }
+.srv-val-pass { display: flex; gap: 6px; }
+.srv-val-pass input { flex: 1; min-width: 0; }
+.srv-val-pass button { border: 1px solid var(--line); background: #fff; border-radius: 6px; padding: 0 9px; cursor: pointer; font-size: 12px; color: var(--muted); }
+.srv-pide-in.mal { border-color: var(--red); }
+.srv-pide-cuenta { font: 600 13px var(--mono); color: #9a6200; margin-top: 6px; }
 .srv-rack { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; font-weight: 600; color: #c7d2df; margin: 2px 0 4px; }
 .srv-rack input { width: 96px; padding: 7px 10px; font: 700 16px var(--mono); text-align: center; background: #0e1319; color: #fff; border: 1px solid #384251; border-radius: 8px; }
 .srv-rack-calc { white-space: pre-line; min-height: 30px; font: 11.5px/1.35 var(--mono); color: #8fa0b3; margin-bottom: 8px; }
@@ -2696,8 +2714,8 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <div class="card srv-cab">
               <div class="om-head">
                 <div>
-                  <div class="om-tit">Configurar servidor</div>
-                  <div class="om-sub">Corre todo el flujo o un paso suelto. Retoma desde el primer paso sin palomita.</div>
+                  <div class="om-tit" id="srv-tit">Configurar servidor</div>
+                  <div class="om-sub" id="srv-sub">Corre todo el flujo o un paso suelto. Retoma desde el primer paso sin palomita.</div>
                 </div>
                 <div class="srv-cab-der">
                   <button type="button" class="llave-chip" id="llave-chip" title="Crear o revisar la llave USB con las contraseñas"><span class="llave-ico">🔑</span><span id="llave-txt">Llave USB</span></button>
@@ -2708,8 +2726,8 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                 <button type="button" class="srv-tab sel" data-tab="pasos" role="tab">Pasos</button>
                 <button type="button" class="srv-tab" data-tab="valores" role="tab">Valores</button>
                 <button type="button" class="srv-tab" data-tab="script" role="tab">Script <span class="srv-mod" id="srv-mod" hidden>modificado</span></button>
-                <button type="button" class="srv-tab" data-tab="resultados" role="tab">Resultados</button>
-                <button type="button" class="srv-tab" data-tab="verificar" role="tab">Verificar</button>
+                <button type="button" class="srv-tab srv-solo-server" data-tab="resultados" role="tab">Resultados</button>
+                <button type="button" class="srv-tab srv-solo-server" data-tab="verificar" role="tab">Verificar</button>
               </div>
             </div>
 
@@ -2728,7 +2746,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
               </div>
               <div class="srv-top">
                 <div class="card srv-lista-card">
-                  <div class="card-head"><span class="card-title">Pasos</span><span class="card-count" id="srv-avance">0 de 20</span></div>
+                  <div class="card-head"><span class="card-title">Pasos</span><button type="button" class="btn btn-secundario btn-mini srv-cero" id="srv-cero" hidden title="Borra engine_flags_tross.json: las 13 etapas del Tross se vuelven a hacer">Tross desde cero</button><span class="card-count" id="srv-avance">0 de 20</span></div>
                   <ol class="srv-pasos" id="srv-pasos"></ol>
                 </div>
                 <div class="card lever-card ctrl-card srv-ctrl" id="srv-ctrl">
@@ -2736,7 +2754,8 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                     <span class="card-title">Configurar</span>
                     <span class="lever-status"><span class="lever-led"></span><span id="srv-ctrl-state">LISTO</span></span>
                   </div>
-                  <label class="srv-rack">Rack <input id="srv-rack" type="number" min="1" max="155" placeholder="54" inputmode="numeric"></label>
+                  <label class="srv-rack" id="srv-rack-lbl">Rack <input id="srv-rack" type="number" min="1" max="155" placeholder="54" inputmode="numeric"></label>
+                  <label class="srv-rack srv-mac" id="srv-mac-lbl" hidden>MAC <input id="srv-mac" type="text" placeholder="aa:bb:cc:dd:ee:ff" spellcheck="false" autocomplete="off"></label>
                   <div class="srv-rack-calc" id="srv-rack-calc"></div>
                   <div class="arm-row" id="srv-arm-row">
                     <div class="rat-wrap">
@@ -2760,7 +2779,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
             <!-- Valores -->
             <div class="srv-panel card" data-panel="valores" hidden>
-              <div class="card-head"><span class="card-title">Valores que usa el script</span><span class="card-count">Se guardan en esta PC</span></div>
+              <div class="card-head"><span class="card-title">Valores que usa el script</span><span class="card-count">Se guardan en esta PC · si algo cambia (una liga, una IP, una contraseña) se arregla aquí</span></div>
               <div class="srv-valores" id="srv-valores"></div>
               <div class="srv-acc">
                 <button type="button" class="btn btn-secundario" id="srv-val-fabrica">Valores de fábrica</button>
@@ -2770,7 +2789,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
             <!-- Script -->
             <div class="srv-panel card" data-panel="script" hidden>
-              <div class="card-head"><span class="card-title">gf_provisioning.py</span><span class="card-count" id="srv-sc-info">—</span></div>
+              <div class="card-head"><span class="card-title">config_engine.py</span><span class="card-count" id="srv-sc-info">—</span></div>
               <p class="srv-nota">Lo que guardes aquí es lo que corre la app. Antes de guardar se revisa que no tenga errores. "Regresar al original" pone la versión que viene con la app.</p>
               <textarea id="srv-sc" class="srv-sc" spellcheck="false" wrap="off"></textarea>
               <div class="srv-acc">
@@ -2780,7 +2799,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
               </div>
             </div>
 
-            <!-- Resultados: cómo quedó el servidor (sale de provisioning_state.json) -->
+            <!-- Resultados: cómo quedó el servidor (sale de engine_flags.json) -->
             <div class="srv-panel" data-panel="resultados" hidden>
               <div class="card srv-res">
                 <div class="srv-res-cab">
@@ -2802,7 +2821,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
                   <ul class="srv-res-flags" id="res-flags"></ul>
                 </div>
                 <div class="card">
-                  <div class="card-head"><span class="card-title">provisioning_state.json</span>
+                  <div class="card-head"><span class="card-title" id="res-archivo">engine_flags.json</span>
                     <div class="uc-actions">
                       <button type="button" class="btn btn-secundario btn-mini" id="res-copiar">Copiar resumen</button>
                       <button type="button" class="btn btn-secundario btn-mini" id="res-abrir">Abrir carpeta</button>
@@ -2831,7 +2850,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
             <div class="upd-console srv-console">
               <div class="uc-head">
-                <span>Consola · servidor</span>
+                <span id="srv-con-tit">Consola · servidor</span>
                 <span class="uc-meta" id="srv-meta">0 líneas</span>
                 <div class="uc-actions">
                   <button id="srv-seguir" class="btn btn-secundario btn-mini is-on" type="button">Seguir salida</button>
@@ -2900,6 +2919,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
               <div class="srv-ilus" id="srv-ilus"></div>
               <p class="srv-dlg-sub" id="srv-pide-msg"></p>
               <input type="text" id="srv-pide-in" class="srv-pide-in" hidden autocomplete="off" spellcheck="false">
+              <div class="srv-pide-cuenta" id="srv-pide-cuenta" hidden></div>
               <div class="srv-acc" id="srv-pide-acc"></div>
             </div>
           </div>
@@ -5121,7 +5141,7 @@ function pintarSeleccionIzumi() {
       const lista = archivos[d.id] || [];
       const srvC = (typeof srv !== 'undefined' && srv && srv.corriendo) || null;
       const enCurso = esRect(d.id) ? (rectCorriendo() ? 1 : 0)
-        : (d.id === 'server' && srvC && srvC.modo !== 'tross') || (d.id === 'tros' && srvC && srvC.modo === 'tross') ? 1
+        : GRUPO_DE[d.id] && srvC && srvC.grupo === GRUPO_DE[d.id] ? 1
         : lista.filter((a) => a.corriendo).length;
       const b = document.createElement('button');
       b.type = 'button';
@@ -5660,9 +5680,15 @@ function pintarSeleccionIzumi() {
   });
   q('plc-archivos').addEventListener('click', (e) => { e.preventDefault(); plcVerArchivos = !plcVerArchivos; pintarModo(); });
 
-  /* ===================== SERVER: configuración del servidor (gf_provisioning.py) ===================== */
+  /* ===================== SERVER / TROSS / JUNIPER Y ZPE: Config Engine (config_engine.py) ===================== */
   const srvApi = () => !!(window.sistema && typeof window.sistema.srvObtener === 'function');
-  var srv = { pasos: [], flags: {}, config: {}, valores: {}, defecto: {}, editado: false, corriendo: null, ultimo: null };
+  var srv = { pasos: [], grupos: {}, campos: [], flags: {}, config: {}, valores: {}, defecto: {}, editado: false, corriendo: null, ultimo: null };
+  // Tres configuraciones independientes: SERVER → server · TROSS → tross · JUNIPER y ZPE → equipos
+  const GRUPO_DE = { server: 'server', tros: 'tross', juniper: 'equipos', zpe: 'equipos' };
+  const NOMBRE_GRUPO = { server: 'SERVER', tross: 'TROSS', equipos: 'JUNIPER / ZPE' };
+  const srvG = () => GRUPO_DE[sel] || 'server';
+  const pasosDe = (g) => srv.pasos.filter((p) => p.grupo === g);
+  const pasosG = () => pasosDe(srvG());
   let srvTab = 'pasos', srvVerArchivos = false, srvArmado = false, srvEraMio = false, srvFalloOculto = null;
   let srvPassCb = null, srvPideActual = null;
   const SRV_MAX_DOM = 4000;
@@ -5674,6 +5700,7 @@ function pintarSeleccionIzumi() {
     juniper: ['Contraseña de root del Juniper', 'La que se le va a poner al Juniper'],
     zpe: ['Contraseña del ZPE', 'Usuario admin del Nodegrid']
   };
+  const VAL_GRUPO = { general: 'General', server: 'Servidor', equipos: 'Juniper y ZPE', tross: 'Tross' };
   const VAL_INFO = {
     red_base: 'Red base (sin el último número)', suma_rack: 'Se suma al rack para la IP', gateway: 'Gateway', dns: 'DNS',
     iface_sfc: 'Tarjeta SFC', hostname_prefijo: 'Prefijo del nombre', mirror_ip: 'IP del mirror', mirror_user: 'Usuario del mirror',
@@ -5684,7 +5711,7 @@ function pintarSeleccionIzumi() {
   };
   const srvTitulo = (id) => (srv.pasos.find((p) => p.id === id) || { titulo: id }).titulo;
   const srvCorre = () => !!srv.corriendo;
-  const srvMio = () => !!(srv.corriendo && srv.corriendo.modo !== 'tross');
+  const srvMio = () => !!(srv.corriendo && srv.corriendo.grupo === srvG());
   const durTxt = (s) => (s >= 3600 ? Math.floor(s / 3600) + ' h ' : '') + Math.floor((s % 3600) / 60) + ' min' + (s < 3600 ? ' ' + (s % 60) + ' s' : '');
   const esc = (t) => String(t == null ? '' : t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const reg = (a, d) => { if (typeof registrarAccion === 'function') registrarAccion('Server', a, d || ''); };
@@ -5710,6 +5737,21 @@ function pintarSeleccionIzumi() {
     vrmu_util_config: ['Haz <code>ping 172.24.125.172</code>: es de donde descarga.', 'Revisa la red SFC.'],
     download_python_tools: ['Haz <code>ping 172.24.125.174</code>: es de donde descarga.', 'Revisa que exista <code>/home/testusr/U22Tocinos</code> en ese servidor y que la contraseña de testusr sea la misma.'],
     fix_chrome: ['Si apt está trabado: <code>sudo dpkg --configure -a</code> y reintenta.'],
+    ensure_dhcp: ['Si dice que falta dhcpd.conf, instala el DHCP (<code>sudo apt install isc-dhcp-server</code>) o corre antes el paso "DHCP del rack".', 'Revisa el servicio: <code>journalctl -u isc-dhcp-server -n 50</code>.'],
+    tross_capture_mac: ['La MAC viene en la etiqueta del Tross (12 caracteres, con o sin ":").', 'Si falla al escribir el DHCP, revisa que <code>/etc/dhcp/dhcpd.conf</code> tenga una sola línea <code>host tross { hardware ethernet ...</code>.'],
+    tross_dhcp_applied: ['Revisa que <code>/etc/dhcp/dhcpd.conf</code> tenga la línea <code>host tross</code> y que el DHCP arranque.'],
+    tross_uboot_flashed: ['Revisa el cable de consola del Tross en el puerto 17 del ZPE y que el ZPE conteste (<code>ping 10.0.0.253</code>).', 'Reinicia el Tross justo cuando la app lo pida: tiene que salir "Hit any key to stop autoboot".', 'Si la consola se queda en solo lectura, reinicia el ZPE.'],
+    tross_linux_booted: ['Revisa que <code>/tftpboot/tross</code> exista (paso VRMU util) y que el DHCP esté arriba.', 'Si la versión de kernel cambió, actualízala en Valores → Versión de kernel esperada.'],
+    tross_imageset_downloaded: ['Si el md5 no coincide y la imagen es nueva, cámbialo en Valores → md5 de imageset.tgz.', 'Revisa la red hacia el servidor TFTP.'],
+    tross_imager_done: ['Tarda ~20 minutos: si se cortó, vuelve a correr la etapa.', 'Si la imagen es nueva, actualiza en Valores el md5 que imprime el imager.'],
+    tross_bootenv_saved: ['Si no salió "login:" tras el reset, espera a que arranque y vuelve a correr la etapa.'],
+    tross_zpe_eth1_reconfigured: ['Revisa la contraseña del ZPE en Valores y que <code>ssh admin@10.0.0.253</code> funcione.'],
+    tross_lease_detected: ['El Tross puede tardar en pedir IP: espera un par de minutos y reintenta.', 'Si la MAC de su red no es la del Tross + 2, cambia Valores → Se suma a la MAC.'],
+    tross_vrmu_flash_done: ['Revisa que <code>~/vrmu_util</code> exista y se pueda ejecutar (paso VRMU util).', 'Haz ping a la IP del lease del Tross.'],
+    tross_vrmu_upgrade_done: ['Revisa que el archivo de firmware esté en el home (Valores → Firmware periférico).'],
+    tross_vrmu_fw_version_checked: ['Si cambió la versión de Ledare, actualízala en Valores.', 'Espera unos minutos: el firmware puede seguir aplicándose.'],
+    tross_voltage_check_done: ['Si pide power cycle: apaga y enciende el rack completo y vuelve a correr el Tross.', 'Revisa que los rectificadores estén conectados.'],
+    tross_voltage_sequence_tested: ['Revisa en la consola qué rectificador no bajó al rango esperado.'],
     end_config_reboot: ['Revisa el resumen en la consola: lista los pasos que faltan.']
   };
   const PISTAS_TEXTO = [
@@ -5742,15 +5784,25 @@ function pintarSeleccionIzumi() {
     const c = srv.corriendo, e = c && c.estados && c.estados[id];
     if (e && e.estado === 'inicio') return 'corre';
     if (e && e.estado === 'fallo') return 'fallo';
+    if (e && e.estado === 'pausa') return 'pausa';
     if (srv.flags[id]) return 'hecho';
     if (!c && srv.ultimo && srv.ultimo.fallo && srv.ultimo.fallo.paso === id) return 'fallo';
+    if (!c && srv.ultimo && srv.ultimo.pausa && srv.ultimo.pausa.paso === id) return 'pausa';
     return '';
   }
-  function srvSiguiente() { const p = srv.pasos.find((x) => !srv.flags[x.id]); return p ? p.id : null; }
+  function srvSiguiente() { const p = pasosG().find((x) => !srv.flags[x.id]); return p ? p.id : null; }
 
   function srvPintar() {
-    if (sel !== 'server') return;
-    const c = srv.corriendo, mio = srvMio();
+    if (!GRUPO_DE[sel]) return;
+    const g = srvG(), pasos = pasosG(), info = (srv.grupos || {})[g] || {};
+    const c = srv.corriendo, mio = srvMio(), otro = c && !mio;
+    q('srv-tit').textContent = info.titulo || 'Configurar';
+    q('srv-con-tit').textContent = 'Consola · ' + (g === 'server' ? 'servidor' : g === 'tross' ? 'Tross' : 'Juniper y ZPE') + (otro ? ' (corriendo: ' + (NOMBRE_GRUPO[c.grupo] || '') + ')' : '');
+    q('srv-sub').textContent = (info.sub || '') + ' Corre todo o un paso suelto; retoma desde el primero sin palomita.';
+    document.querySelectorAll('#srv-guia .srv-solo-server').forEach((b) => { b.hidden = g !== 'server'; });
+    if (g !== 'server' && (srvTab === 'resultados' || srvTab === 'verificar')) srvTabSel('pasos');
+    q('srv-cero').hidden = g !== 'tross';
+    q('srv-cero').disabled = !!c;
     if (srvEraMio && !mio) srvArmar(false);   // al terminar, el switch se apaga solo
     srvEraMio = mio;
     // Pasos
@@ -5758,7 +5810,7 @@ function pintarSeleccionIzumi() {
     ol.textContent = '';
     const sig = srvSiguiente();
     let hechos = 0;
-    srv.pasos.forEach((p, i) => {
+    pasos.forEach((p, i) => {
       const est = srvEstadoDe(p.id);
       if (srv.flags[p.id]) hechos++;
       const li = document.createElement('li');
@@ -5767,7 +5819,7 @@ function pintarSeleccionIzumi() {
       const e = c && c.estados && c.estados[p.id];
       const dur = e && e.seg ? '<span class="srv-dur">' + durTxt(Math.round(e.seg)) + '</span>' : '';
       li.innerHTML = '<span class="om-num">' + (i + 1) + '</span><div><b>' + esc(p.titulo) + dur + '</b><small>' + esc(p.desc) +
-        (p.cable ? ' · necesita cable de consola' : '') + '</small></div><div class="srv-paso-acc"></div>';
+        (p.cable ? ' · necesita cable de consola' : '') + (p.siempre ? ' · se repite en cada corrida' : '') + '</small></div><div class="srv-paso-acc"></div>';
       if (est === 'corre') {
         li.insertAdjacentHTML('beforeend', '<div class="srv-vivo"><span>⏱ <span class="srv-crono" data-desde="' + ((e && e.t) || Date.now()) + '">00:00</span></span><span class="srv-ult"></span></div><div class="srv-barra-ind"></div>');
       }
@@ -5787,12 +5839,12 @@ function pintarSeleccionIzumi() {
       }
       ol.appendChild(li);
     });
-    const total = srv.pasos.length;
+    const total = pasos.length;
     q('srv-avance').textContent = hechos === total && total ? 'Todos listos ✓' : hechos + ' de ' + total;
     const pr = q('srv-prog');
-    pr.hidden = !(c && c.modo !== 'tross');
+    pr.hidden = !mio;
     if (!pr.hidden) {
-      const idx = c.actual ? srv.pasos.findIndex((p) => p.id === c.actual) + 1 : 0;
+      const idx = c.actual ? pasos.findIndex((p) => p.id === c.actual) + 1 : 0;
       q('srv-prog-txt').textContent = c.modo === 'paso' ? 'Paso suelto: ' + srvTitulo(c.paso) : (idx ? 'Paso ' + idx + ' de ' + total : 'Iniciando…');
       q('srv-prog-hecho').style.width = (total ? Math.round(hechos / total * 100) : 0) + '%';
       q('srv-prog-t').dataset.desde = c.inicio || Date.now();
@@ -5804,16 +5856,24 @@ function pintarSeleccionIzumi() {
     // Estado arriba
     const st = q('srv-estado');
     st.className = 'om-estado';
-    if (c && c.modo !== 'tross') { st.classList.add('run'); st.textContent = c.actual ? 'Corriendo · ' + srvTitulo(c.actual) : 'Iniciando…'; }
-    else if (hechos === total && total) { st.classList.add('ok'); st.textContent = 'Servidor configurado'; }
-    else if (srv.ultimo && srv.ultimo.fallo && srv.ultimo.modo !== 'tross') { st.classList.add('bad'); st.textContent = 'Falló · ' + srvTitulo(srv.ultimo.fallo.paso); }
+    const u = srv.ultimo && srv.ultimo.grupo === g ? srv.ultimo : null;
+    if (mio) { st.classList.add('run'); st.textContent = c.actual ? 'Corriendo · ' + srvTitulo(c.actual) : 'Iniciando…'; }
+    else if (otro) { st.classList.add('run'); st.textContent = 'Ocupado · ' + (NOMBRE_GRUPO[c.grupo] || ''); }
+    else if (hechos === total && total) { st.classList.add('ok'); st.textContent = g === 'server' ? 'Servidor configurado' : g === 'tross' ? 'Tross configurado' : 'Juniper y ZPE configurados'; }
+    else if (u && u.pausa) { st.textContent = 'En pausa · ' + srvTitulo(u.pausa.paso); }
+    else if (u && u.fallo) { st.classList.add('bad'); st.textContent = 'Falló · ' + srvTitulo(u.fallo.paso); }
     else st.textContent = hechos ? hechos + ' de ' + total + ' pasos' : 'Sin configurar';
 
-    // Rack
+    // Rack (servidor) o MAC (Tross)
+    q('srv-rack-lbl').hidden = g !== 'server';
+    q('srv-mac-lbl').hidden = g !== 'tross';
     const rackGuardado = srv.config && srv.config.rack_number;
     const inp = q('srv-rack');
     if (rackGuardado && !inp.value && document.activeElement !== inp) inp.value = rackGuardado;
     inp.disabled = !!c || !!srv.flags.set_ID;
+    const mac = q('srv-mac'), macG = srv.config && srv.config.tross_mac;
+    if (macG && !mac.value && document.activeElement !== mac) mac.value = macG;
+    mac.disabled = !!c || !!srv.flags.tross_capture_mac;
     srvRackCalc();
 
     // Control
@@ -5826,22 +5886,27 @@ function pintarSeleccionIzumi() {
     go.disabled = !mio && (!srvArmado || !!c || !srvApi());
     q('srv-arm-label').textContent = c ? 'Configurando…' : srvArmado ? 'Listo para configurar' : 'Sube el switch para activar';
     q('srv-hint').textContent = !srvApi() ? 'Abre la app con Electron para configurar'
-      : c && c.modo === 'tross' ? 'Se está aplicando la MAC del Tross'
+      : otro ? 'Espera: se está configurando ' + (NOMBRE_GRUPO[c.grupo] || 'otro equipo') + ' (se corre uno a la vez)'
       : c ? (c.pide ? 'El script espera tu respuesta' : 'Corriendo · puedes ver la consola abajo')
       : hechos === total && total ? 'Ya está todo. Desmarca un paso para repetirlo'
       : srvArmado ? (hechos ? 'Retoma desde: ' + srvTitulo(sig) : 'Presiona Configurar') : 'Sube el switch y presiona Configurar';
 
-    // Falla
-    const f = !c && srv.ultimo && !srv.ultimo.ok && !srv.ultimo.abort && srv.ultimo.modo !== 'tross' ? srv.ultimo.fallo : null;
-    const clave = f ? f.paso + '|' + srv.ultimo.fin : null;
+    // Falla o pausa (power cycle) del último intento de ESTE grupo
+    const pz = !c && u && u.pausa ? u.pausa : null;
+    const f = !c && u && !u.ok && !u.abort ? u.fallo : null;
+    const cosa = f || pz;
+    const clave = cosa ? cosa.paso + '|' + u.fin : null;
     const caja = q('srv-fallo');
-    caja.hidden = !f || srvFalloOculto === clave;
-    if (f && !caja.hidden) {
-      q('srv-fallo-tit').textContent = 'Falló: ' + srvTitulo(f.paso);
-      q('srv-fallo-err').textContent = f.error || 'Terminó con error (revisa la consola)';
-      q('srv-pistas').innerHTML = srvPistas(f.paso, f.error).map((p) => '<li>' + p + '</li>').join('');
-      q('srv-reintentar').disabled = !f.paso;
-      caja.dataset.clave = clave; caja.dataset.paso = f.paso || '';
+    caja.hidden = !cosa || srvFalloOculto === clave;
+    caja.classList.toggle('pausa', !!pz && !f);
+    if (cosa && !caja.hidden) {
+      q('srv-fallo-tit').textContent = (f ? 'Falló: ' : 'En pausa: ') + srvTitulo(cosa.paso);
+      q('srv-fallo-err').textContent = f ? (f.error || 'Terminó con error (revisa la consola)') : (pz.msg || '');
+      q('srv-pistas').innerHTML = f ? srvPistas(f.paso, f.error).map((p) => '<li>' + p + '</li>').join('') : '';
+      caja.querySelector('.srv-fallo-sub').hidden = !f;
+      q('srv-reintentar').textContent = f ? 'Reintentar este paso' : 'Continuar (ya hice el power cycle)';
+      q('srv-reintentar').disabled = !cosa.paso;
+      caja.dataset.clave = clave; caja.dataset.paso = cosa.paso || '';
     }
     q('srv-mod').hidden = !srv.editado;
     // Ventana de pregunta pendiente
@@ -5855,7 +5920,8 @@ function pintarSeleccionIzumi() {
   const reloj = (ms) => { const t = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(t / 3600), m = Math.floor(t % 3600 / 60), x = t % 60; return (h ? h + ':' + String(m).padStart(2, '0') : String(m).padStart(2, '0')) + ':' + String(x).padStart(2, '0'); };
   const hace = (ms) => { const t = Math.floor(ms / 1000); return t < 60 ? t + ' s' : Math.floor(t / 60) + ' min'; };
   function srvTic() {
-    if (!srv.corriendo || srv.corriendo.modo === 'tross') return;
+    if (!srvMio()) { srvCuenta(); return; }
+    srvCuenta();
     const ahora = Date.now();
     document.querySelectorAll('#srv-pasos .srv-crono').forEach((el) => { el.textContent = reloj(ahora - +el.dataset.desde); });
     const tt = q('srv-prog-t'); if (tt.dataset.desde) tt.textContent = reloj(ahora - +tt.dataset.desde);
@@ -5865,15 +5931,30 @@ function pintarSeleccionIzumi() {
     q('srv-prog-ult').textContent = txt; q('srv-prog-ult').classList.toggle('calla', calla > 180000);
   }
   setInterval(srvTic, 1000);
+  const RX_MAC12 = (t) => String(t || '').replace(/[^0-9a-f]/gi, '').length === 12;
   function srvRackCalc() {
     const v = srv.valores || {}, n = parseInt(q('srv-rack').value, 10);
     const el = q('srv-rack-calc');
+    if (srvG() === 'tross') {
+      const m = q('srv-mac').value.trim();
+      q('srv-mac').classList.toggle('mal', !!m && !RX_MAC12(m));
+      el.textContent = srv.flags.tross_capture_mac ? 'MAC aplicada en el DHCP → ' + (v.tross_ip || '10.0.0.251')
+        : m ? (RX_MAC12(m) ? 'Se pone en el DHCP → ' + (v.tross_ip || '10.0.0.251') : 'MAC no válida (12 caracteres)') : 'Escríbela aquí o te la pide al llegar a ese paso';
+      return;
+    }
+    if (srvG() === 'equipos') { el.textContent = 'Ten a la mano el cable de consola (RJ45 → USB)'; return; }
     if (srv.flags.set_ID && srv.config.ip_address) { el.textContent = srv.config.ip_address + '\n' + (srv.config.hostname || ''); return; }
     if (!n) { el.textContent = 'Escribe el número de rack'; return; }
     const oct = n + Number(v.suma_rack || 99);
     el.textContent = oct > 254 ? 'Rack fuera de rango (IP > 254)' : (v.red_base || '172.24.125.') + oct + '\n' + (v.hostname_prefijo || 'ghostfish-ist-flg-') + String(n).padStart(3, '0');
   }
   q('srv-rack').addEventListener('input', srvRackCalc);
+  q('srv-mac').addEventListener('input', srvRackCalc);
+  q('srv-cero').addEventListener('click', async () => {
+    if (!confirm('¿Empezar el Tross desde cero?\n\nSe borra engine_flags_tross.json y las 13 etapas se vuelven a hacer (U-Boot, imagen, firmware...).\nLo del servidor, la MAC y VRMU util no se tocan.')) return;
+    const r = await window.sistema.srvTrossCero().catch((e) => ({ ok: false, error: e.message }));
+    if (r && r.ok === false) alert(r.error); else reg('Tross desde cero');
+  });
 
   /* ---------- Switch y botón ---------- */
   function srvArmar(v) {
@@ -5887,7 +5968,7 @@ function pintarSeleccionIzumi() {
   q('srv-arm').addEventListener('click', () => { if (srvCorre()) return; srvArmar(!srvArmado); reg(srvArmado ? 'Switch ON' : 'Switch OFF'); srvPintar(); });
   q('srv-go').addEventListener('click', () => {
     if (srvMio()) {
-      if (confirm('¿Detener la configuración del servidor?\n\nEl paso que va corriendo queda sin palomita y se puede repetir.')) window.sistema.srvDetener();
+      if (confirm('¿Detener ' + ((srv.grupos[srvG()] || {}).titulo || 'la configuración').toLowerCase() + '?\n\nEl paso que va corriendo queda sin palomita y se puede repetir.')) window.sistema.srvDetener();
       return;
     }
     srvCorrerTodo();
@@ -5897,7 +5978,7 @@ function pintarSeleccionIzumi() {
   function srvPassDe(ids) {
     const s = new Set();
     for (const id of ids) for (const k of ((srv.pasos.find((p) => p.id === id) || {}).pass || [])) s.add(k);
-    return ['sudo', 'vault', 'mirror', 'juniper', 'zpe'].filter((k) => s.has(k));
+    return ['sudo', 'vault', 'mirror'].filter((k) => s.has(k));
   }
   function srvPedirPass(cuales, titulo) {
     return new Promise((resolve) => {
@@ -5938,31 +6019,34 @@ function pintarSeleccionIzumi() {
   async function srvCorrerTodo() {
     if (!srvApi() || srvCorre()) return;
     if (!srvArmado) { q('srv-hint').textContent = 'Primero sube el switch'; srvSacudir(); return; }
-    const faltan = srv.pasos.filter((p) => !srv.flags[p.id]).map((p) => p.id);
-    if (!faltan.length) { q('srv-hint').textContent = 'Ya está todo. Desmarca un paso para repetirlo'; return; }
-    const rack = q('srv-rack').value.trim();
-    if (faltan.includes('set_ID') && !/^\d+$/.test(rack)) { q('srv-hint').textContent = 'Escribe el número de rack'; q('srv-rack').focus(); srvSacudir('srv-rack'); return; }
+    const g = srvG();
+    const faltan = pasosG().filter((p) => !srv.flags[p.id] || p.siempre).map((p) => p.id);
+    if (!pasosG().some((p) => !srv.flags[p.id])) { q('srv-hint').textContent = 'Ya está todo. Desmarca un paso para repetirlo'; return; }
+    const rack = q('srv-rack').value.trim(), mac = q('srv-mac').value.trim();
+    if (g === 'server' && faltan.includes('set_ID') && !/^\d+$/.test(rack)) { q('srv-hint').textContent = 'Escribe el número de rack'; q('srv-rack').focus(); srvSacudir('srv-rack'); return; }
+    if (g === 'tross' && mac && !RX_MAC12(mac)) { q('srv-hint').textContent = 'La MAC del Tross no es válida'; q('srv-mac').focus(); srvSacudir('srv-mac'); return; }
     const pass = await srvPedirPass(srvPassDe(faltan), 'Para los ' + faltan.length + ' pasos que faltan.');
     if (!pass) return;
     srvFalloOculto = null;
-    reg('Presionó Configurar', faltan.length + ' pasos pendientes' + (rack ? ' · rack ' + rack : ''));
-    const r = await window.sistema.srvCorrer({ rack: rack || undefined, pass }).catch((e) => ({ ok: false, error: e.message }));
+    reg('Presionó Configurar · ' + (NOMBRE_GRUPO[g] || g), faltan.length + ' pasos pendientes' + (g === 'server' && rack ? ' · rack ' + rack : ''));
+    const r = await window.sistema.srvCorrer({ grupo: g, rack: (g === 'server' && rack) || undefined, trossMac: (g === 'tross' && RX_MAC12(mac) && mac) || undefined, pass }).catch((e) => ({ ok: false, error: e.message }));
     if (r && r.ok === false) { q('srv-hint').textContent = r.error || 'No se pudo iniciar'; srvSacudir(); }
   }
 
   async function srvCorrerPaso(id) {
     if (!srvApi() || srvCorre()) return;
-    let rack;
+    let rack, trossMac;
     if (id === 'set_ID') {
       rack = q('srv-rack').value.trim();
       if (!/^\d+$/.test(rack)) rack = undefined;   // el script lo pregunta en una ventana
     }
+    if (id === 'tross_capture_mac' && RX_MAC12(q('srv-mac').value)) trossMac = q('srv-mac').value.trim();
     const pass = await srvPedirPass(srvPassDe([id]), 'Paso: ' + srvTitulo(id));
     if (!pass) return;
     if (srv.flags[id]) { const d = await window.sistema.srvDesmarcar(id); if (d && d.ok === false) { alert(d.error); return; } }
     srvFalloOculto = null;
     reg('Corrió un paso', srvTitulo(id));
-    const r = await window.sistema.srvCorrer({ paso: id, rack, pass }).catch((e) => ({ ok: false, error: e.message }));
+    const r = await window.sistema.srvCorrer({ paso: id, rack, trossMac, pass }).catch((e) => ({ ok: false, error: e.message }));
     if (r && r.ok === false) alert(r.error || 'No se pudo iniciar');
   }
 
@@ -5972,12 +6056,18 @@ function pintarSeleccionIzumi() {
     if (r && r.ok === false) alert(r.error);
   }
 
-  q('srv-reintentar').addEventListener('click', () => { const p = q('srv-fallo').dataset.paso; if (p) srvCorrerPaso(p); });
+  q('srv-reintentar').addEventListener('click', () => {
+    const p = q('srv-fallo').dataset.paso;
+    if (!p) return;
+    if (q('srv-fallo').classList.contains('pausa')) { srvArmar(true); srvCorrerTodo(); }   // después del power cycle sigue con lo que falta
+    else srvCorrerPaso(p);
+  });
   q('srv-fallo-log').addEventListener('click', () => { if (srvApi()) window.sistema.srvAbrirLog(); });
   q('srv-fallo-cerrar').addEventListener('click', () => { srvFalloOculto = q('srv-fallo').dataset.clave; q('srv-fallo').hidden = true; });
 
   /* ---------- Ventana: lo que pide el script ---------- */
   function srvIlustracion(tipo) {
+    if (tipo === 'cable_tross') return srvIlusTross();
     const jun = tipo === 'cable_juniper';
     const nombre = jun ? 'JUNIPER' : 'ZPE · NODEGRID';
     const puerto = jun ? 'CON' : 'CONSOLE';
@@ -5998,10 +6088,38 @@ function pintarSeleccionIzumi() {
       '<text x="40" y="150" fill="#8fa0b3" font-family="Inter,sans-serif" font-size="12">Cable de consola (RJ45 → USB)</text>' +
       '</svg>';
   }
+  // Tross (arriba, puerto CONSOLE) → ZPE (abajo, puerto 17)
+  function srvIlusTross() {
+    let pz = '';
+    for (let i = 0; i < 16; i++) { const x = 120 + i * 30; pz += '<rect x="' + x + '" y="234" width="22" height="16" rx="2" fill="#2b323c" stroke="#4a5462"/>'; }
+    const x17 = 120 + 16 * 30;
+    return '<svg viewBox="0 0 680 300" role="img" aria-label="Cable de consola del Tross al puerto 17 del ZPE">' +
+      '<rect x="20" y="20" width="640" height="64" rx="8" fill="#1b2027" stroke="#3a434f"/>' +
+      '<text x="40" y="58" fill="#c7d2df" font-family="Inter,sans-serif" font-size="15" font-weight="700">TROSS</text>' +
+      '<rect x="160" y="40" width="46" height="24" rx="3" fill="#0e1319" stroke="#ffb400" class="puerto-hot"/>' +
+      '<text x="183" y="35" text-anchor="middle" fill="#ffcc4d" font-family="Inter,sans-serif" font-size="11" font-weight="700">CONSOLE</text>' +
+      '<path d="M183 64 C 183 150, ' + (x17 + 11) + ' 140, ' + (x17 + 11) + ' 234" fill="none" stroke="#3d8bff" stroke-width="5" stroke-linecap="round" class="cable"/>' +
+      '<rect x="20" y="214" width="640" height="66" rx="8" fill="#1b2027" stroke="#3a434f"/>' +
+      '<text x="40" y="250" fill="#c7d2df" font-family="Inter,sans-serif" font-size="13" font-weight="700">ZPE</text>' + pz +
+      '<rect x="' + x17 + '" y="234" width="22" height="16" rx="2" fill="#0e1319" stroke="#ffb400" class="puerto-hot"/>' +
+      '<text x="' + (x17 + 11) + '" y="268" text-anchor="middle" fill="#ffcc4d" font-family="Inter,sans-serif" font-size="11" font-weight="700">17</text>' +
+      '<text x="40" y="160" fill="#8fa0b3" font-family="Inter,sans-serif" font-size="12">Cable de consola (RJ45 ↔ RJ45)</text>' +
+      '</svg>';
+  }
+  // Cuenta regresiva de las preguntas con tiempo (ej. reinicio automático)
+  function srvCuenta() {
+    const el = q('srv-pide-cuenta'), p = srvPideActual;
+    if (!p || !p.segundos) { el.hidden = true; return; }
+    const quedan = Math.max(0, Math.round(p.segundos - (Date.now() - (p.desde || Date.now())) / 1000));
+    el.hidden = false;
+    el.textContent = (p.pide === 'reinicio' ? 'Se reinicia solo en ' : 'Se toma la opción por defecto en ') + Math.floor(quedan / 60) + ':' + String(quedan % 60).padStart(2, '0');
+  }
   function srvMostrarPide(ev) {
     srvPideActual = ev;
     const tit = q('srv-pide-tit'), msg = q('srv-pide-msg'), ilus = q('srv-ilus'), inp = q('srv-pide-in'), acc = q('srv-pide-acc');
-    ilus.innerHTML = ''; inp.hidden = true; inp.value = ''; acc.textContent = '';
+    ilus.innerHTML = ''; inp.hidden = true; inp.value = ''; inp.type = 'text'; inp.placeholder = ''; inp.oninput = null; inp.classList.remove('mal'); acc.textContent = '';
+    if (!ev.desde) ev.desde = Date.now();
+    srvCuenta();
     const boton = (txt, resp, sec) => {
       const b = document.createElement('button');
       b.type = 'button'; b.className = 'btn' + (sec ? ' btn-secundario' : ''); b.textContent = txt;
@@ -6023,8 +6141,48 @@ function pintarSeleccionIzumi() {
     } else if (ev.pide === 'reinicio') {
       tit.textContent = 'Configuración terminada';
       msg.textContent = 'Para que todo quede aplicado hay que reiniciar el servidor.\n¿Reiniciar ahora? Guarda lo que tengas abierto.';
-      boton('Después', 'no', true);
+      boton('No reiniciar', 'no', true);
       boton('Reiniciar ahora', 'si').focus();
+    } else if (ev.pide === 'cable_tross') {
+      tit.textContent = 'Conecta la consola del Tross al ZPE';
+      ilus.innerHTML = srvIlustracion('cable_tross');
+      msg.textContent = '1. Conecta el cable de consola en el puerto CONSOLE del Tross.\n2. El otro extremo va en el puerto 17 del ZPE.\n3. Presiona "Listo".';
+      boton('Listo, ya está conectado', '').focus();
+    } else if (ev.pide === 'reinicio_tross') {
+      tit.textContent = 'Reinicia el Tross';
+      msg.textContent = 'Ya está conectada la consola.\nApágalo y préndelo (o presiona su botón de reset) y luego presiona "Ya lo reinicié".\nLa app espera el mensaje "Hit any key to stop autoboot" para entrar a U-Boot.';
+      boton('Ya lo reinicié', '').focus();
+    } else if (ev.pide === 'reiniciar_zpe') {
+      tit.textContent = 'Reinicia el ZPE';
+      msg.textContent = 'La consola del ZPE se quedó en solo lectura y no deja escribirle al Tross.\nApaga y prende el ZPE y presiona "Listo" cuando haya encendido. La etapa se repite sola.';
+      boton('Listo, ya encendió', '').focus();
+    } else if (ev.pide === 'reintentar') {
+      tit.textContent = 'Se cortó la descarga';
+      msg.textContent = ev.msg || 'Se cortó por tiempo. Revisa la red y reintenta.';
+      boton('Reintentar', '').focus();
+    } else if (ev.pide === 'si_no') {
+      tit.textContent = 'El script pregunta';
+      msg.textContent = ev.msg || '';
+      boton('No', 'n', true);
+      boton('Sí', 'y').focus();
+    } else if (ev.pide === 'tross_mac' || ev.pide === 'tross_mac_mal') {
+      const mal = ev.pide === 'tross_mac_mal';
+      tit.textContent = mal ? 'La MAC del Tross no coincide' : 'MAC del Tross';
+      msg.textContent = mal ? 'El DHCP tiene otra MAC y el Tross no pudo descargar.\nEscribe la MAC correcta (viene en la etiqueta del Tross) y la app la corrige sola en dhcpd.conf.\nDéjala vacía para solo reintentar.'
+        : 'Escribe la MAC que viene en la etiqueta del Tross.\nSe pone en /etc/dhcp/dhcpd.conf y se reinicia el DHCP.';
+      inp.hidden = false; inp.placeholder = 'aa:bb:cc:dd:ee:ff';
+      const b = boton(mal ? 'Corregir y reintentar' : 'Aceptar', () => inp.value.trim());
+      inp.oninput = () => { inp.classList.toggle('mal', !!inp.value.trim() && !RX_MAC12(inp.value)); b.disabled = (!mal && !RX_MAC12(inp.value)) || (!!inp.value.trim() && !RX_MAC12(inp.value)); };
+      inp.oninput();
+      inp.onkeydown = (e) => { if (e.key === 'Enter' && !b.disabled) b.click(); };
+      setTimeout(() => inp.focus(), 30);
+    } else if (ev.pide === 'password') {
+      tit.textContent = 'Falta una contraseña';
+      msg.textContent = (ev.msg || '') + '\nPara no escribirla cada vez, guárdala en la pestaña Valores.';
+      inp.hidden = false; inp.type = 'password';
+      const b = boton('Aceptar', () => inp.value);
+      inp.onkeydown = (e) => { if (e.key === 'Enter') b.click(); };
+      setTimeout(() => inp.focus(), 30);
     } else if (ev.pide === 'rack') {
       tit.textContent = 'Número de rack';
       msg.textContent = ev.msg || 'Escribe el número de rack';
@@ -6062,29 +6220,52 @@ function pintarSeleccionIzumi() {
   }
   document.querySelectorAll('#srv-guia .srv-tab').forEach((b) => b.addEventListener('click', () => srvTabSel(b.dataset.tab)));
 
+  // Se muestran los valores del grupo abierto (servidor / Juniper y ZPE / Tross) y los generales
   function srvPintarValores(vals) {
-    const v = vals || srv.valores || {}, d = srv.defecto || {};
+    const v = vals || srv.valores || {}, g = srvG();
     const cont = q('srv-valores');
     cont.textContent = '';
-    for (const k of Object.keys(d)) {
-      const l = document.createElement('label');
-      l.textContent = VAL_INFO[k] || k;
-      const i = document.createElement('input');
-      i.type = k === 'suma_rack' ? 'number' : 'text';
-      i.value = v[k] != null ? v[k] : d[k]; i.dataset.k = k; i.spellcheck = false;
-      i.title = 'De fábrica: ' + d[k];
-      const marcar = () => i.classList.toggle('cambio', String(i.value) !== String(d[k]));
-      i.addEventListener('input', marcar); marcar();
-      l.appendChild(i); cont.appendChild(l);
+    for (const grupo of [g, 'general']) {
+      const campos = (srv.campos || []).filter((c) => c.grupo === grupo);
+      if (!campos.length) continue;
+      const h = document.createElement('div'); h.className = 'srv-val-grupo'; h.textContent = VAL_GRUPO[grupo] || grupo; cont.appendChild(h);
+      for (const c of campos) {
+        const l = document.createElement('label');
+        if (c.tipo === 'largo') l.className = 'largo';
+        l.append(c.label);
+        const sm = document.createElement('small'); sm.textContent = c.k; l.appendChild(sm);
+        const i = document.createElement('input');
+        i.type = c.tipo === 'num' ? 'number' : c.tipo === 'pass' ? 'password' : 'text';
+        i.value = v[c.k] != null ? v[c.k] : c.def; i.dataset.k = c.k; i.spellcheck = false; i.autocomplete = 'off';
+        if (c.tipo === 'pass') { i.placeholder = 'Vacía: se pregunta al correr'; i.title = 'Se guarda solo en esta PC'; }
+        else i.title = 'De fábrica: ' + c.def;
+        const marcar = () => i.classList.toggle('cambio', c.tipo !== 'pass' && String(i.value) !== String(c.def));
+        i.addEventListener('input', marcar); marcar();
+        if (c.tipo === 'pass') {
+          const w = document.createElement('div'); w.className = 'srv-val-pass';
+          const ver = document.createElement('button'); ver.type = 'button'; ver.textContent = 'Ver';
+          ver.addEventListener('click', () => {
+            if (i.value === '••••••') { i.value = ''; i.placeholder = 'Escribe la nueva (la guardada no se muestra)'; }
+            i.type = i.type === 'password' ? 'text' : 'password'; ver.textContent = i.type === 'password' ? 'Ver' : 'Ocultar';
+          });
+          w.append(i, ver); l.appendChild(w);
+        } else l.appendChild(i);
+        cont.appendChild(l);
+      }
     }
   }
-  q('srv-val-fabrica').addEventListener('click', () => srvPintarValores(srv.defecto));
+  q('srv-val-fabrica').addEventListener('click', () => {
+    const d = { ...(srv.defecto || {}) };
+    for (const c of srv.campos || []) if (c.tipo === 'pass') d[c.k] = (srv.valores || {})[c.k] || '';   // las contraseñas no se borran
+    srvPintarValores(d);
+  });
   q('srv-val-guardar').addEventListener('click', async () => {
     const v = {};
     q('srv-valores').querySelectorAll('input').forEach((i) => { v[i.dataset.k] = i.value; });
     const r = await window.sistema.srvValores(v).catch((e) => ({ ok: false, error: e.message }));
     const b = q('srv-val-guardar');
     b.textContent = r && r.ok ? 'Guardado ✓' : 'No se guardó';
+    if (r && r.ok) reg('Guardó valores · ' + (NOMBRE_GRUPO[srvG()] || ''));
     if (r && !r.ok) alert(r.error);
     setTimeout(() => { b.textContent = 'Guardar valores'; }, 1800);
   });
@@ -6236,7 +6417,7 @@ function pintarSeleccionIzumi() {
     const msg = q('llave-msg'); msg.className = 'srv-sc-msg'; msg.textContent = lista.length ? '' : 'Conecta una USB y vuelve a abrir esta ventana.';
     q('llave-crear').disabled = !lista.some((u) => u.escribible);
     const cont = q('llave-campos'); cont.textContent = '';
-    for (const k of ['sudo', 'vault', 'mirror', 'juniper', 'zpe']) {
+    for (const k of ['sudo', 'vault', 'mirror']) {   // las de Juniper / ZPE / Tross van en Valores
       const l = document.createElement('label');
       l.innerHTML = esc(PASS_INFO[k][0]) + ' <small>' + esc(PASS_INFO[k][1]) + '</small>';
       const i = document.createElement('input'); i.type = 'password'; i.autocomplete = 'off'; i.dataset.k = k;
@@ -6283,22 +6464,23 @@ function pintarSeleccionIzumi() {
   }
   function resResumen() {
     const c = srv.config || {}, i = srv.interfaces || {};
-    const hechos = srv.pasos.filter((p) => srv.flags[p.id]).length;
+    const ps = pasosDe('server'), hechos = ps.filter((p) => srv.flags[p.id]).length;
     return ['Servidor ' + (c.hostname || '—') + ' · rack ' + (c.rack_number || '—') + ' · ' + (c.ip_address || '—'),
-      'Pasos: ' + hechos + ' de ' + srv.pasos.length + (hechos === srv.pasos.length ? ' (configurado)' : ''),
+      'Pasos del servidor: ' + hechos + ' de ' + ps.length + (hechos === ps.length ? ' (configurado)' : ''),
       ...Object.entries(i).map(([k, v]) => 'Interfaz ' + k + ': ' + v),
       'Juniper: consola ' + (c.juniper_console_device || '—') + ' · ya estaba configurado: ' + siNo(c.juniper_already_configured),
       'ZPE: MAC ' + (c.zpe_mac || '—') + ' · consola ' + (c.zpe_console_device || '—') + ' · ya estaba configurado: ' + siNo(c.zpe_already_configured),
       'Tross: MAC ' + (c.tross_mac || '—'),
-      ...srv.pasos.filter((p) => !srv.flags[p.id]).map((p) => 'Falta: ' + p.titulo)].join('\n');
+      'Tross: etapas ' + pasosDe('tross').filter((p) => srv.flags[p.id]).length + ' de ' + pasosDe('tross').length + ((srv.tross || {}).tross_lease ? ' · lease ' + srv.tross.tross_lease : ''),
+      ...srv.pasos.filter((p) => !srv.flags[p.id]).map((p) => 'Falta (' + (NOMBRE_GRUPO[p.grupo] || p.grupo) + '): ' + p.titulo)].join('\n');
   }
   function resPintar() {
     if (srvTab !== 'resultados' || sel !== 'server') return;
     const c = srv.config || {}, i = srv.interfaces || {}, v = srv.valores || {};
-    const total = srv.pasos.length, hechos = srv.pasos.filter((p) => srv.flags[p.id]).length, listo = total && hechos === total;
+    const ps = pasosDe('server'), total = ps.length, hechos = ps.filter((p) => srv.flags[p.id]).length, listo = total && hechos === total;
     q('res-tit').textContent = !srv.existeEstado ? 'Sin configurar' : listo ? 'Servidor configurado ✓' : hechos + ' de ' + total + ' pasos';
     q('res-tit').classList.toggle('ok', !!listo);
-    q('res-sub').textContent = !srv.existeEstado ? 'Todavía no existe ' + (srv.estadoRuta || '~/provisioning_state.json') + '. Se crea al correr el primer paso.'
+    q('res-sub').textContent = !srv.existeEstado ? 'Todavía no existe ' + (srv.estadoRuta || '~/engine_flags.json') + '. Se crea al correr el primer paso.'
       : (c.hostname || 'Sin nombre') + ' · ' + (srv.estadoRuta || '');
     const b = q('res-barra'); b.style.width = (total ? Math.round(hechos / total * 100) : 0) + '%'; b.classList.toggle('ok', !!listo);
     const ifs = Object.entries(i);
@@ -6307,10 +6489,11 @@ function pintarSeleccionIzumi() {
       resGrupo('Tarjetas de prueba', ifs.length ? ifs : [[v.iface_test || 'ens4f0', null], [v.iface_test2 || 'ens4f1', null]]) +
       resGrupo('Juniper', [['Consola', c.juniper_console_device], ['Ya estaba configurado', siNo(c.juniper_already_configured)], ['Paso', srv.flags.juniper_config ? '✓' : 'pendiente']]) +
       resGrupo('ZPE', [['MAC', c.zpe_mac], ['Consola', c.zpe_console_device], ['Ya estaba configurado', siNo(c.zpe_already_configured)]]) +
-      resItem('MAC del Tross', c.tross_mac, c.tross_mac ? '→ ' + (v.tross_ip || '10.0.0.251') : 'Se pone en TROSS');
+      resItem('MAC del Tross', c.tross_mac, c.tross_mac ? '→ ' + (v.tross_ip || '10.0.0.251') : 'Se pone en TROSS') +
+      resGrupo('Tross', [['Etapas', pasosDe('tross').filter((p) => srv.flags[p.id]).length + ' de ' + pasosDe('tross').length], ['Lease', (srv.tross || {}).tross_lease]]);
     // Banderas: las del flujo y las que haya de otras versiones del script
     const conocidas = new Set(srv.pasos.map((p) => p.id));
-    const lis = srv.pasos.map((p, k) => '<li class="' + (srv.flags[p.id] ? 'si' : '') + '"><span class="m">' + (srv.flags[p.id] ? '✓' : '·') + '</span><span>' + (k + 1) + '. ' + esc(p.titulo) + ' <code>' + esc(p.id) + '</code></span></li>');
+    const lis = srv.pasos.map((p) => '<li class="' + (srv.flags[p.id] ? 'si' : '') + '"><span class="m">' + (srv.flags[p.id] ? '✓' : '·') + '</span><span>' + esc(NOMBRE_GRUPO[p.grupo] || '') + ' · ' + (pasosDe(p.grupo).indexOf(p) + 1) + '. ' + esc(p.titulo) + ' <code>' + esc(p.id) + '</code></span></li>');
     for (const [k, val] of Object.entries(srv.flags || {})) if (!conocidas.has(k)) lis.push('<li class="extra' + (val ? ' si' : '') + '"><span class="m">' + (val ? '✓' : '·') + '</span><span>' + esc(RES_EXTRA[k] || 'Otra bandera') + ' <code>' + esc(k) + '</code></span></li>');
     q('res-flags').innerHTML = lis.join('');
     q('res-flags-n').textContent = hechos + ' de ' + total;
@@ -6326,7 +6509,7 @@ function pintarSeleccionIzumi() {
   });
   q('res-abrir').addEventListener('click', () => { if (srvApi() && window.sistema.srvAbrirEstado) window.sistema.srvAbrirEstado(); });
   q('res-cred-quitar').addEventListener('click', async () => {
-    if (!confirm('¿Quitar las contraseñas guardadas de provisioning_state.json?\n\nLas banderas y los valores no se tocan.')) return;
+    if (!confirm('¿Quitar las contraseñas guardadas del archivo de banderas?\n\nLas banderas y los valores no se tocan.')) return;
     const r = await window.sistema.srvQuitarCred().catch((e) => ({ ok: false, error: e.message }));
     if (r && !r.ok) alert(r.error);
   });
@@ -6365,8 +6548,10 @@ function pintarSeleccionIzumi() {
       for (const x of g.l) {
         const d = document.createElement('div');
         d.className = 'ver-item ' + x.estado; d.style.animationDelay = (i++ * 25) + 'ms';
-        const idx = x.paso ? srv.pasos.findIndex((p) => p.id === x.paso) + 1 : 0;
-        d.innerHTML = '<span class="ic">' + (x.estado === 'ok' ? '✓' : x.estado === 'aviso' ? '!' : '✕') + '</span><div><b>' + esc(x.nombre) + '</b><small>' + esc(x.detalle) + (x.estado !== 'ok' && idx ? ' · lo deja bien el paso ' + idx + ' (' + esc(srvTitulo(x.paso)) + ')' : '') + '</small></div><div></div>';
+        const pp = x.paso ? srv.pasos.find((p) => p.id === x.paso) : null;
+        const idx = pp ? pasosDe(pp.grupo).indexOf(pp) + 1 : 0;
+        const donde = pp && pp.grupo !== 'server' ? ' en ' + (NOMBRE_GRUPO[pp.grupo] || pp.grupo) : '';
+        d.innerHTML = '<span class="ic">' + (x.estado === 'ok' ? '✓' : x.estado === 'aviso' ? '!' : '✕') + '</span><div><b>' + esc(x.nombre) + '</b><small>' + esc(x.detalle) + (x.estado !== 'ok' && idx ? ' · lo deja bien el paso ' + idx + donde + ' (' + esc(srvTitulo(x.paso)) + ')' : '') + '</small></div><div></div>';
         if (x.estado !== 'ok' && idx) {
           const bt = document.createElement('button'); bt.type = 'button'; bt.className = 'btn btn-secundario btn-mini';
           bt.textContent = 'Correr paso ' + idx; bt.disabled = srvCorre();
@@ -6384,7 +6569,8 @@ function pintarSeleccionIzumi() {
     srv = { ...srv, ...s };
     if (!s.corriendo) srv.corriendo = null;
     if (!antes !== !srv.corriendo) renderDevs();
-    srvPintar(); trPintar(); resPintar();
+    srvPintar(); resPintar();
+    if (srvTab === 'valores' && !q('srv-guia').hidden && !q('srv-valores').contains(document.activeElement) && !q('srv-valores').childElementCount) srvPintarValores();
   }
   if (srvApi()) {
     window.sistema.srvObtener().then((s) => {
@@ -6398,9 +6584,11 @@ function pintarSeleccionIzumi() {
   }
 
   function pintarModo() {
-    const esSrv = sel === 'server', esTr = sel === 'tros';
+    const esSrv = !!GRUPO_DE[sel], esTr = false;   // TROSS, JUNIPER y ZPE usan el mismo panel por grupo
+    const antesSrv = q('srv-guia').dataset.grupo;
     q('srv-guia').hidden = !esSrv;
-    q('srv-tross').hidden = !esTr;
+    q('srv-tross').hidden = true;
+    if (esSrv && antesSrv !== srvG()) { q('srv-guia').dataset.grupo = srvG(); if (srvTab === 'valores') srvPintarValores(); }
     const esOmron = sel === 'omron', esDaq = sel === 'daq', esCh = esChiller(sel);
     q('cfg-rect').hidden = !esRect(sel);
     const esPlc = sel === 'plc';

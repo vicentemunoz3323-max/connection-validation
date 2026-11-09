@@ -25,9 +25,13 @@ function ipDelEquipo() {
 function rackDelEquipo(hostname, ip) {
   // 1) lo que guardó el script de configuración
   try {
-    const st = JSON.parse(fs.readFileSync(path.join(os.homedir(), 'provisioning_state.json'), 'utf8'));
-    const r = st && (st.config || st).rack_number;
-    if (r !== undefined && r !== null && String(r).trim()) return String(r).trim();
+    for (const nombre of ['engine_flags.json', 'provisioning_state.json']) {   // nombre nuevo y el de antes
+      const ruta = path.join(os.homedir(), nombre);
+      if (!fs.existsSync(ruta)) continue;
+      const st = JSON.parse(fs.readFileSync(ruta, 'utf8'));
+      const r = st && (st.config || st).rack_number;
+      if (r !== undefined && r !== null && String(r).trim()) return String(r).trim();
+    }
   } catch (e) {}
   // 2) el hostname: ghostfish-ist-flg-012 → 12
   const m = /(\d{1,3})$/.exec(hostname || '');

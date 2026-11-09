@@ -63,7 +63,7 @@ contextBridge.exposeInMainWorld('sistema', {
   tcObtener: () => ipcRenderer.invoke('tc-get'),
   // Chiller monitor (script bash en segundo plano)
   chObtener: () => ipcRenderer.invoke('ch-get'),
-  // Configuración del servidor (gf_provisioning.py)
+  // Config Engine (server/config_engine.py)
   srvObtener: () => ipcRenderer.invoke('srv-get'),
   srvCorrer: (opc) => ipcRenderer.invoke('srv-run', opc),
   srvDetener: () => ipcRenderer.invoke('srv-stop'),
@@ -77,6 +77,7 @@ contextBridge.exposeInMainWorld('sistema', {
   srvQuitarCred: () => ipcRenderer.invoke('srv-quitar-cred'),
   srvVerificar: () => ipcRenderer.invoke('srv-verificar'),
   srvAbrirEstado: () => ipcRenderer.invoke('srv-abrir-estado'),
+  srvTrossCero: () => ipcRenderer.invoke('srv-tross-cero'),
   onSrvEstado: (cb) => ipcRenderer.on('srv-estado', (_e, d) => cb(d)),
   onSrvSalida: (cb) => ipcRenderer.on('srv-salida', (_e, d) => cb(d)),
   onSrvPide: (cb) => ipcRenderer.on('srv-pide', (_e, d) => cb(d)),
