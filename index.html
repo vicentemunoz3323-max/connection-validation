@@ -1947,6 +1947,18 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .eo-grid { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 9px; }
 .eo-paso { position: relative; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 8px 10px 10px; transition: border-color .2s, box-shadow .2s, background .2s; }
 .eo-paso-cab { display: flex; justify-content: space-between; align-items: center; }
+.eo-num { white-space: nowrap; }
+.eo-sw { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+.eo-sw input { position: absolute; opacity: 0; width: 0; height: 0; }
+.eo-sw i { position: relative; width: 26px; height: 15px; border-radius: 99px; background: #c2c9d3; transition: background .2s; flex: none; }
+.eo-sw i::after { content: ''; position: absolute; top: 2px; left: 2px; width: 11px; height: 11px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+.eo-sw input:checked + i { background: var(--blue); }
+.eo-sw input:checked + i::after { transform: translateX(11px); }
+.eo-sw input:disabled + i { opacity: .5; cursor: default; }
+.eo-sw input:focus-visible + i { outline: 2px solid var(--blue); outline-offset: 2px; }
+.eo-paso.apagado { background: var(--bg-soft); border-style: dashed; }
+.eo-paso.apagado .eo-img, .eo-paso.apagado .eo-nom, .eo-paso.apagado .eo-cmd { opacity: .4; filter: grayscale(1); }
+.eo-paso.omitido .eo-ico { border-style: dashed; }
 .eo-num { font: 700 10px var(--mono); color: var(--muted); letter-spacing: .05em; }
 .eo-ico { width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--font); border: 2px solid var(--line); color: transparent; background: #fff; }
 .eo-img { height: 56px; border-radius: 8px; display: grid; place-items: center; background: var(--bg-soft); color: #8a94a3; transition: background .25s, color .25s; }
@@ -2061,9 +2073,9 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       </div>
       <nav aria-label="Principal" id="nav-principal">
         <a href="#connection-validation" class="nav-link" data-section="connection-validation" title="Connection validation"><span class="lbl-full">Connection validation</span><span class="lbl-corto">Validación</span></a>
-        <a href="#engineout" class="nav-link" data-section="engineout" title="EngineOut"><span class="lbl-full">EngineOut</span><span class="lbl-corto">EngineOut</span></a>
+        <a href="#engineout" class="nav-link" data-section="engineout" title="Liberar rack"><span class="lbl-full">Liberar rack</span><span class="lbl-corto">Liberar</span></a>
         <div class="nav-grupo" data-grupo="config">
-          <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Configuración general</span><span class="lbl-corto">Config.</span><span class="nav-flecha" aria-hidden="true"></span></button>
+          <button type="button" class="nav-padre" aria-haspopup="true" aria-expanded="false"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span><span class="nav-flecha" aria-hidden="true"></span></button>
           <div class="nav-menu" role="menu">
             <a href="#set-valve" class="nav-link" data-section="set-valve" title="Set valve"><span class="lbl-full">Set valve</span><span class="lbl-corto">Valve</span><span class="beta-tag">BETA</span></a>
             <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
@@ -3103,7 +3115,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <div class="inst-header">
           <div class="inst-header-text">
             <span class="inst-eyebrow">Mantenimiento</span>
-            <h1>EngineOut</h1>
+            <h1>Liberar rack</h1>
             <p class="lead">Reinicia DHCP y servicios, revisa equipos y Jolt, paso a paso. Al final genera el reporte en PDF.</p>
           </div>
         </div>
@@ -3123,7 +3135,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
         <div class="eo-acc">
           <button class="btn btn-secundario" type="button" id="eo-reintentar" hidden>Reintentar los que fallaron</button>
-          <button class="btn eo-go" type="button" id="eo-go">Iniciar EngineOut</button>
+          <button class="btn eo-go" type="button" id="eo-go">Iniciar</button>
         </div>
       </div>
 
@@ -6750,7 +6762,7 @@ function pintarSeleccionIzumi() {
   nav.querySelectorAll('a.nav-link[data-section]').forEach((a) => { links[a.dataset.section] = a; });
   const grupos = {};
   nav.querySelectorAll('.nav-grupo').forEach((g) => { grupos[g.dataset.grupo] = g; });
-  const NOMBRE_GRUPO = { config: 'Configuración general', izumis: 'Izumis' };
+  const NOMBRE_GRUPO = { config: 'Configuración', izumis: 'Izumis' };
   const nombreSec = (id) => (links[id] ? links[id].querySelector('.lbl-full').textContent : id);
   // Orden actual del HTML = menú original
   function leerActual() {
@@ -6783,7 +6795,7 @@ function pintarSeleccionIzumi() {
   function valido(o) { return o && Array.isArray(o.top) && o.sub && typeof o.sub === 'object'; }
   let guardado = null;
   try { guardado = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
-  // v1.5.33: Recursos se movió dentro de Configuración general (una sola vez, respeta lo demás)
+  // v1.5.33: Recursos se movió dentro del grupo Configuración (una sola vez, respeta lo demás)
   try {
     if (valido(guardado) && !localStorage.getItem('menu_mig_recursos')) {
       guardado.top = guardado.top.filter((t) => t !== 's:recursos');
@@ -7995,15 +8007,30 @@ function pintarSeleccionIzumi() {
   let inicio = null, fin = null, rutaReporte = null;
   let equipo = { hostname: '', ip: '', rack: '', usuario: '' };
 
+  // Pasos habilitados (se recuerdan en esta PC)
+  const habilitado = PASOS.map(() => true);
+  try { const g = JSON.parse(lsGet('eo_habilitados') || 'null'); if (Array.isArray(g)) g.forEach((v, i) => { if (i < habilitado.length) habilitado[i] = v !== false; }); } catch (e) {}
+  const nHabilitados = () => habilitado.filter(Boolean).length;
+  // Cuántos cuentan para el total: antes de correr los habilitados; después los que no se omitieron
+  const totalPasos = () => (fase === 'reposo' && !inicio ? nHabilitados() : pasos.filter((d) => d.est !== 'omitido').length);
+
   const lista = $e('eo-lista');
   PASOS.forEach((p, i) => {
     const li = document.createElement('li');
     li.className = 'eo-paso pendiente';
-    li.innerHTML = '<div class="eo-paso-cab"><span class="eo-num"></span><span class="eo-der"><span class="eo-t"></span><span class="eo-ico"></span></span></div><div class="eo-img"></div><div><div class="eo-nom"></div><div class="eo-cmd"></div></div><div class="eo-err" hidden></div>';
+    li.innerHTML = '<div class="eo-paso-cab"><label class="eo-sw" title="Habilitar o deshabilitar este paso"><input type="checkbox"><i></i><span class="eo-num"></span></label><span class="eo-der"><span class="eo-t"></span><span class="eo-ico"></span></span></div><div class="eo-img"></div><div><div class="eo-nom"></div><div class="eo-cmd"></div></div><div class="eo-err" hidden></div>';
     li.querySelector('.eo-num').textContent = 'PASO ' + String(i + 1).padStart(2, '0');
     li.querySelector('.eo-img').innerHTML = p.img;
     li.querySelector('.eo-nom').textContent = p.n;
     li.querySelector('.eo-cmd').textContent = p.v;
+    const sw = li.querySelector('.eo-sw input');
+    sw.checked = habilitado[i];
+    sw.addEventListener('change', () => {
+      habilitado[i] = sw.checked;
+      lsSet('eo_habilitados', JSON.stringify(habilitado));
+      if (typeof registrarAccion === 'function') registrarAccion('Liberar rack', (sw.checked ? 'Habilitó' : 'Deshabilitó') + ' paso', (i + 1) + '. ' + p.n);
+      pintar();
+    });
     lista.appendChild(li);
   });
 
@@ -8052,27 +8079,31 @@ function pintarSeleccionIzumi() {
   function pintar() {
     lista.querySelectorAll('.eo-paso').forEach((li, i) => {
       const d = pasos[i];
-      li.className = 'eo-paso ' + d.est;
+      li.className = 'eo-paso ' + d.est + (habilitado[i] ? '' : ' apagado');
+      const sw = li.querySelector('.eo-sw input');
+      sw.checked = habilitado[i];
+      sw.disabled = corriendo;
       li.querySelector('.eo-ico').textContent = d.est === 'ok' ? '✓' : d.est === 'fallo' ? '✕' : d.est === 'detenido' ? '■' : '';
-      li.querySelector('.eo-t').textContent = d.est === 'ejecutando' ? 'corriendo…' : d.t;
+      li.querySelector('.eo-t').textContent = d.est === 'ejecutando' ? 'corriendo…' : d.est === 'omitido' || !habilitado[i] ? '' : d.t;
       const er = li.querySelector('.eo-err');
       er.hidden = !(d.est === 'fallo' && d.err);
       er.textContent = d.err;
     });
     const { fallos, hechos } = cuenta();
     const enCurso = corriendo ? indices[actual] : -1;
-    $e('eo-pct').textContent = hechos + ' / ' + PASOS.length;
-    $e('eo-barra').style.width = (hechos / PASOS.length * 100) + '%';
+    const total = totalPasos();
+    $e('eo-pct').textContent = hechos + ' / ' + total;
+    $e('eo-barra').style.width = (total ? hechos / total * 100 : 0) + '%';
     $e('eo-estado').textContent = corriendo
-      ? 'Paso ' + (enCurso + 1) + ' de ' + PASOS.length + ': ' + (PASOS[enCurso] ? PASOS[enCurso].n : '')
-      : fase === 'reposo' ? 'Listo para iniciar'
+      ? 'Paso ' + (actual + 1) + ' de ' + indices.length + ': ' + (PASOS[enCurso] ? (enCurso + 1) + '. ' + PASOS[enCurso].n : '')
+      : fase === 'reposo' ? (nHabilitados() === PASOS.length ? 'Listo para iniciar' : 'Listo para iniciar · ' + nHabilitados() + ' de ' + PASOS.length + ' pasos habilitados')
       : fallos ? 'Terminó con ' + fallos + (fallos === 1 ? ' error' : ' errores')
       : fase === 'detenido' ? 'Detenido' : 'Completado ✓';
     const sec = $e('engineout');
     sec.classList.toggle('fin-ok', !corriendo && fase === 'listo' && !fallos);
     sec.classList.toggle('fin-err', !corriendo && fallos > 0);
     const go = $e('eo-go');
-    go.textContent = corriendo ? 'Detener' : fase === 'reposo' ? 'Iniciar EngineOut' : 'Correr todo de nuevo';
+    go.textContent = corriendo ? 'Detener' : fase === 'reposo' ? 'Iniciar' : 'Correr de nuevo';
     go.classList.toggle('btn-rojo', corriendo);
     $e('eo-reintentar').hidden = corriendo || !fallos;
     $e('eo-rack').disabled = corriendo;
@@ -8087,7 +8118,7 @@ function pintarSeleccionIzumi() {
     rep.className = 'card eo-rep ' + (fallos ? 'err' : fase === 'detenido' ? 'stop' : 'ok');
     $e('eo-rep-ico').textContent = fallos ? '✕' : fase === 'detenido' ? '■' : '✓';
     $e('eo-rep-tit').textContent = 'Reporte · Rack ' + (rack() || '—') + ' · ' + (fallos ? fallos + (fallos === 1 ? ' paso falló' : ' pasos fallaron') : fase === 'detenido' ? 'detenido' : 'todo bien');
-    $e('eo-rep-sub').textContent = fechaTxt(inicio) + ' · ' + horaTxt(inicio) + (fin ? ' a ' + horaTxt(fin) + ' (' + duracion(fin - inicio) + ')' : '') + ' · ' + ok + ' de ' + PASOS.length + ' correctos';
+    $e('eo-rep-sub').textContent = fechaTxt(inicio) + ' · ' + horaTxt(inicio) + (fin ? ' a ' + horaTxt(fin) + ' (' + duracion(fin - inicio) + ')' : '') + ' · ' + ok + ' de ' + totalPasos() + ' correctos' + (pasos.some((d) => d.est === 'omitido') ? ' · ' + pasos.filter((d) => d.est === 'omitido').length + ' omitido(s)' : '');
     $e('eo-log').hidden = !logPath;
   }
 
@@ -8183,16 +8214,16 @@ function pintarSeleccionIzumi() {
   /* ---------- Correr ---------- */
   async function correr(cuales, nuevo) {
     const s = api();
-    if (!s) { mensaje('err', 'Abre la app con Electron para correr EngineOut.'); return; }
+    if (!s) { mensaje('err', 'Abre la app con Electron para liberar el rack.'); return; }
     if (!rack()) { $e('eo-rack').focus(); mensajeArriba('Escribe el número de rack antes de iniciar.'); return; }
-    if (nuevo) for (let i = 0; i < pasos.length; i++) pasos[i] = { est: 'pendiente', t: '', seg: 0, err: '', salida: [] };
+    if (nuevo) for (let i = 0; i < pasos.length; i++) pasos[i] = { est: cuales.includes(i) ? 'pendiente' : 'omitido', t: '', seg: 0, err: '', salida: [] };
     else for (const i of cuales) pasos[i] = { est: 'pendiente', t: '', seg: 0, err: '', salida: [] };
     indices = cuales.slice();
     logPath = null; rutaReporte = null; fin = null;
     if (nuevo || !inicio) inicio = new Date();
     pintarFecha();
     $e('eo-con').textContent = '';
-    agregarCon([{ t: 'sys', s: '— EngineOut · Rack ' + rack() + ' · ' + new Date().toLocaleString('es-MX') + ' —' }]);
+    agregarCon([{ t: 'sys', s: '— Liberar rack · Rack ' + rack() + ' · ' + new Date().toLocaleString('es-MX') + ' —' }]);
     corriendo = true; fase = 'ejecutando'; actual = 0;
     $e('eo-msg').hidden = true;
     pintar();
@@ -8201,7 +8232,7 @@ function pintarSeleccionIzumi() {
       if (r && r.ok === false) {
         corriendo = false; fase = 'reposo'; inicio = null; pintar();
         mensajeArriba('No se pudo iniciar: ' + (r.error || 'error desconocido') + (/en curso/.test(r.error || '') ? ' (espera a que termine la actualización de rectificadores)' : ''));
-      } else if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Inició', 'Rack ' + rack() + ' · ' + cuales.length + ' paso(s)');
+      } else if (typeof registrarAccion === 'function') registrarAccion('Liberar rack', 'Inició', 'Rack ' + rack() + ' · ' + cuales.length + ' paso(s)');
     } catch (e) {
       corriendo = false; fase = 'reposo'; inicio = null; pintar();
       mensajeArriba('Error al iniciar: ' + e.message);
@@ -8212,12 +8243,16 @@ function pintarSeleccionIzumi() {
 
   $e('eo-go').addEventListener('click', () => {
     if (corriendo) {
-      if (confirm('¿Detener EngineOut? El paso que está corriendo se corta.')) api() && api().cmdsDetener();
+      if (confirm('¿Detener Liberar rack? El paso que está corriendo se corta.')) api() && api().cmdsDetener();
       return;
     }
     if (!rack()) { $e('eo-rack').focus(); mensajeArriba('Escribe el número de rack antes de iniciar.'); return; }
-    if (!confirm('Rack ' + rack() + ': se van a reiniciar DHCP, opentest, chillermonitor, Preboot y los servicios de Jolt, y se reinician las Izumis.\n\n¿Iniciar EngineOut?')) return;
-    correr(PASOS.map((_, i) => i), true);
+    const cuales = PASOS.map((_, i) => i).filter((i) => habilitado[i]);
+    if (!cuales.length) { mensajeArriba('Todos los pasos están deshabilitados: prende al menos uno.'); return; }
+    const off = PASOS.map((p, i) => habilitado[i] ? null : (i + 1) + '. ' + p.n).filter(Boolean);
+    if (!confirm('Rack ' + rack() + ': se van a correr ' + cuales.length + ' de ' + PASOS.length + ' pasos de Liberar rack.' +
+      (off.length ? '\n\nDeshabilitados (no se corren):\n· ' + off.join('\n· ') : '') + '\n\n¿Iniciar?')) return;
+    correr(cuales, true);
   });
   $e('eo-reintentar').addEventListener('click', () => {
     const malos = pasos.map((d, i) => d.est === 'fallo' ? i : -1).filter((i) => i >= 0);
@@ -8239,12 +8274,12 @@ function pintarSeleccionIzumi() {
     return {
       rack: rack() || '—', quien: $e('eo-quien').value.trim(), host: equipo.hostname, ip: equipo.ip, usuario: equipo.usuario,
       fecha: fechaTxt(inicio || new Date()), inicio: horaTxt(inicio || new Date()), fin: fin ? horaTxt(fin) : '—',
-      duracion: inicio && fin ? duracion(fin - inicio) : '—', ok, fallos, resultado, notas: $e('eo-notas').value.trim(),
+      duracion: inicio && fin ? duracion(fin - inicio) : '—', ok, fallos, resultado, total: totalPasos(), omitidos: pasos.filter((x) => x.est === 'omitido').length, notas: $e('eo-notas').value.trim(),
       color: fallos ? '#c8261d' : fase === 'detenido' ? '#d48806' : '#12894a',
       generado: new Date().toLocaleString('es-MX', { hour12: false })
     };
   }
-  const estTxt = (e) => ({ ok: 'OK', fallo: 'FALLÓ', detenido: 'DETENIDO', ejecutando: 'CORRIENDO', pendiente: 'NO SE CORRIÓ' })[e] || e;
+  const estTxt = (e) => ({ ok: 'OK', fallo: 'FALLÓ', detenido: 'DETENIDO', ejecutando: 'CORRIENDO', pendiente: 'NO SE CORRIÓ', omitido: 'OMITIDO' })[e] || e;
   const colorEst = (e) => (e === 'ok' ? '#12894a' : e === 'fallo' ? '#c8261d' : e === 'detenido' ? '#d48806' : '#8a94a3');
   const icoEst = (e) => (e === 'ok' ? '✓' : e === 'fallo' ? '✕' : e === 'detenido' ? '■' : '–');
   const errCorto = (x) => esc(corto(x.err.replace(/\n+/g, ' · '), 170));
@@ -8259,7 +8294,7 @@ function pintarSeleccionIzumi() {
         <td><b>${i + 1}. ${esc(p.n)}</b><div class="mono cmd">${esc(corto(p.v, 90))}</div>${x.est === 'fallo' && x.err ? `<div class="mono err">${errCorto(x)}</div>` : ''}</td>
         <td class="st" style="color:${c}">${estTxt(x.est)}</td><td class="mono t">${esc(x.t)}</td></tr>`;
     }).join('');
-    return pagina('Reporte EngineOut', `
+    return pagina('Reporte Liberar rack', `
       .hoja{padding:.45in .55in}.cab{border:1px solid #d8dde4;border-radius:14px;overflow:hidden}
       .top{padding:18px 22px;border-bottom:4px solid ${d.color}}.eb{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#1d5ccf;font-weight:700}
       h1{margin:4px 0 0;font-size:24px}.pill{display:inline-block;margin-top:8px;padding:4px 12px;border-radius:99px;background:${d.color};color:#fff;font-size:12px;font-weight:700}
@@ -8270,8 +8305,8 @@ function pintarSeleccionIzumi() {
       .cmd{font-size:9.5px;color:#5b6676;margin-top:1px}.err{margin-top:3px;padding:3px 6px;background:#fbecea;border-left:3px solid #c8261d;color:#c8261d;font-size:9.5px}
       .st{font-weight:700;font-size:11px;white-space:nowrap;width:80px}.t{font-size:10.5px;color:#5b6676;white-space:nowrap;width:60px;text-align:right}
       .notas{margin-top:12px;padding:9px 12px;background:#f4f6f9;border-radius:8px;font-size:12px}.pie{margin-top:14px;font-size:9.5px;color:#8a94a3;display:flex;justify-content:space-between}`,
-    `<div class="hoja"><div class="cab"><div class="top"><div class="eb">Connection Validation · EngineOut</div><h1>Reporte de EngineOut · Rack ${esc(d.rack)}</h1>
-      <div class="pill">${d.resultado} · ${d.ok} de ${PASOS.length} correctos</div></div>
+    `<div class="hoja"><div class="cab"><div class="top"><div class="eb">Connection Validation · Liberar rack</div><h1>Reporte de liberación · Rack ${esc(d.rack)}</h1>
+      <div class="pill">${d.resultado} · ${d.ok} de ${d.total} correctos${d.omitidos ? ' · ' + d.omitidos + ' omitido(s)' : ''}</div></div>
       <div class="datos"><div><span>Rack</span><b>${esc(d.rack)}</b></div><div><span>Fecha</span><b>${esc(d.fecha)}</b></div><div><span>Hora</span><b>${esc(d.inicio.slice(0, 5))} – ${esc(d.fin.slice(0, 5))}</b></div><div><span>Duración</span><b>${esc(d.duracion)}</b></div>
       <div><span>Equipo</span><b class="mono" style="font-size:11px">${esc(d.host || '—')}</b></div><div><span>IP</span><b class="mono" style="font-size:11px">${esc(d.ip || '—')}</b></div><div><span>Hecho por</span><b>${esc(d.quien || '—')}</b></div><div><span>Usuario PC</span><b>${esc(d.usuario || '—')}</b></div></div></div>
       <h2>Lo que se le hizo</h2><table>${filas}</table>
@@ -8281,13 +8316,13 @@ function pintarSeleccionIzumi() {
 
   // Diseño 2 · Formato: documento formal con folio y firmas
   function diseno2(d) {
-    const folio = 'EO-' + String(d.rack).replace(/\W/g, '').padStart(3, '0') + '-' + (inicio || new Date()).toISOString().slice(0, 10).replace(/-/g, '') + '-' + d.inicio.replace(/:/g, '').slice(0, 4);
+    const folio = 'LR-' + String(d.rack).replace(/\W/g, '').padStart(3, '0') + '-' + fechaArchivo(inicio || new Date()).slice(0, 10).replace(/-/g, '') + '-' + d.inicio.replace(/:/g, '').slice(0, 4);
     const filas = PASOS.map((p, i) => {
       const x = pasos[i], c = colorEst(x.est);
       return `<tr><td class="n">${String(i + 1).padStart(2, '0')}</td><td>${esc(p.n)}${x.est === 'fallo' && x.err ? `<div class="err">${errCorto(x)}</div>` : ''}</td>
         <td class="mono cmd">${esc(corto(p.v, 58))}</td><td class="r" style="color:${c}">${icoEst(x.est)} ${estTxt(x.est)}</td><td class="mono t">${esc(x.t)}</td></tr>`;
     }).join('');
-    return pagina('Reporte EngineOut', `
+    return pagina('Reporte Liberar rack', `
       .hoja{padding:.5in .6in;font-size:11.5px}.enc{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:3px solid #16202b;padding-bottom:8px}
       .enc h1{margin:0;font-size:19px;letter-spacing:.02em}.enc small{display:block;font-size:10px;color:#5b6676;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
       .folio{text-align:right;font-size:10px;color:#5b6676}.folio b{display:block;font:700 13px "DejaVu Sans Mono",monospace;color:#16202b}
@@ -8301,27 +8336,27 @@ function pintarSeleccionIzumi() {
       .obs{margin-top:12px;border:1px solid #16202b;min-height:58px;padding:6px 9px}.obs span{display:block;font-size:8.5px;text-transform:uppercase;letter-spacing:.1em;color:#5b6676;font-weight:700;margin-bottom:3px}
       .firmas{display:grid;grid-template-columns:1fr 1fr;gap:50px;margin-top:40px;text-align:center;font-size:10.5px}.firmas div{border-top:1px solid #16202b;padding-top:5px}
       .pie{margin-top:16px;font-size:9px;color:#8a94a3;text-align:center}`,
-    `<div class="hoja"><div class="enc"><div><small>Reporte de mantenimiento</small><h1>ENGINEOUT · RACK ${esc(d.rack)}</h1></div><div class="folio">Folio<b>${esc(folio)}</b></div></div>
+    `<div class="hoja"><div class="enc"><div><small>Reporte de mantenimiento</small><h1>LIBERAR RACK · RACK ${esc(d.rack)}</h1></div><div class="folio">Folio<b>${esc(folio)}</b></div></div>
       <div class="grid"><div><span>Rack</span><b>${esc(d.rack)}</b></div><div><span>Fecha</span><b>${esc(d.fecha)}</b></div><div><span>Horario</span><b>${esc(d.inicio)} – ${esc(d.fin)}</b></div>
       <div><span>Equipo</span><b class="mono" style="font-size:11px">${esc(d.host || '—')}</b></div><div><span>IP</span><b class="mono" style="font-size:11px">${esc(d.ip || '—')}</b></div><div><span>Duración</span><b>${esc(d.duracion)}</b></div>
-      <div><span>Realizó</span><b>${esc(d.quien || '—')}</b></div><div><span>Pasos correctos</span><b>${d.ok} de ${PASOS.length}</b></div><div><span>Resultado</span><b><span class="res">${d.resultado}${d.fallos ? ' (' + d.fallos + ')' : ''}</span></b></div></div>
+      <div><span>Realizó</span><b>${esc(d.quien || '—')}</b></div><div><span>Pasos correctos</span><b>${d.ok} de ${d.total}${d.omitidos ? ' <small style="font-weight:400;color:#5b6676">(' + d.omitidos + ' omitido' + (d.omitidos === 1 ? '' : 's') + ')</small>' : ''}</b></div><div><span>Resultado</span><b><span class="res">${d.resultado}${d.fallos ? ' (' + d.fallos + ')' : ''}</span></b></div></div>
       <h2>Actividades realizadas</h2>
       <table><tr><th>#</th><th>Actividad</th><th>Comando</th><th>Resultado</th><th>Tiempo</th></tr>${filas}</table>
       <div class="obs"><span>Observaciones</span>${esc(d.notas)}</div>
       <div class="firmas"><div>Realizó<br><b>${esc(d.quien || '')}</b></div><div>Revisó</div></div>
-      <div class="pie">Connection Validation · EngineOut · generado ${esc(d.generado)}</div></div>`);
+      <div class="pie">Connection Validation · Liberar rack · generado ${esc(d.generado)}</div></div>`);
   }
 
   // Diseño 3 · Visual: banda con el rack, dibujos de cada paso y resumen grande
   function diseno3(d) {
-    const pct = Math.round(d.ok / PASOS.length * 100);
+    const pct = d.total ? Math.round(d.ok / d.total * 100) : 0;
     const tarj = PASOS.map((p, i) => {
       const x = pasos[i], c = colorEst(x.est);
-      return `<div class="tj" style="border-color:${x.est === 'fallo' ? c : '#e1e5ea'}"><div class="ti" style="color:${c};background:${c}14">${p.img}</div>
+      return `<div class="tj" style="border-color:${x.est === 'fallo' ? c : '#e1e5ea'}${x.est === 'omitido' ? ';opacity:.45' : ''}"><div class="ti" style="color:${c};background:${c}14">${p.img}</div>
         <div class="tn"><span class="nn">${String(i + 1).padStart(2, '0')}</span>${esc(p.n)}</div><div class="te" style="color:${c}">${icoEst(x.est)} ${estTxt(x.est)}<span>${esc(x.t)}</span></div></div>`;
     }).join('');
     const errores = PASOS.map((p, i) => pasos[i].est === 'fallo' ? `<li><b>${i + 1}. ${esc(p.n)}:</b> ${errCorto(pasos[i])}</li>` : '').join('');
-    return pagina('Reporte EngineOut', `
+    return pagina('Reporte Liberar rack', `
       .banda{background:#16202b;color:#fff;padding:.4in .55in .3in;display:flex;justify-content:space-between;align-items:center}
       .banda small{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#7fb0ff;font-weight:700}.banda h1{margin:2px 0 0;font-size:30px}
       .banda .sub{margin-top:6px;font-size:12px;color:#c7cfda}.rack{text-align:center;border:2px solid #3a4656;border-radius:14px;padding:8px 18px}
@@ -8338,8 +8373,8 @@ function pintarSeleccionIzumi() {
       .err{margin:12px .55in 0;padding:8px 12px;border-radius:8px;background:#fbecea;color:#c8261d;font-size:10.5px}.err ul{margin:4px 0 0;padding-left:16px}
       .notas{margin:10px .55in 0;padding:8px 12px;border-radius:8px;background:#f4f6f9;font-size:11px}
       .pie{margin:12px .55in 0;font-size:9px;color:#8a94a3}`,
-    `<div class="banda"><div><small>EngineOut · Reporte</small><h1>Rack ${esc(d.rack)}</h1><div class="sub">${esc(d.fecha)} · ${esc(d.inicio.slice(0, 5))} – ${esc(d.fin.slice(0, 5))} · ${esc(d.duracion)}</div></div><div class="rack"><span>RACK</span><b>${esc(d.rack)}</b></div></div>
-      <div class="res"><div class="ring"><div>${d.ok}/${PASOS.length}</div></div><div><h2>${d.fallos ? d.fallos + (d.fallos === 1 ? ' paso falló' : ' pasos fallaron') : d.resultado === 'DETENIDO' ? 'Se detuvo' : 'Todo salió bien'}</h2><p>${d.ok} de ${PASOS.length} pasos correctos</p></div>
+    `<div class="banda"><div><small>Liberar rack · Reporte</small><h1>Rack ${esc(d.rack)}</h1><div class="sub">${esc(d.fecha)} · ${esc(d.inicio.slice(0, 5))} – ${esc(d.fin.slice(0, 5))} · ${esc(d.duracion)}</div></div><div class="rack"><span>RACK</span><b>${esc(d.rack)}</b></div></div>
+      <div class="res"><div class="ring"><div>${d.ok}/${d.total}</div></div><div><h2>${d.fallos ? d.fallos + (d.fallos === 1 ? ' paso falló' : ' pasos fallaron') : d.resultado === 'DETENIDO' ? 'Se detuvo' : 'Todo salió bien'}</h2><p>${d.ok} de ${d.total} pasos correctos${d.omitidos ? ' · ' + d.omitidos + ' omitido(s)' : ''}</p></div>
       <div class="datos"><span>Equipo</span><b>${esc(d.host || '—')}</b><span>IP</span><b>${esc(d.ip || '—')}</b><span>Hecho por</span><b>${esc(d.quien || '—')}</b></div></div>
       <div class="grid">${tarj}</div>
       ${errores ? `<div class="err"><b>Errores</b><ul>${errores}</ul></div>` : ''}
@@ -8369,7 +8404,7 @@ function pintarSeleccionIzumi() {
       rutaReporte = r.ruta;
       $e('eo-ver-rep').hidden = false;
       mensaje('ok', '✓ PDF guardado: ' + r.ruta);
-      if (typeof registrarAccion === 'function') registrarAccion('EngineOut', 'Reporte PDF', r.ruta);
+      if (typeof registrarAccion === 'function') registrarAccion('Liberar rack', 'Reporte PDF', r.ruta);
     } else mensaje('err', '✕ No se pudo generar el PDF: ' + ((r && r.error) || 'error desconocido'));
     return r;
   }

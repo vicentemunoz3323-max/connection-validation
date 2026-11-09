@@ -62,7 +62,7 @@ ipcMain.handle('eo-reporte-pdf', async (_e, datos) => {
     });
     const ruta = path.join(dirReportes(), nombreSeguro(datos && datos.nombre) + '.pdf');
     fs.writeFileSync(ruta, pdf);
-    bitacora.registrar('EngineOut', 'Reporte PDF', ruta);
+    bitacora.registrar('Liberar rack', 'Reporte PDF', ruta);
     if (datos && datos.abrir) shell.openPath(ruta);
     return { ok: true, ruta };
   } catch (e) {

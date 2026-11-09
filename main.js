@@ -27,7 +27,7 @@ const consolasIzumi = require('./izumi_main.js');
 
 // Remplazar Izumi: lee las MAC actuales de dhcpd.conf y las remplaza
 const remplazoIzumi = require('./remplazo_main.js');
-// EngineOut: reporte y envío por correo
+// Liberar rack (antes EngineOut): datos del equipo y reporte en PDF
 require('./engineout_main.js');
 // Chiller monitor: scripts bash en segundo plano con salida en la app
 const chillerMonitor = require('./chiller_main.js');
@@ -794,7 +794,7 @@ function correrComando(cmd, opciones = {}) {
 
 const ORIGENES = {
   rect: { modulo: 'Rectificadores', titulo: 'Actualización de rectificadores', log: 'actualizacion', carpeta: 'rectificadores' },
-  engineout: { modulo: 'EngineOut', titulo: 'EngineOut', log: 'engineout', carpeta: 'engineout' }
+  engineout: { modulo: 'Liberar rack', titulo: 'Liberar rack', log: 'liberar_rack', carpeta: 'engineout' }
 };
 
 async function ejecutarComandos(lista, detenerSiFalla, limiteMs, origen = 'rect', nombres = null) {
@@ -813,7 +813,7 @@ async function ejecutarComandos(lista, detenerSiFalla, limiteMs, origen = 'rect'
   }
 
   ejecCmds = { abortado: false, proc: null };
-  bitacora.registrar(O.modulo, origen === 'rect' ? 'Inició actualización' : 'Inició EngineOut', total + ' comando(s): ' + lista.join(' ; '));
+  bitacora.registrar(O.modulo, origen === 'rect' ? 'Inició actualización' : 'Inició Liberar rack', total + ' comando(s): ' + lista.join(' ; '));
   emitirCmds({
     fase: 'ejecutando', total, completados: 0, actual: 0, pide: null,
     resultados: [...resultados], inicio: Date.now(), fin: null, error: null, logPath,
