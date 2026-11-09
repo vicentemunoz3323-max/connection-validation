@@ -535,13 +535,27 @@ ipcMain.handle('srv-tross-cero', () => {
     return { ok: true };
   } catch (e) { return { ok: false, error: e.message }; }
 });
+/* Pestaña Script con contraseña: se revisa aquí (no en la ventana) y abre por 10 minutos.
+   En el código solo va la huella sha256 de la contraseña, no la contraseña. */
+const HUELLA_SCRIPT = '52d28c6524709972e82cfeff0ad4059eb5195631c8a95daf2d169833506cb41b';
+let scriptAbierto = 0;
+const scriptOk = () => Date.now() < scriptAbierto;
+ipcMain.handle('srv-script-clave', (_e, clave) => {
+  const ok = require('crypto').createHash('sha256').update(String(clave || '')).digest('hex') === HUELLA_SCRIPT;
+  scriptAbierto = ok ? Date.now() + 10 * 60 * 1000 : 0;
+  bitacora.registrar('Server', ok ? 'Abrió la pestaña Script' : 'Contraseña incorrecta en Script');
+  return { ok };
+});
+ipcMain.handle('srv-script-cerrar', () => { scriptAbierto = 0; return true; });
 ipcMain.handle('srv-script-leer', () => {
+  if (!scriptOk()) return { ok: false, bloqueado: true, error: 'Escribe la contraseña para ver el script.' };
   try { return { ok: true, texto: fs.readFileSync(asegurarScript(), 'utf8'), ruta: rutaScript(), editado: editado() }; }
   catch (e) { return { ok: false, error: e.message }; }
 });
 // Guarda el script editado; antes revisa que Python lo pueda leer (si tiene error de sintaxis no se guarda)
 ipcMain.handle('srv-script-guardar', (_e, texto) => new Promise((resolve) => {
   if (run) return resolve({ ok: false, error: 'Espera a que termine la corrida.' });
+  if (!scriptOk()) return resolve({ ok: false, bloqueado: true, error: 'Se cerró por tiempo: vuelve a entrar a la pestaña Script con la contraseña.' });
   if (typeof texto !== 'string' || texto.length > 3 * 1024 * 1024) return resolve({ ok: false, error: 'Texto no válido.' });
   const tmp = path.join(os.tmpdir(), 'engine_revisar_' + process.pid + '.py');
   try { fs.writeFileSync(tmp, texto); } catch (e) { return resolve({ ok: false, error: e.message }); }
@@ -559,6 +573,7 @@ ipcMain.handle('srv-script-guardar', (_e, texto) => new Promise((resolve) => {
 }));
 ipcMain.handle('srv-script-restaurar', () => {
   if (run) return { ok: false, error: 'Espera a que termine la corrida.' };
+  if (!scriptOk()) return { ok: false, bloqueado: true, error: 'Se cerró por tiempo: vuelve a entrar a la pestaña Script con la contraseña.' };
   try {
     fs.mkdirSync(dirDatos(), { recursive: true });
     copiarOriginal();

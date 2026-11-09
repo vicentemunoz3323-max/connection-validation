@@ -2924,6 +2924,20 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             </div>
           </div>
 
+          <!-- Ventana: contraseña de la pestaña Script -->
+          <div class="manual-modal srv-modal" id="sc-lock" hidden>
+            <div class="srv-dlg" role="dialog" aria-label="Contraseña del script">
+              <div class="srv-dlg-tit">🔒 Script protegido</div>
+              <p class="srv-dlg-sub">Escribe la contraseña para ver o editar config_engine.py.</p>
+              <input type="password" id="sc-lock-in" class="srv-pide-in" autocomplete="off" spellcheck="false">
+              <div class="srv-sc-msg err" id="sc-lock-msg"></div>
+              <div class="srv-acc">
+                <button type="button" class="btn btn-secundario" id="sc-lock-cancelar">Cancelar</button>
+                <button type="button" class="btn" id="sc-lock-ok">Entrar</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Ventana: lo que pide el script (cables, downgrade, reinicio, rack) -->
           <div class="manual-modal srv-modal" id="srv-pide" hidden>
             <div class="srv-dlg srv-dlg-ancho" role="dialog" aria-label="El script necesita algo">
@@ -6222,7 +6236,33 @@ function pintarSeleccionIzumi() {
   }
 
   /* ---------- Pestañas, valores y script ---------- */
-  function srvTabSel(t) {
+  // La pestaña Script pide contraseña cada vez que se entra
+  function srvPedirClaveScript() {
+    return new Promise((resolve) => {
+      const dlg = q('sc-lock'), inp = q('sc-lock-in'), msg = q('sc-lock-msg');
+      inp.value = ''; msg.textContent = ''; dlg.hidden = false;
+      setTimeout(() => inp.focus(), 30);
+      const cerrar = (v) => { dlg.hidden = true; inp.value = ''; q('sc-lock-ok').onclick = q('sc-lock-cancelar').onclick = inp.onkeydown = null; resolve(v); };
+      const probar = async () => {
+        const r = await window.sistema.srvScriptClave(inp.value).catch(() => ({ ok: false }));
+        if (r && r.ok) return cerrar(true);
+        msg.textContent = 'Contraseña incorrecta'; inp.select(); srvSacudir('sc-lock-ok');
+      };
+      q('sc-lock-ok').onclick = probar;
+      q('sc-lock-cancelar').onclick = () => cerrar(false);
+      inp.onkeydown = (e) => { if (e.key === 'Enter') probar(); if (e.key === 'Escape') cerrar(false); };
+    });
+  }
+  async function srvTabSel(t) {
+    if (t === 'script' && srvTab !== 'script') {
+      if (!srvApi() || typeof window.sistema.srvScriptClave !== 'function') return;
+      if (!(await srvPedirClaveScript())) return;
+    }
+    if (srvTab === 'script' && t !== 'script') {   // al salir se borra lo que estaba en pantalla y se vuelve a cerrar
+      if (q('srv-sc').value && q('srv-sc').value !== srvScOriginal && !confirm('Tienes cambios sin guardar en el script. ¿Salir y perderlos?')) return;
+      q('srv-sc').value = ''; srvScOriginal = '';
+      if (window.sistema.srvScriptCerrar) window.sistema.srvScriptCerrar();
+    }
     srvTab = t;
     document.querySelectorAll('#srv-guia .srv-tab').forEach((b) => b.classList.toggle('sel', b.dataset.tab === t));
     document.querySelectorAll('#srv-guia .srv-panel').forEach((p) => { p.hidden = p.dataset.panel !== t; });
@@ -6288,7 +6328,7 @@ function pintarSeleccionIzumi() {
     const r = await window.sistema.srvScriptLeer().catch((e) => ({ ok: false, error: e.message }));
     const m = q('srv-sc-msg');
     m.className = 'srv-sc-msg';
-    if (!r || !r.ok) { m.textContent = (r && r.error) || 'No se pudo leer'; m.classList.add('err'); return; }
+    if (!r || !r.ok) { m.textContent = (r && r.error) || 'No se pudo leer'; m.classList.add('err'); if (r && r.bloqueado) srvTabSel('pasos'); return; }
     if (q('srv-sc').value && q('srv-sc').value !== srvScOriginal && !confirm('Tienes cambios sin guardar en el script. ¿Descartarlos y recargar?')) return;
     q('srv-sc').value = r.texto; srvScOriginal = r.texto;
     q('srv-sc-info').textContent = r.texto.split('\n').length + ' líneas · ' + (r.editado ? 'modificado' : 'original');
