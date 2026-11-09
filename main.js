@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, shell, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, shell, Notification, net } = require('electron');
 
 // Nombre interno de la ventana (WM_CLASS): une la ventana con su ícono en la barra de Ubuntu
 app.setName('ghostfish-engine');
@@ -1130,14 +1130,117 @@ if (autoUpdater) {
       new Notification({ title: 'Connection Validation', body: `Versión ${info.version} lista. Reinicia la app para instalarla.` }).show();
     }
   });
-  autoUpdater.on('error', (e) => enviarUpdate('error', { mensaje: e ? e.message : 'Error desconocido' }));
+  // Los errores pasajeros de GitHub (504, timeout...) se reintentan abajo: aquí no se avisan
+  autoUpdater.on('error', (e) => { const m = e ? e.message : 'Error desconocido'; if (!esPasajero(m)) enviarUpdate('error', { mensaje: m }); else console.log('[update] error pasajero:', m.split('\n')[0]); });
 }
 
+/* ---------- Aguante cuando GitHub falla ----------
+   1) Reintenta sola si GitHub contesta 502/503/504 o se corta la conexión.
+   2) Si sigue fallando, "plan B": pregunta la última versión a la API de GitHub (otra ruta),
+      baja el .deb directo y lo instala con pkexec (pide la contraseña de Ubuntu). */
+const RX_PASAJERO = /\b50[0234]\b|Gateway Time-?out|didn't respond in time|ETIMEDOUT|ECONNRESET|ESOCKETTIMEDOUT|socket hang up|EAI_AGAIN|ENOTFOUND|ECONNREFUSED|net::ERR_|timed? ?out/i;
+const esPasajero = (m) => RX_PASAJERO.test(String(m || ''));
+const ESPERAS_SEG = [3, 6, 12, 20, 30];
+const espera = (seg) => new Promise((r) => setTimeout(r, seg * 1000));
+const PUB = (() => { try { const p = require('./package.json').build.publish; return Array.isArray(p) ? p[0] : p; } catch (e) { return null; } })()
+  || { owner: 'vicentemunoz3323-max', repo: 'connection-validation' };
+let planB = null;   // { version, deb: { nombre, url, tam }, sha512, archivo }
+
+async function conReintentos(que, fn) {
+  for (let i = 0; ; i++) {
+    try { return await fn(); }
+    catch (e) {
+      if (!esPasajero(e && e.message) || i >= ESPERAS_SEG.length) throw e;
+      console.log('[update] ' + que + ': GitHub no respondió (' + String(e.message).split('\n')[0].slice(0, 80) + '), reintento ' + (i + 1) + ' de ' + ESPERAS_SEG.length);
+      enviarUpdate('reintentando', { intento: i + 1, de: ESPERAS_SEG.length, segundos: ESPERAS_SEG[i] });
+      await espera(ESPERAS_SEG[i]);
+    }
+  }
+}
+
+const masNueva = (a, b) => {   // ¿a > b? (1.6.10 > 1.6.9)
+  const x = String(a).split(/[.-]/).map((n) => parseInt(n, 10) || 0), y = String(b).split(/[.-]/).map((n) => parseInt(n, 10) || 0);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  return false;
+};
+async function apiGithub(ruta, opc = {}) {
+  const r = await net.fetch('https://api.github.com/repos/' + PUB.owner + '/' + PUB.repo + ruta, {
+    headers: { 'User-Agent': 'connection-validation-updater', Accept: opc.crudo ? 'application/octet-stream' : 'application/vnd.github+json' }
+  });
+  if (!r.ok) throw new Error('API de GitHub respondió ' + r.status);
+  return opc.crudo ? r.text() : r.json();
+}
+async function buscarPlanB() {
+  const rel = await conReintentos('API', () => apiGithub('/releases/latest'));
+  const version = String(rel.tag_name || '').replace(/^v/, '');
+  const deb = (rel.assets || []).find((a) => /\.deb$/.test(a.name));
+  if (!version || !deb) throw new Error('El release de GitHub no trae el .deb');
+  let sha512 = null;
+  const yml = (rel.assets || []).find((a) => a.name === 'latest-linux.yml');
+  if (yml) { try { const t = await apiGithub('/releases/assets/' + yml.id, { crudo: true }); sha512 = ((t.match(/^sha512:\s*(\S+)/m) || [])[1]) || null; } catch (e) {} }
+  if (!masNueva(version, app.getVersion())) { planB = null; return enviarUpdate('actual', { version: app.getVersion() }); }
+  planB = { version, deb: { nombre: deb.name, url: deb.browser_download_url, apiUrl: deb.url, tam: deb.size }, sha512, archivo: null };
+  bitacora.registrar('App', 'Actualización por plan B', 'v' + version + ' (GitHub no respondía la ruta normal)');
+  enviarUpdate('disponible', { version });
+  if (versionAvisada !== version && Notification.isSupported()) { versionAvisada = version; new Notification({ title: 'Connection Validation', body: `Nueva versión ${version} disponible. Ábrela para actualizar.` }).show(); }
+}
+async function descargarPlanB() {
+  const destino = path.join(app.getPath('temp'), planB.deb.nombre);
+  const bajar = async (url, headers) => {
+    const r = await net.fetch(url, { headers: { 'User-Agent': 'connection-validation-updater', ...(headers || {}) } });
+    if (!r.ok) throw new Error('Descarga respondió ' + r.status);
+    const total = Number(r.headers.get('content-length')) || planB.deb.tam || 0;
+    const hash = require('crypto').createHash('sha512');
+    const out = fs.createWriteStream(destino);
+    const lector = r.body.getReader();
+    let llevo = 0, ultimo = -1;
+    try {
+      for (;;) {
+        const { done, value } = await lector.read();
+        if (done) break;
+        const b = Buffer.from(value);
+        hash.update(b); llevo += b.length;
+        if (!out.write(b)) await new Promise((ok) => out.once('drain', ok));
+        const pct = total ? Math.floor(llevo / total * 100) : 0;
+        if (pct !== ultimo) { ultimo = pct; enviarUpdate('descargando', { porcentaje: pct }); }
+      }
+    } finally { await new Promise((ok) => out.end(ok)); }
+    if (planB.deb.tam && llevo !== planB.deb.tam) throw new Error('La descarga quedó incompleta (' + llevo + ' de ' + planB.deb.tam + ' bytes)');
+    if (planB.sha512 && hash.digest('base64') !== planB.sha512) throw new Error('El archivo descargado no coincide (sha512)');
+  };
+  try { await conReintentos('descarga', () => bajar(planB.deb.url)); }
+  catch (e) { if (!esPasajero(e.message)) throw e; await conReintentos('descarga API', () => bajar(planB.deb.apiUrl, { Accept: 'application/octet-stream' })); }
+  planB.archivo = destino;
+  bitacora.registrar('App', 'Actualización descargada (plan B)', 'v' + planB.version + ' · ' + destino);
+  enviarUpdate('lista', { version: planB.version });
+  if (Notification.isSupported()) new Notification({ title: 'Connection Validation', body: `Versión ${planB.version} lista. Reinicia la app para instalarla.` }).show();
+}
+function instalarPlanB() {
+  const { spawn } = require('child_process');
+  bitacora.registrar('App', 'Instalar actualización (plan B)', 'desde v' + app.getVersion() + ' a v' + planB.version);
+  const p = spawn('pkexec', ['apt-get', 'install', '-y', '--allow-downgrades', planB.archivo], { stdio: 'ignore' });
+  p.on('error', (e) => enviarUpdate('error', { mensaje: 'No se pudo instalar: ' + e.message }));
+  p.on('close', (c) => {
+    if (c === 0) { app.relaunch(); app.exit(0); }
+    else enviarUpdate('error', { mensaje: c === 126 || c === 127 ? 'Se canceló la contraseña de Ubuntu.' : 'La instalación falló (código ' + c + '). Instálala a mano: sudo apt install ' + planB.archivo });
+  });
+}
+
+let buscandoAct = false;
 async function buscarActualizaciones() {
   if (!autoUpdater) return enviarUpdate('error', { mensaje: 'Falta el paquete electron-updater. Corre "npm install".' });
   if (!app.isPackaged) return enviarUpdate('dev');
-  try { await autoUpdater.checkForUpdates(); }
-  catch (e) { enviarUpdate('error', { mensaje: e.message }); }
+  if (buscandoAct) return;
+  buscandoAct = true;
+  try {
+    planB = null;
+    await conReintentos('buscar', () => autoUpdater.checkForUpdates());
+  } catch (e) {
+    if (esPasajero(e.message)) {
+      try { await buscarPlanB(); }
+      catch (e2) { enviarUpdate('error', { mensaje: 'GitHub no está respondiendo (' + String(e.message).split('\n')[0].slice(0, 60) + '). Se vuelve a intentar sola en una hora, o presiona el botón más tarde.' }); }
+    } else enviarUpdate('error', { mensaje: e.message });
+  } finally { buscandoAct = false; }
 }
 
 ipcMain.handle('app:version', () => app.getVersion());
@@ -1178,10 +1281,23 @@ ipcMain.handle('update:buscar', () => buscarActualizaciones());
 ipcMain.handle('update:descargar', async () => {
   if (!autoUpdater || descargando) return;   // evita dos descargas a la vez
   descargando = true;
-  try { await autoUpdater.downloadUpdate(); } catch (e) { enviarUpdate('error', { mensaje: e.message }); }
+  try {
+    if (planB) await descargarPlanB();
+    else {
+      try { await conReintentos('descarga', () => autoUpdater.downloadUpdate()); }
+      catch (e) {
+        if (!esPasajero(e.message)) throw e;
+        await buscarPlanB();            // la ruta normal sigue caída: se baja por la API
+        if (planB) await descargarPlanB();
+      }
+    }
+  } catch (e) { enviarUpdate('error', { mensaje: e.message }); }
   finally { descargando = false; }
 });
-ipcMain.handle('update:instalar', () => { if (autoUpdater) { bitacora.registrar('App', 'Instalar actualización', 'desde v' + app.getVersion()); autoUpdater.quitAndInstall(); } });
+ipcMain.handle('update:instalar', () => {
+  if (planB && planB.archivo) return instalarPlanB();
+  if (autoUpdater) { bitacora.registrar('App', 'Instalar actualización', 'desde v' + app.getVersion()); autoUpdater.quitAndInstall(); }
+});
 
 app.whenReady().then(() => {
   if (!app.isPackaged || !esInstanciaPrincipal) return;

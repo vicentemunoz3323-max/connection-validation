@@ -1,7 +1,7 @@
 {
   "name": "ghostfish-engine",
   "productName": "Connection Validation",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Ghostfish Engine - Motor de validación",
   "main": "main.js",
   "desktopName": "ghostfish-engine.desktop",
@@ -52,6 +52,13 @@
         "repo": "connection-validation",
         "releaseType": "release"
       }
+    ],
+    "files": [
+      "**/*",
+      "!**/*.deb",
+      "!**/*.AppImage",
+      "!dist/**",
+      "!*.log"
     ]
   }
 }

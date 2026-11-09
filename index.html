@@ -8008,11 +8008,14 @@ function pintarSeleccionIzumi() {
 
     btn.addEventListener('click', () => { manual = true; upd.buscar(); });
 
-    upd.alCambiar(({ estado, version, porcentaje, mensaje }) => {
-      btn.classList.toggle('girando', estado === 'buscando' || estado === 'descargando');
+    upd.alCambiar(({ estado, version, porcentaje, mensaje, intento, de, segundos }) => {
+      btn.classList.toggle('girando', estado === 'buscando' || estado === 'descargando' || estado === 'reintentando');
       switch (estado) {
         case 'buscando':
           if (manual) mostrar({ titulo: 'Buscando actualizaciones…', cerrar: false });
+          break;
+        case 'reintentando':
+          if (manual) mostrar({ titulo: 'GitHub no responde, reintentando…', msg: 'Intento ' + intento + ' de ' + de + ' · vuelve a probar en ' + segundos + ' s', cerrar: false });
           break;
         case 'disponible':
           btn.classList.add('hay-nueva');
