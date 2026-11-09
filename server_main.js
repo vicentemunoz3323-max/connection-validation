@@ -49,7 +49,7 @@ const PASOS = [
   { id: 'reinstall_goss', grupo: 'server', titulo: 'Goss', desc: 'Reinstala la herramienta de validación', pass: ['sudo'] },
   { id: 'run_final_abmx_config', grupo: 'server', titulo: 'Configuración final desde el mirror', desc: 'Ansible configure-fish-station corrido desde el mirror', pass: ['sudo', 'vault', 'mirror'] },
   { id: 'create_networkmanager_symlink', grupo: 'server', titulo: 'Servicio de red', desc: 'Instala paquetes y crea el enlace network-manager.service', pass: ['sudo'] },
-  { id: 'download_python_tools', grupo: 'server', titulo: 'Herramientas de prueba', desc: 'Descarga reboot.py, dhcpd.py, share.py, UUT_test_case.py y U22Tocinos al home', pass: ['sudo'] },
+  { id: 'download_python_tools', grupo: 'server', titulo: 'U22Tocinos', desc: 'Descarga U22Tocinos del servidor de herramientas al home', pass: ['sudo'] },
   { id: 'fix_chrome', grupo: 'server', titulo: 'Google Chrome', desc: 'Reinstala Chrome limpio (borra su perfil)', pass: ['sudo'] },
   { id: 'end_config_reboot', grupo: 'server', titulo: 'Terminar y reiniciar', desc: 'Resumen y reinicio (si nadie contesta, reinicia solo)', pass: ['sudo'] },
 
@@ -107,7 +107,7 @@ const CAMPOS = [
   ['server', 'dhcp_user', 'testusr', 'Usuario en ese servidor'],
   ['server', 'goss_url', 'https://goss.rocks/install', 'Instalador de Goss'],
   ['server', 'tools_host', '172.24.125.174', 'Servidor de herramientas'],
-  ['server', 'tools_files', 'dhcpd.py, UUT_test_case.py, share.py, reboot.py, U22Tocinos', 'Herramientas que se descargan (separadas por coma)', 'largo'],
+  ['server', 'tools_files', 'U22Tocinos', 'Lo que se descarga del servidor de herramientas (separado por coma)'],
   ['server', 'reinicio_min', 5, 'Minutos para reiniciar solo al terminar', 'num'],
   ['equipos', 'consolas', '/dev/ttyUSB0, /dev/ttyUSB1', 'Puertos del cable de consola'],
   ['equipos', 'juniper_baud', 9600, 'Velocidad de consola del Juniper', 'num'],
@@ -183,6 +183,7 @@ function leerValores() {
   try { v = { ...VALORES_DEFECTO, ...JSON.parse(fs.readFileSync(rutaValores(), 'utf8')) }; } catch (e) { v = { ...VALORES_DEFECTO }; }
   // valores.json de versiones anteriores traía los nombres viejos de fábrica: se pasan a los de Engine
   for (const [k, viejo] of Object.entries(NOMBRES_VIEJOS)) if (v[k] === viejo) v[k] = VALORES_DEFECTO[k];
+  if (v.tools_files === 'dhcpd.py, UUT_test_case.py, share.py, reboot.py, U22Tocinos') v.tools_files = VALORES_DEFECTO.tools_files;   // antes bajaba todo; ahora solo U22Tocinos
   return v;
 }
 // Racks que ya venían avanzados: las banderas viejas se copian una vez a los nombres nuevos (las viejas no se borran)

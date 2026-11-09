@@ -99,17 +99,25 @@ function buscarScriptUUT() {
   }
   return null;
 }
+/* El script viene dentro de la app (server/uut_case.py: solo genera automático, sin menú).
+   Python no puede leer dentro del .asar, así que se copia a la carpeta de datos de la app.
+   Solo se usa otro si lo eligen con "cambiar". */
+const SCRIPT_APP = path.join(__dirname, 'server', 'uut_case.py');
+function scriptDeLaApp() {
+  try {
+    const destino = path.join(app.getPath('userData'), 'uut_case.py');
+    const orig = fs.readFileSync(SCRIPT_APP);
+    if (!fs.existsSync(destino) || !fs.readFileSync(destino).equals(orig)) fs.writeFileSync(destino, orig, { mode: 0o755 });
+    return destino;
+  } catch (e) { return null; }
+}
 function obtenerScript() {
   if (rutaScript === undefined) {
     const j = leerCfg();
-    rutaScript = typeof j.script === 'string' && j.script ? j.script : null;
+    rutaScript = j.scriptPropio && typeof j.script === 'string' && j.script ? j.script : null;   // las versiones de antes guardaban el que encontraban: ya no cuenta
   }
   if (rutaScript && fs.existsSync(rutaScript)) return rutaScript;
-  if (!rutaScript) {               // nunca se eligió: se busca por nombre
-    const hallado = buscarScriptUUT();
-    if (hallado) { rutaScript = hallado; escribirCfg({ script: hallado }); }
-  }
-  return rutaScript;
+  return scriptDeLaApp();
 }
 
 /* ---------- Salida hacia la ventana ---------- */
@@ -142,6 +150,16 @@ function flush() {
   enviar('tc-output', lote);
 }
 function linea(tipo, texto) {
+  if (texto.startsWith('@@SLOT ')) {
+    try {
+      const d = JSON.parse(texto.slice(7));
+      if (d && d.n >= 1 && d.n <= NUM_SLOTS) {
+        enviar('tc-slot', d);
+        if (trabajo && (d.estado === 'ok' || d.estado === 'fail')) { trabajo.hechos++; emitirEstado(); }
+      }
+      return;
+    } catch (e) {}
+  }
   const ahora = Date.now();
   const reg = { i: ++seq, t: tipo, h: ahora, s: texto.length > MAX_LARGO_LINEA ? texto.slice(0, MAX_LARGO_LINEA) + ' …[línea recortada en pantalla]' : texto };
   hist.push(reg);
@@ -506,7 +524,7 @@ async function escanear() {
 async function correrScript() {
   const script = obtenerScript();
   if (!script || !fs.existsSync(script)) return { ok: false, error: 'No se encontró el script. Usa "Elegir script…".' };
-  const t = abrirTrabajo('script', 0);
+  const t = abrirTrabajo('script', NUM_SLOTS);
   if (!t) return ocupado();
   const salida = obtenerRuta();
   // --generar: corre sin menú · --archivo: escribe en el mismo UUT_case que usa esta pantalla
@@ -679,7 +697,7 @@ ipcMain.handle('tc-script-set', async (e) => {
   });
   if (r.canceled || !r.filePaths || !r.filePaths[0]) return { ok: true, cambio: false };
   rutaScript = r.filePaths[0];
-  escribirCfg({ script: rutaScript });
+  escribirCfg({ script: rutaScript, scriptPropio: true });
   linea('sys', 'Script para generar: ' + rutaScript);
   flush();
   emitirEstado();
