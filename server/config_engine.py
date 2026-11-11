@@ -73,7 +73,7 @@ CFG_DEFECTO = {
     "dhcp_user": "testusr",
     "goss_url": "https://goss.rocks/install",
     "tools_host": "172.24.125.174",
-    "tools_files": "dhcpd.py, UUT_test_case.py, share.py, reboot.py, U22Tocinos",
+    "tools_files": "U22Tocinos",                 # paso 16: solo se descarga U22Tocinos
     "reinicio_min": 5,                            # minutos para reiniciar solo al terminar
     # --- Juniper y ZPE ---
     "consolas": "/dev/ttyUSB0, /dev/ttyUSB1",
