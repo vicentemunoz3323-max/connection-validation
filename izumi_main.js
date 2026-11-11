@@ -253,6 +253,8 @@ function abrirConsola(n) {
     if (existente.win.isMinimized()) existente.win.restore();
     existente.win.show();
     existente.win.focus();
+    existente.win.webContents.invalidate();
+    existente.win.webContents.send('izu:repintar');
     if (existente.estado === 'desconectado' && !existente.timerReintento) conectar(existente);
     return { ok: true, yaAbierta: true };
   }
@@ -285,6 +287,15 @@ function abrirConsola(n) {
   win.webContents.on('will-navigate', (e) => e.preventDefault());
   win.webContents.once('did-finish-load', () => conectar(s));
   win.on('closed', () => cerrarSesion(n));
+  // Al regresar de minimizado (o al traerla al frente) Linux a veces no repinta y la consola sale negra:
+  // se le pide a la ventana que se vuelva a dibujar completa.
+  const repintar = () => {
+    if (win.isDestroyed()) return;
+    win.webContents.invalidate();
+    win.webContents.send('izu:repintar');
+    setTimeout(() => { if (!win.isDestroyed()) { win.webContents.invalidate(); win.webContents.send('izu:repintar'); } }, 150);
+  };
+  for (const ev of ['restore', 'show', 'focus', 'maximize', 'unmaximize']) win.on(ev, repintar);
   win.loadFile(path.join(__dirname, 'izumi.html'), { query: { n: String(n) } });
   avisarPrincipal();
   return { ok: true };

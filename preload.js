@@ -106,6 +106,18 @@ contextBridge.exposeInMainWorld('sistema', {
   // Llave USB con las contraseñas
   llaveEstado: () => ipcRenderer.invoke('llave-estado'),
   llaveLeer: () => ipcRenderer.invoke('llave-leer'),
+  // Clonar: instala el .deb de la carpeta Música en otros racks
+  cloBuscar: () => ipcRenderer.invoke('clo-buscar'),
+  cloAbrirCarpeta: () => ipcRenderer.invoke('clo-abrir-carpeta'),
+  cloUsuario: () => ipcRenderer.invoke('clo-usuario'),
+  cloIps: (texto) => ipcRenderer.invoke('clo-ips', texto),
+  cloClonar: (datos) => ipcRenderer.invoke('clo-clonar', datos),
+  cloCancelar: () => ipcRenderer.invoke('clo-cancelar'),
+  cloEstado: () => ipcRenderer.invoke('clo-estado'),
+  onCloInicio: (cb) => ipcRenderer.on('clo-inicio', (_e, d) => cb(d)),
+  onCloFila: (cb) => ipcRenderer.on('clo-fila', (_e, d) => cb(d)),
+  onCloLog: (cb) => ipcRenderer.on('clo-log', (_e, d) => cb(d)),
+  onCloFin: (cb) => ipcRenderer.on('clo-fin', (_e, d) => cb(d)),
   llaveUsbs: () => ipcRenderer.invoke('llave-usbs'),
   llaveCrear: (opc) => ipcRenderer.invoke('llave-crear', opc),
   onLlaveEstado: (cb) => ipcRenderer.on('llave-estado', (_e, d) => cb(d)),

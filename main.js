@@ -35,6 +35,7 @@ const chillerMonitor = require('./chiller_main.js');
 const servidor = require('./server_main.js');
 require('./llave_main.js');   // llave USB con las contraseñas
 require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO
+require('./clonar_main.js');   // Clonar: instala el .deb de Música en otros racks
 const setValve = require('./setvalve_main.js'); // Set valve: PWM de las válvulas por slot
 const protector = require('./protector_main.js'); // avisos a pantalla completa (se quitan con la contraseña de root)
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)

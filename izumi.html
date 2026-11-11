@@ -228,8 +228,25 @@ function pintarOmitidas() {
 
 /* ===== Dibujo (solo lo visible) ===== */
 function programar() {
-  if (!pendiente) { pendiente = true; requestAnimationFrame(dibujar); }
+  if (pendiente) return;
+  pendiente = true;
+  // requestAnimationFrame no corre con la ventana minimizada: si no llega, se dibuja con un timer
+  // (así nunca se queda "pendiente" para siempre y la pantalla sin dibujar)
+  const t = setTimeout(() => { if (pendiente) dibujar(); }, 250);
+  requestAnimationFrame(() => { clearTimeout(t); if (pendiente) dibujar(); });
 }
+// Redibuja todo desde cero (al restaurar la ventana, o si la pantalla se quedó negra)
+function repintarTodo() {
+  ultimaClave = '';
+  pendiente = false;
+  if (seguir) vista.scrollTop = vista.scrollHeight;
+  dibujar();
+  // pequeño empujón para que Chromium vuelva a componer la capa
+  cont.style.visibility = 'hidden'; void cont.offsetHeight; cont.style.visibility = '';
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden) repintarTodo(); });
+window.addEventListener('focus', repintarTodo);
+window.addEventListener('pageshow', repintarTodo);
 
 function esc(t) { return t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 
@@ -455,6 +472,7 @@ $('b-ctrlc').addEventListener('click', () => api.enviar('\x03', 'nada'));
 if (api) {
   api.onDatos(agregar);
   api.onEstado(aplicarEstado);
+  if (api.onRepintar) api.onRepintar(repintarTodo);
   api.info().then(aplicarEstado).catch(() => {});
 } else {
   $('estado-txt').textContent = 'Sin conexión con la app';

@@ -1359,6 +1359,39 @@ h1 { font-size: clamp(22px, 2.3vw, 28px); font-weight: 700; letter-spacing: -.02
 .tc-bar .tc-stop, .tc-bar .tc-stop:hover { background: var(--red); }
 .link-btn { border-radius: var(--r-s) !important; }
 
+/* ---------- Clonar ---------- */
+.clo-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; align-items: start; }
+.clo-card .card-head { margin-bottom: 12px; }
+.clo-in { width: 100%; min-width: 0; padding: 8px 10px; font-size: 13px; }
+select.clo-in { font-family: var(--mono); font-size: 12.5px; }
+.clo-ta { resize: vertical; min-height: 92px; font-family: var(--mono); font-size: 12.5px; line-height: 1.5; }
+.clo-deb-info { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 12px; color: var(--muted); }
+.clo-deb-info b { color: var(--text); font-weight: 600; }
+.clo-vacio { font-size: 13px; color: var(--muted); line-height: 1.5; padding: 10px 12px; background: var(--bg-soft); border-radius: var(--r-s); }
+.clo-vacio code { font-size: 12px; }
+.clo-modo { display: inline-flex; padding: 3px; background: var(--bg-soft); border-radius: 9px; margin-bottom: 12px; }
+.clo-modo-btn { font: 600 12.5px var(--font); padding: 6px 14px; border: 0; border-radius: 7px; background: transparent; color: var(--muted); cursor: pointer; }
+.clo-modo-btn.on { background: #fff; color: var(--text); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.clo-lbl { display: flex; flex-direction: column; gap: 5px; font-size: 12.5px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+.clo-lbl[hidden] { display: none; }
+.clo-cred { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.clo-tip { font-size: 11.5px; font-weight: 400; color: var(--muted); }
+.clo-tip code { font-size: 11px; }
+.clo-msg { font-size: 12.5px; padding: 8px 10px; border-radius: var(--r-s); margin-bottom: 10px; background: #fdeceb; color: #b3261e; }
+.clo-msg.ok { background: #e7f6ec; color: #1e7e34; }
+.clo-acc { display: flex; gap: 8px; margin-top: 4px; }
+.clo-acc .btn { padding: 9px 18px; font-size: 13px; font-weight: 600; }
+.clo-cancelar { background: var(--red); color: #fff; }
+.clo-cancelar:hover { background: #b9261b; }
+.clo-res { margin-top: 16px; }
+.clo-tabla td { padding: 7px 6px; }
+.clo-c-ip { width: 150px; } .clo-c-st { width: 130px; }
+.clo-tabla .clo-ip { font-family: var(--mono); font-size: 12.5px; }
+.clo-det { margin-top: 12px; }
+.clo-body .cl b { color: #9cdcfe; font-weight: 600; }
+@media (max-width: 980px) { .clo-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .clo-cred { grid-template-columns: 1fr; } }
+
 /* ---------- Campos ---------- */
 input[type="text"], input[type="number"], input[type="password"], select, textarea, .tc-in, .cmd-input {
   font-family: var(--font); border-radius: var(--r-s); border: 1px solid var(--line-strong); background: #fff; color: var(--text);
@@ -2111,6 +2144,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
             <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar test case"><span class="lbl-full">Generar test case</span><span class="lbl-corto">Test case</span></a>
             <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
+            <a href="#clonar" class="nav-link" data-section="clonar" title="Clonar"><span class="lbl-full">Clonar</span><span class="lbl-corto">Clonar</span></a>
           </div>
         </div>
         <div class="nav-grupo" data-grupo="izumis">
@@ -3153,6 +3187,80 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <div class="ra-fila" data-k="disco"><span class="ra-nom">Disco</span><div class="ra-barra"><i></i></div><span class="ra-val">—</span></div>
         </div>
         <p class="ra-nota">Lo que usa Connection Validation (todos sus procesos). Disco = archivos de la app, sus datos y ~/Ghostfish-Logs.</p>
+      </div>
+    </section>
+
+    <section id="clonar" class="section">
+      <div class="sec-head">
+        <div class="inst-header">
+          <div class="inst-header-text">
+            <span class="inst-eyebrow">Instalación</span>
+            <h1>Clonar</h1>
+            <p class="lead">Copia el instalable (.deb) de la carpeta Música de este servidor a otros racks y lo instala.</p>
+            <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="clo-grid">
+        <div class="card clo-card">
+          <div class="card-head">
+            <span class="card-title">1 · Instalable</span>
+            <div class="uc-actions">
+              <button type="button" class="btn btn-secundario btn-mini" id="clo-buscar">Buscar de nuevo</button>
+              <button type="button" class="btn btn-secundario btn-mini" id="clo-carpeta">Abrir carpeta</button>
+            </div>
+          </div>
+          <div id="clo-deb-caja">
+            <select id="clo-deb" class="clo-in" aria-label="Instalable"></select>
+            <div class="clo-deb-info" id="clo-deb-info"></div>
+          </div>
+          <div class="clo-vacio" id="clo-deb-vacio" hidden></div>
+        </div>
+
+        <div class="card clo-card">
+          <div class="card-head"><span class="card-title">2 · Racks destino</span><span class="card-count" id="clo-cuenta"></span></div>
+          <div class="clo-modo" role="tablist" aria-label="Cuántos racks">
+            <button type="button" class="clo-modo-btn on" data-modo="una" role="tab" aria-selected="true">Una IP</button>
+            <button type="button" class="clo-modo-btn" data-modo="varias" role="tab" aria-selected="false">Varias IPs</button>
+          </div>
+          <label class="clo-lbl" id="clo-una-caja">IP del rack
+            <input type="text" id="clo-ip" class="clo-in" placeholder="172.24.125.101" spellcheck="false" autocomplete="off">
+          </label>
+          <label class="clo-lbl" id="clo-varias-caja" hidden>IPs de los racks
+            <textarea id="clo-ips" class="clo-in clo-ta" rows="4" spellcheck="false" placeholder="172.24.125.101&#10;172.24.125.102, 172.24.125.103&#10;172.24.125.110-120"></textarea>
+            <span class="clo-tip">Una por renglón o separadas con espacio o coma. Rango: <code>172.24.125.110-120</code></span>
+          </label>
+          <div class="clo-cred">
+            <label class="clo-lbl">Usuario del rack
+              <input type="text" id="clo-usuario" class="clo-in" spellcheck="false" autocomplete="off">
+            </label>
+            <label class="clo-lbl">Contraseña (SSH y sudo)
+              <input type="password" id="clo-clave" class="clo-in" autocomplete="off">
+            </label>
+          </div>
+          <p class="clo-tip" id="clo-llave-txt">La contraseña no se guarda. Si conectas la llave USB, se llena sola.</p>
+          <div class="clo-msg" id="clo-msg" hidden></div>
+          <div class="clo-acc">
+            <button type="button" class="btn" id="clo-ir" disabled>Clonar</button>
+            <button type="button" class="btn clo-cancelar" id="clo-cancelar" hidden>Cancelar</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card clo-card clo-res" id="clo-res" hidden>
+        <div class="card-head"><span class="card-title">3 · Avance</span><span class="card-count" id="clo-resumen"></span></div>
+        <table class="tc-table clo-tabla">
+          <thead><tr><th class="clo-c-ip">IP</th><th class="clo-c-st">Estado</th><th>Detalle</th></tr></thead>
+          <tbody id="clo-filas"></tbody>
+        </table>
+        <details class="tcs-detalles clo-det">
+          <summary>Ver detalles <span class="uc-meta" id="clo-meta">0 líneas</span></summary>
+          <div class="upd-console">
+            <div class="uc-head"><span>Actividad</span><div class="uc-actions"><button id="clo-limpiar" class="btn btn-secundario btn-mini" type="button">Limpiar</button></div></div>
+            <div id="clo-body" class="uc-body clo-body" tabindex="0"></div>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -7045,6 +7153,15 @@ function pintarSeleccionIzumi() {
     }
     localStorage.setItem('menu_mig_recursos', '1');
   } catch (e) {}
+  // v1.6.7: Clonar entra al grupo Configuración (una sola vez, respeta lo demás)
+  try {
+    if (valido(guardado) && !localStorage.getItem('menu_mig_clonar')) {
+      const ya = guardado.top.includes('s:clonar') || Object.values(guardado.sub).some((l) => (l || []).includes('clonar'));
+      if (!ya) (guardado.sub.config = guardado.sub.config || []).push('clonar');
+      localStorage.setItem(KEY, JSON.stringify(guardado));
+    }
+    localStorage.setItem('menu_mig_clonar', '1');
+  } catch (e) {}
   aplicar(valido(guardado) ? guardado : ORIGINAL);
 
   /* ---- Ventana ---- */
@@ -8665,6 +8782,170 @@ function pintarSeleccionIzumi() {
 
   cargarEquipo();
   pintar();
+})();
+</script>
+<script>
+/* ===== Clonar: instala el .deb de la carpeta Música en otros racks ===== */
+(() => {
+  const S = window.sistema;
+  const $c = (id) => document.getElementById(id);
+  if (!S || !S.cloBuscar || !$c('clonar')) return;
+  const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const tam = (b) => (b >= 1048576 ? (b / 1048576).toFixed(1) + ' MB' : Math.round(b / 1024) + ' KB');
+  const fecha = (ms) => new Date(ms).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  let debs = [], modo = 'una', corriendo = false, nIps = 0, lineas = 0;
+
+  /* ---- Instalable ---- */
+  async function buscar() {
+    const r = await S.cloBuscar().catch(() => ({ debs: [], dir: '' }));
+    debs = r.debs || [];
+    const sel = $c('clo-deb'), antes = sel.value;
+    sel.innerHTML = debs.map((d) => '<option value="' + esc(d.ruta) + '">' + esc(d.nombre) + '</option>').join('');
+    if (debs.some((d) => d.ruta === antes)) sel.value = antes;
+    sel.disabled = debs.length < 2;
+    $c('clo-deb-caja').hidden = !debs.length;
+    $c('clo-deb-vacio').hidden = !!debs.length;
+    $c('clo-deb-vacio').innerHTML = r.error ? esc(r.error)
+      : 'No hay ningún <code>.deb</code> en <code>' + esc(r.dir || '~/Música') + '</code>. Copia ahí el instalable y dale <b>Buscar de nuevo</b>.';
+    infoDeb();
+    revisar();
+  }
+  function infoDeb() {
+    const d = debs.find((x) => x.ruta === $c('clo-deb').value);
+    $c('clo-deb-info').innerHTML = d
+      ? (d.paquete ? '<span>Paquete <b>' + esc(d.paquete) + '</b></span>' : '') +
+        (d.version ? '<span>Versión <b>' + esc(d.version) + '</b></span>' : '') +
+        '<span>' + tam(d.tam) + '</span><span>' + fecha(d.fecha) + '</span>' +
+        (debs.length > 1 ? '<span>' + debs.length + ' instalables en la carpeta (el más nuevo arriba)</span>' : '')
+      : '';
+  }
+  $c('clo-deb').addEventListener('change', infoDeb);
+  $c('clo-buscar').addEventListener('click', buscar);
+  $c('clo-carpeta').addEventListener('click', () => S.cloAbrirCarpeta());
+
+  /* ---- Una / varias IPs ---- */
+  function ponerModo(m) {
+    modo = m;
+    document.querySelectorAll('.clo-modo-btn').forEach((b) => { const on = b.dataset.modo === m; b.classList.toggle('on', on); b.setAttribute('aria-selected', on); });
+    $c('clo-una-caja').hidden = m !== 'una';
+    $c('clo-varias-caja').hidden = m !== 'varias';
+    revisar();
+  }
+  document.querySelectorAll('.clo-modo-btn').forEach((b) => b.addEventListener('click', () => ponerModo(b.dataset.modo)));
+  const textoIps = () => (modo === 'una' ? $c('clo-ip').value : $c('clo-ips').value);
+
+  let tRev = null;
+  function revisar() {
+    clearTimeout(tRev);
+    tRev = setTimeout(async () => {
+      const r = await S.cloIps(textoIps()).catch(() => ({ ips: [], malas: [] }));
+      nIps = r.ips.length;
+      const msg = $c('clo-msg');
+      if (r.malas.length && !corriendo) { msg.hidden = false; msg.className = 'clo-msg'; msg.textContent = 'No son IPs válidas: ' + r.malas.slice(0, 5).join(', ') + (r.malas.length > 5 ? '…' : ''); }
+      else if (!corriendo && msg.className === 'clo-msg') msg.hidden = true;
+      if (modo === 'una' && nIps > 1) nIps = 1;
+      $c('clo-cuenta').textContent = nIps ? nIps + (nIps === 1 ? ' rack' : ' racks') : '';
+      const listo = debs.length && nIps && !r.malas.length && $c('clo-usuario').value.trim() && $c('clo-clave').value;
+      $c('clo-ir').disabled = corriendo || !listo;
+      $c('clo-ir').textContent = nIps > 1 ? 'Clonar a ' + nIps + ' racks' : 'Clonar';
+    }, 120);
+  }
+  for (const id of ['clo-ip', 'clo-ips', 'clo-usuario', 'clo-clave']) $c(id).addEventListener('input', revisar);
+  $c('clo-ip').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !$c('clo-ir').disabled) $c('clo-ir').click(); });
+  $c('clo-clave').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !$c('clo-ir').disabled) $c('clo-ir').click(); });
+
+  /* ---- Contraseña desde la llave USB ---- */
+  async function llave() {
+    if ($c('clo-clave').value || !S.llaveLeer) return;
+    const r = await S.llaveLeer().catch(() => null);
+    if (r && r.ok && r.pass && r.pass.sudo) {
+      $c('clo-clave').value = r.pass.sudo;
+      $c('clo-llave-txt').textContent = 'Contraseña tomada de la llave USB' + (r.nombre ? ' (' + r.nombre + ')' : '') + '. No se guarda.';
+      revisar();
+    }
+  }
+
+  /* ---- Avance ---- */
+  const TXT = { espera: 'En espera', copiando: 'Copiando', instalando: 'Instalando', ok: 'Instalado', fallo: 'Falló', cancelado: 'Cancelado', omitido: 'Omitido' };
+  const CLS = { espera: '', copiando: 'busy', instalando: 'busy', ok: 'ok', fallo: 'bad', cancelado: 'warn', omitido: 'warn' };
+  function filaDe(ip) {
+    let tr = document.querySelector('#clo-filas tr[data-ip="' + CSS.escape(ip) + '"]');
+    if (!tr) {
+      tr = document.createElement('tr');
+      tr.dataset.ip = ip;
+      tr.innerHTML = '<td class="clo-ip"></td><td><span class="tc-st"></span></td><td class="clo-det-txt"></td>';
+      tr.children[0].textContent = ip;
+      $c('clo-filas').appendChild(tr);
+    }
+    return tr;
+  }
+  function pintarFila(d) {
+    const tr = filaDe(d.ip), st = tr.querySelector('.tc-st');
+    st.className = 'tc-st ' + (CLS[d.estado] || '');
+    st.textContent = TXT[d.estado] || d.estado;
+    tr.querySelector('.clo-det-txt').textContent = d.detalle || '';
+    resumen();
+  }
+  function resumen() {
+    const sts = [...document.querySelectorAll('#clo-filas .tc-st')].map((x) => x.textContent);
+    const ok = sts.filter((t) => t === TXT.ok).length, mal = sts.filter((t) => t === TXT.fallo).length;
+    $c('clo-resumen').textContent = sts.length ? ok + ' de ' + sts.length + ' instalados' + (mal ? ' · ' + mal + ' con falla' : '') : '';
+  }
+  function linea(d) {
+    const b = $c('clo-body'), abajo = b.scrollTop + b.clientHeight >= b.scrollHeight - 20;
+    const div = document.createElement('div');
+    div.className = 'cl' + (d.tipo ? ' ' + d.tipo : '');
+    div.innerHTML = '<b>[' + esc(d.ip) + ']</b> ' + esc(d.texto);
+    b.appendChild(div);
+    if (b.children.length > 3000) b.removeChild(b.firstChild);
+    lineas++;
+    $c('clo-meta').textContent = lineas + ' líneas';
+    if (abajo) b.scrollTop = b.scrollHeight;
+  }
+  $c('clo-limpiar').addEventListener('click', () => { $c('clo-body').textContent = ''; lineas = 0; $c('clo-meta').textContent = '0 líneas'; });
+
+  function ponerCorriendo(on) {
+    corriendo = on;
+    $c('clo-cancelar').hidden = !on;
+    $c('clo-ir').hidden = on;
+    for (const id of ['clo-ip', 'clo-ips', 'clo-usuario', 'clo-clave', 'clo-deb', 'clo-buscar']) $c(id).disabled = on || (id === 'clo-deb' && debs.length < 2);
+    document.querySelectorAll('.clo-modo-btn').forEach((b) => { b.disabled = on; });
+    revisar();
+  }
+
+  S.onCloInicio(() => { $c('clo-filas').textContent = ''; $c('clo-res').hidden = false; ponerCorriendo(true); });
+  S.onCloFila(pintarFila);
+  S.onCloLog(linea);
+  S.onCloFin((r) => {
+    ponerCorriendo(false);
+    const msg = $c('clo-msg');
+    msg.hidden = false;
+    msg.className = 'clo-msg' + (!r.mal && !r.cancelado ? ' ok' : '');
+    msg.textContent = r.cancelado ? 'Se canceló. ' + r.ok + ' alcanzaron a instalarse.'
+      : r.mal ? r.ok + ' instalados y ' + r.mal + ' con falla. Revisa el detalle de cada IP.'
+      : 'Listo: instalado en ' + r.ok + (r.ok === 1 ? ' rack.' : ' racks.');
+  });
+
+  $c('clo-ir').addEventListener('click', async () => {
+    const msg = $c('clo-msg');
+    msg.hidden = true;
+    let texto = textoIps();
+    if (modo === 'una') texto = texto.trim().split(/[\s,;]+/)[0] || '';
+    const r = await S.cloClonar({ deb: $c('clo-deb').value, ips: texto, usuario: $c('clo-usuario').value.trim(), clave: $c('clo-clave').value });
+    if (r && r.ok === false) { msg.hidden = false; msg.className = 'clo-msg'; msg.textContent = r.error; ponerCorriendo(false); }
+  });
+  $c('clo-cancelar').addEventListener('click', () => { $c('clo-cancelar').disabled = true; S.cloCancelar().finally(() => { $c('clo-cancelar').disabled = false; }); });
+
+  /* ---- Al entrar a la sección ---- */
+  async function alEntrar() { await buscar(); llave(); }
+  window.addEventListener('hashchange', () => { if (location.hash === '#clonar') alEntrar(); });
+  document.querySelectorAll('a[data-section="clonar"]').forEach((a) => a.addEventListener('click', () => setTimeout(alEntrar, 50)));
+  (async () => {
+    $c('clo-usuario').value = await S.cloUsuario().catch(() => '');
+    const e = await S.cloEstado().catch(() => null);
+    if (e && e.corriendo) { $c('clo-res').hidden = false; ponerCorriendo(true); for (const [ip, f] of Object.entries(e.filas)) pintarFila({ ip, ...f }); }
+    buscar();
+  })();
 })();
 </script>
 </body>
