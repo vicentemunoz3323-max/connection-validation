@@ -182,7 +182,7 @@ async function clonarUna(ip, deb, usuario, clave) {
 }
 
 async function clonar(datos) {
-  if (trabajo) return { ok: false, error: 'Ya hay una clonación corriendo.' };
+  if (trabajo) return { ok: false, error: 'Ya hay una instalación corriendo.' };
   const { ips, malas } = leerIps(datos && datos.ips);
   if (malas.length) return { ok: false, error: 'Estas no son IPs válidas: ' + malas.join(', ') };
   if (!ips.length) return { ok: false, error: 'Escribe al menos una IP.' };
@@ -198,7 +198,7 @@ async function clonar(datos) {
   const propias = misIps();
   trabajo = { cancelado: false, procs: new Set(), filas: {} };
   enviar('clo-inicio', { ips, deb: deb.nombre });
-  bitacora.registrar('Clonar', 'Inició', deb.nombre + ' → ' + ips.join(', ') + ' (usuario ' + usuario + ')');
+  bitacora.registrar('Instalador', 'Inició', deb.nombre + ' → ' + ips.join(', ') + ' (usuario ' + usuario + ')');
   guardarUsuario(usuario);
 
   const pendientes = [];
@@ -219,7 +219,7 @@ async function clonar(datos) {
   const filas = trabajo.filas;
   trabajo = null;
   const resumen = { ok, mal, cancelado, filas };
-  bitacora.registrar('Clonar', cancelado ? 'Cancelado' : 'Terminó', ok + ' instalados, ' + mal + ' con falla');
+  bitacora.registrar('Instalador', cancelado ? 'Cancelado' : 'Terminó', ok + ' instalados, ' + mal + ' con falla');
   enviar('clo-fin', resumen);
   return { ok: true, ...resumen };
 }
@@ -254,4 +254,4 @@ ipcMain.handle('clo-cancelar', () => cancelar());
 ipcMain.handle('clo-estado', () => (trabajo ? { corriendo: true, filas: trabajo.filas } : { corriendo: false }));
 
 module.exports = { leerIps, ocupado: () => !!trabajo };
-console.log('[clonar] módulo Clonar cargado');
+console.log('[instalador] módulo Instalador cargado');

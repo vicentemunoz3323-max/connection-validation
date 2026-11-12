@@ -1241,7 +1241,7 @@ function ocupadoAhora() {
   prueba('Chiller monitor', () => chillerMonitor.ocupado());
   prueba('Generar test case', () => require('./testcase_main.js').ocupado());
   prueba('Set valve', () => setValve.ocupado());
-  prueba('Clonar', () => require('./clonar_main.js').ocupado());
+  prueba('Instalador', () => require('./clonar_main.js').ocupado());
   prueba('un script de Configuración', () => require('./configuracion_main.js').ocupado());
   prueba('una consola de Izumi abierta', () => consolasIzumi.abiertas() > 0);
   return quien;

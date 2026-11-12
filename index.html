@@ -2154,7 +2154,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
             <a href="#configuracion" class="nav-link" data-section="configuracion" title="Configuración"><span class="lbl-full">Configuración</span><span class="lbl-corto">Config.</span></a>
             <a href="#generar-test-case" class="nav-link" data-section="generar-test-case" title="Generar test case"><span class="lbl-full">Generar test case</span><span class="lbl-corto">Test case</span></a>
             <a href="#recursos" class="nav-link" data-section="recursos" title="Recursos"><span class="lbl-full">Recursos</span><span class="lbl-corto">Recursos</span></a>
-            <a href="#clonar" class="nav-link" data-section="clonar" title="Clonar"><span class="lbl-full">Clonar</span><span class="lbl-corto">Clonar</span></a>
+            <a href="#clonar" class="nav-link" data-section="clonar" title="Instalador"><span class="lbl-full">Instalador</span><span class="lbl-corto">Instalador</span></a>
           </div>
         </div>
         <div class="nav-grupo" data-grupo="izumis">
@@ -3204,7 +3204,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <div class="inst-header">
           <div class="inst-header-text">
             <span class="inst-eyebrow">Instalación</span>
-            <h1>Clonar</h1>
+            <h1>Instalador</h1>
             <p class="lead">Copia el instalable (.deb) de la carpeta Música de este servidor a otros racks y lo instala.</p>
             <div class="ip-box" title="La app le hace ping a esta IP cada 5 s"><span class="dot ip-dot"></span><span class="ip-estado">En espera…</span><span class="ip-num">IP: —</span></div>
           </div>
@@ -3251,7 +3251,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <p class="clo-tip" id="clo-llave-txt">La contraseña no se guarda. Si conectas la llave USB, se llena sola.</p>
           <div class="clo-msg" id="clo-msg" hidden></div>
           <div class="clo-acc">
-            <button type="button" class="btn" id="clo-ir" disabled>Clonar</button>
+            <button type="button" class="btn" id="clo-ir" disabled>Instalar</button>
             <button type="button" class="btn clo-cancelar" id="clo-cancelar" hidden>Cancelar</button>
           </div>
         </div>
@@ -8817,7 +8817,7 @@ function pintarSeleccionIzumi() {
 })();
 </script>
 <script>
-/* ===== Clonar: instala el .deb de la carpeta Música en otros racks ===== */
+/* ===== Instalador (antes "Clonar"): instala el .deb de la carpeta Música en otros racks ===== */
 (() => {
   const S = window.sistema;
   const $c = (id) => document.getElementById(id);
@@ -8879,7 +8879,7 @@ function pintarSeleccionIzumi() {
       $c('clo-cuenta').textContent = nIps ? nIps + (nIps === 1 ? ' rack' : ' racks') : '';
       const listo = debs.length && nIps && !r.malas.length && $c('clo-usuario').value.trim() && $c('clo-clave').value;
       $c('clo-ir').disabled = corriendo || !listo;
-      $c('clo-ir').textContent = nIps > 1 ? 'Clonar a ' + nIps + ' racks' : 'Clonar';
+      $c('clo-ir').textContent = nIps > 1 ? 'Instalar en ' + nIps + ' racks' : 'Instalar';
     }, 120);
   }
   for (const id of ['clo-ip', 'clo-ips', 'clo-usuario', 'clo-clave']) $c(id).addEventListener('input', revisar);
