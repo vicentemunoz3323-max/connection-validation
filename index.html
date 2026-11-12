@@ -1454,10 +1454,14 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .firma { font-size: 11.5px; color: var(--muted); padding-top: 8px; }
 .firma .familia { letter-spacing: .06em; }
 /* Firma más resaltada */
-.firma { font-size: 13px; font-weight: 600; color: var(--text); padding: 14px 24px 16px; }
-.firma .version { display: table; margin: 7px auto 0; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
-  letter-spacing: .03em; opacity: 1; color: var(--blue); background: rgba(29, 92, 207, .1); font-variant-numeric: tabular-nums; }
-.firma .familia { margin-top: 7px; font-size: 10.5px; font-weight: 800; letter-spacing: .16em; opacity: 1; color: var(--text); }
+.firma { font-size: 13px; font-weight: 600; color: var(--text); padding: 12px 24px 14px; }
+.firma .firma-v { display: inline-flex; line-height: 0; }
+.firma .firma-v svg { display: block; filter: drop-shadow(0 1px 1.5px rgba(217, 48, 37, .35)); transform-origin: 50% 55%; animation: firma-late 1.4s ease-in-out infinite; }
+@keyframes firma-late { 0%, 100% { transform: scale(1); } 14% { transform: scale(1.18); } 28% { transform: scale(1); } 42% { transform: scale(1.12); } 70% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { .firma .firma-v svg { animation: none; } }
+.firma .version { display: table; margin: 6px auto 0; padding: 2px 10px; border-radius: 999px; font-size: 10px; font-weight: 600;
+  letter-spacing: .03em; opacity: .7; color: var(--blue); background: rgba(29, 92, 207, .08); font-variant-numeric: tabular-nums; }
+.firma .familia { margin-top: 5px; font-size: 9px; font-weight: 700; letter-spacing: .14em; opacity: .5; color: var(--text); }
 @media (max-width: 900px) { .firma .version { display: table; margin-left: auto; } }
 
 /* ---------- Responsivo ---------- */
@@ -3433,7 +3437,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
   </main>
 
-  <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión —</span><span class="familia">An app from the DRDT Engine software family</span></footer>
+  <footer class="firma"><span class="firma-v" title="V"><svg viewBox="0 0 32 29" width="16" height="14.5" aria-label="V"><path d="M16 28.2 13.8 26.2C5.9 19.1.8 14.5.8 8.8.8 4.2 4.4.6 9 .6c2.6 0 5.1 1.2 7 3.1C17.9 1.8 20.4.6 23 .6c4.6 0 8.2 3.6 8.2 8.2 0 5.7-5.1 10.3-13 17.4z" fill="#d93025"/><text x="16" y="17.6" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="800" fill="#fff">V</text></svg></span><span class="version" id="version-app">Versión 2026</span><span class="familia">An app from the DRDT Engine software family</span></footer>
 
   <!-- Aviso de actualización -->
   <div id="upd-toast" class="upd-toast" role="status" aria-live="polite">
@@ -8169,7 +8173,7 @@ function pintarSeleccionIzumi() {
     document.getElementById('upd-cerrar').addEventListener('click', ocultar);
 
     upd.version().then((v) => {
-      document.getElementById('version-app').textContent = 'Versión ' + v;
+      document.getElementById('version-app').textContent = 'Versión ' + v + ' · ' + new Date().getFullYear();
       btn.title = 'Buscar actualizaciones · v' + v;
     }).catch(() => {});
 
