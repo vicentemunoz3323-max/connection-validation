@@ -383,3 +383,6 @@ app.on('before-quit', () => {
 });
 
 console.log('[config] módulo de configuración cargado');
+
+// Para no actualizar la app a medio script
+module.exports = { ocupado: () => [...corriendo.values()].some((r) => !r.terminado) };

@@ -170,5 +170,6 @@ contextBridge.exposeInMainWorld('actualizador', {
   buscar: () => ipcRenderer.invoke('update:buscar'),
   descargar: () => ipcRenderer.invoke('update:descargar'),
   instalar: () => ipcRenderer.invoke('update:instalar'),
+  posponer: () => ipcRenderer.invoke('update:posponer'),
   alCambiar: (fn) => ipcRenderer.on('update:estado', (_e, datos) => fn(datos))
 });

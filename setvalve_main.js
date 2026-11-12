@@ -187,5 +187,5 @@ ipcMain.handle('sv-ping', (_e, ip) => new Promise((resolve) => {
   });
 }));
 
-module.exports = { configurar, aplicar, leerPorcentaje, SCRIPT };
+module.exports = { configurar, aplicar, leerPorcentaje, SCRIPT, ocupado: () => !!trabajo };
 console.log('[setvalve] set valve listo (script original set_valve_remote_V2.sh)');

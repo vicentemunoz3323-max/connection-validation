@@ -1096,7 +1096,8 @@ app.on('window-all-closed', () => {
 
 /* ============================================================
    ACTUALIZACIONES (GitHub Releases)
-   Revisa al abrir y cada hora. Avisa con notificación de Ubuntu y dentro de la app.
+   Revisa al abrir y cada hora. Si hay versión nueva la DESCARGA SOLA y la INSTALA SOLA
+   cuando la app no está trabajando (avisa 60 s antes, con "Actualizar ahora" y "Después").
    Solo funciona en la app instalada (.deb); con "npm start" muestra "modo desarrollo".
    ============================================================ */
 let autoUpdater = null;
@@ -1111,25 +1112,24 @@ function enviarUpdate(estado, datos = {}) {
 }
 
 if (autoUpdater) {
-  autoUpdater.autoDownload = false;          // primero se pregunta
+  autoUpdater.autoDownload = true;           // se descarga sola en cuanto la encuentra
   autoUpdater.autoInstallOnAppQuit = true;   // si ya se descargó, se instala al cerrar
   autoUpdater.on('checking-for-update', () => enviarUpdate('buscando'));
   autoUpdater.on('update-not-available', () => enviarUpdate('actual', { version: app.getVersion() }));
   autoUpdater.on('update-available', (info) => {
+    if (pendiente === info.version) return;   // ya está descargada, esperando a instalarse
     enviarUpdate('disponible', { version: info.version });
     if (versionAvisada === info.version) return;   // la notificación de Ubuntu sale una vez por versión, no cada hora
     versionAvisada = info.version;
     if (Notification.isSupported()) {
-      new Notification({ title: 'Connection Validation', body: `Nueva versión ${info.version} disponible. Ábrela para actualizar.` }).show();
+      new Notification({ title: 'Connection Validation', body: `Nueva versión ${info.version}: se está descargando sola.` }).show();
     }
   });
   autoUpdater.on('download-progress', (p) => enviarUpdate('descargando', { porcentaje: Math.round(p.percent) }));
   autoUpdater.on('update-downloaded', (info) => {
     enviarUpdate('lista', { version: info.version });
     bitacora.registrar('App', 'Actualización descargada', 'v' + info.version);
-    if (Notification.isSupported()) {
-      new Notification({ title: 'Connection Validation', body: `Versión ${info.version} lista. Reinicia la app para instalarla.` }).show();
-    }
+    programarInstalacion(info.version);
   });
   // Los errores pasajeros de GitHub (504, timeout...) se reintentan abajo: aquí no se avisan
   autoUpdater.on('error', (e) => { const m = e ? e.message : 'Error desconocido'; if (!esPasajero(m)) enviarUpdate('error', { mensaje: m }); else console.log('[update] error pasajero:', m.split('\n')[0]); });
@@ -1214,8 +1214,72 @@ async function descargarPlanB() {
   planB.archivo = destino;
   bitacora.registrar('App', 'Actualización descargada (plan B)', 'v' + planB.version + ' · ' + destino);
   enviarUpdate('lista', { version: planB.version });
-  if (Notification.isSupported()) new Notification({ title: 'Connection Validation', body: `Versión ${planB.version} lista. Reinicia la app para instalarla.` }).show();
+  programarInstalacion(planB.version);
 }
+// Plan B también se descarga solo
+async function autoPlanB() {
+  if (!planB || planB.archivo || descargando) return;
+  descargando = true;
+  try { await descargarPlanB(); }
+  catch (e) { enviarUpdate('error', { mensaje: e.message }); }
+  finally { descargando = false; }
+}
+
+/* ---------- Instalación automática ----------
+   Solo cuando la app no está trabajando. Avisa CUENTA_SEG segundos antes; "Después" la pospone.
+   Si cierras la app antes, se instala al cerrar. */
+const CUENTA_SEG = Number(process.env.CV_UPD_CUENTA_SEG) || 60;   // la variable es solo para pruebas
+const POSPONER_MIN = 30;
+let pendiente = null;        // versión descargada, esperando a instalarse
+let timerAuto = null;
+let posponerHasta = 0;
+function ocupadoAhora() {
+  const quien = [];
+  const prueba = (nombre, f) => { try { if (f()) quien.push(nombre); } catch (e) {} };
+  prueba('una ejecución de comandos', () => ejecCmds);
+  prueba('Configuración (SERVER / Juniper / Tross)', () => servidor.ocupado());
+  prueba('Chiller monitor', () => chillerMonitor.ocupado());
+  prueba('Generar test case', () => require('./testcase_main.js').ocupado());
+  prueba('Set valve', () => setValve.ocupado());
+  prueba('Clonar', () => require('./clonar_main.js').ocupado());
+  prueba('un script de Configuración', () => require('./configuracion_main.js').ocupado());
+  prueba('una consola de Izumi abierta', () => consolasIzumi.abiertas() > 0);
+  return quien;
+}
+function instalarYa() {
+  clearTimeout(timerAuto);
+  if (planB && planB.archivo) return instalarPlanB();
+  if (autoUpdater) { bitacora.registrar('App', 'Instalar actualización', 'desde v' + app.getVersion() + ' a v' + pendiente); autoUpdater.quitAndInstall(); }
+}
+function programarInstalacion(version) {
+  pendiente = version;
+  clearTimeout(timerAuto);
+  const intentar = () => {
+    if (!pendiente) return;
+    if (Date.now() < posponerHasta) { timerAuto = setTimeout(intentar, posponerHasta - Date.now() + 1000); return; }
+    const quien = ocupadoAhora();
+    if (quien.length) {                                   // trabajando: se espera y se vuelve a revisar cada minuto
+      enviarUpdate('esperando', { version, quien });
+      timerAuto = setTimeout(intentar, 60 * 1000);
+      return;
+    }
+    enviarUpdate('auto', { version, segundos: CUENTA_SEG });
+    if (Notification.isSupported()) new Notification({ title: 'Connection Validation', body: `Se actualiza a la versión ${version} en ${CUENTA_SEG} segundos.` }).show();
+    timerAuto = setTimeout(() => {
+      if (!pendiente || Date.now() < posponerHasta) return intentar();
+      if (ocupadoAhora().length) return intentar();        // empezó algo durante la cuenta
+      instalarYa();
+    }, CUENTA_SEG * 1000);
+  };
+  intentar();
+}
+ipcMain.handle('update:posponer', () => {
+  posponerHasta = Date.now() + POSPONER_MIN * 60 * 1000;
+  bitacora.registrar('App', 'Actualización pospuesta', 'v' + pendiente + ' · ' + POSPONER_MIN + ' min');
+  enviarUpdate('pospuesta', { version: pendiente, minutos: POSPONER_MIN });
+  if (pendiente) programarInstalacion(pendiente);
+  return true;
+});
 function instalarPlanB() {
   const { spawn } = require('child_process');
   bitacora.registrar('App', 'Instalar actualización (plan B)', 'desde v' + app.getVersion() + ' a v' + planB.version);
@@ -1238,7 +1302,7 @@ async function buscarActualizaciones() {
     await conReintentos('buscar', () => autoUpdater.checkForUpdates());
   } catch (e) {
     if (esPasajero(e.message)) {
-      try { await buscarPlanB(); }
+      try { await buscarPlanB(); autoPlanB(); }
       catch (e2) { enviarUpdate('error', { mensaje: 'GitHub no está respondiendo (' + String(e.message).split('\n')[0].slice(0, 60) + '). Se vuelve a intentar sola en una hora, o presiona el botón más tarde.' }); }
     } else enviarUpdate('error', { mensaje: e.message });
   } finally { buscandoAct = false; }
@@ -1295,10 +1359,7 @@ ipcMain.handle('update:descargar', async () => {
   } catch (e) { enviarUpdate('error', { mensaje: e.message }); }
   finally { descargando = false; }
 });
-ipcMain.handle('update:instalar', () => {
-  if (planB && planB.archivo) return instalarPlanB();
-  if (autoUpdater) { bitacora.registrar('App', 'Instalar actualización', 'desde v' + app.getVersion()); autoUpdater.quitAndInstall(); }
-});
+ipcMain.handle('update:instalar', () => instalarYa());
 
 app.whenReady().then(() => {
   if (!app.isPackaged || !esInstanciaPrincipal) return;

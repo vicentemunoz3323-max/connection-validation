@@ -253,5 +253,5 @@ ipcMain.handle('clo-clonar', (_e, datos) => clonar(datos));
 ipcMain.handle('clo-cancelar', () => cancelar());
 ipcMain.handle('clo-estado', () => (trabajo ? { corriendo: true, filas: trabajo.filas } : { corriendo: false }));
 
-module.exports = { leerIps };
+module.exports = { leerIps, ocupado: () => !!trabajo };
 console.log('[clonar] módulo Clonar cargado');

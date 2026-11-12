@@ -370,5 +370,5 @@ function cerrarTodas() {
 }
 app.on('before-quit', () => { for (const n of [...sesiones.keys()]) cerrarSesion(n); });
 
-module.exports = { cerrarTodas, abierta: (n) => sesiones.has(Number(n)) };
+module.exports = { cerrarTodas, abierta: (n) => sesiones.has(Number(n)), abiertas: () => sesiones.size };
 console.log('[izumi] módulo de consola Izumi cargado');

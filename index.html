@@ -8154,7 +8154,7 @@ function pintarSeleccionIzumi() {
     const btn = document.getElementById('btn-update');
     const toast = document.getElementById('upd-toast');
     if (!upd) { btn.hidden = true; return; }
-    let manual = false, accion = null, timer = null;
+    let manual = false, accion = null, timer = null, alCerrar = null, cuenta = null;
 
     function mostrar({ titulo, msg = '', tipo = '', ok = null, alOk = null, progreso = null, cerrar = true, ocultarEn = 0 }) {
       clearTimeout(timer);
@@ -8168,9 +8168,9 @@ function pintarSeleccionIzumi() {
       if (progreso !== null) document.getElementById('upd-prog').style.width = progreso + '%';
       if (ocultarEn) timer = setTimeout(ocultar, ocultarEn);
     }
-    function ocultar() { toast.classList.remove('visible'); }
+    function ocultar() { toast.classList.remove('visible'); clearInterval(cuenta); }
     document.getElementById('upd-ok').addEventListener('click', () => { if (accion) accion(); });
-    document.getElementById('upd-cerrar').addEventListener('click', ocultar);
+    document.getElementById('upd-cerrar').addEventListener('click', () => { const f = alCerrar; alCerrar = null; ocultar(); if (f) f(); });
 
     upd.version().then((v) => {
       document.getElementById('version-app').textContent = 'Versión ' + v + ' · ' + new Date().getFullYear();
@@ -8179,8 +8179,9 @@ function pintarSeleccionIzumi() {
 
     btn.addEventListener('click', () => { manual = true; upd.buscar(); });
 
-    upd.alCambiar(({ estado, version, porcentaje, mensaje, intento, de, segundos }) => {
+    upd.alCambiar(({ estado, version, porcentaje, mensaje, intento, de, segundos, quien, minutos }) => {
       btn.classList.toggle('girando', estado === 'buscando' || estado === 'descargando' || estado === 'reintentando');
+      if (estado !== 'auto') { clearInterval(cuenta); alCerrar = null; }
       switch (estado) {
         case 'buscando':
           if (manual) mostrar({ titulo: 'Buscando actualizaciones…', cerrar: false });
@@ -8190,15 +8191,32 @@ function pintarSeleccionIzumi() {
           break;
         case 'disponible':
           btn.classList.add('hay-nueva');
-          mostrar({ titulo: 'Nueva versión ' + version, msg: 'Hay una actualización lista para descargar.', ok: 'Descargar',
-            alOk: () => { upd.descargar(); mostrar({ titulo: 'Descargando actualización', msg: '0%', progreso: 0, cerrar: false }); } });
+          mostrar({ titulo: 'Nueva versión ' + version, msg: 'Se está descargando sola. Se instala cuando la app no esté trabajando.', progreso: 0, ocultarEn: 8000 });
           break;
         case 'descargando':
-          mostrar({ titulo: 'Descargando actualización', msg: porcentaje + '%', progreso: porcentaje, cerrar: false });
+          if (manual || porcentaje % 10 === 0) mostrar({ titulo: 'Descargando actualización', msg: porcentaje + '%', progreso: porcentaje, ocultarEn: porcentaje >= 100 ? 3000 : 0 });
           break;
         case 'lista':
-          mostrar({ titulo: 'Versión ' + version + ' descargada', msg: 'Reinicia para instalarla (te pedirá tu contraseña de Ubuntu). Si no, se instala al cerrar la app.',
-            tipo: 'ok', ok: 'Reiniciar e instalar', alOk: () => upd.instalar() });
+          mostrar({ titulo: 'Versión ' + version + ' descargada', msg: 'Se instala sola en cuanto la app no esté trabajando.', tipo: 'ok', ok: 'Instalar ahora', alOk: () => upd.instalar(), ocultarEn: 10000 });
+          break;
+        case 'esperando':
+          btn.classList.add('hay-nueva');
+          btn.title = 'Versión ' + version + ' lista · se instala cuando termine: ' + (quien || []).join(', ');
+          if (manual) mostrar({ titulo: 'Versión ' + version + ' lista', msg: 'Se instala sola cuando termine: ' + (quien || []).join(', ') + '.', tipo: 'ok', ok: 'Instalar ahora', alOk: () => upd.instalar(), ocultarEn: 10000 });
+          manual = false;
+          break;
+        case 'auto': {
+          let quedan = segundos || 60;
+          const pintar = () => mostrar({ titulo: 'Actualizando a la versión ' + version + ' en ' + quedan + ' s',
+            msg: 'La app se reinicia sola (Ubuntu te puede pedir tu contraseña).', tipo: 'ok', ok: 'Actualizar ahora', alOk: () => { clearInterval(cuenta); upd.instalar(); } });
+          pintar();
+          alCerrar = () => upd.posponer();
+          clearInterval(cuenta);
+          cuenta = setInterval(() => { quedan--; if (quedan <= 0) { clearInterval(cuenta); return; } pintar(); alCerrar = () => upd.posponer(); }, 1000);
+          break;
+        }
+        case 'pospuesta':
+          mostrar({ titulo: 'Actualización pospuesta', msg: 'Se vuelve a intentar en ' + minutos + ' minutos, o se instala al cerrar la app.', ocultarEn: 5000 });
           break;
         case 'actual':
           btn.classList.remove('hay-nueva');
