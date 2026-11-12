@@ -36,6 +36,7 @@ const servidor = require('./server_main.js');
 require('./llave_main.js');   // llave USB con las contraseñas
 require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO
 require('./clonar_main.js');   // Clonar: instala el .deb de Música en otros racks
+require('./daq_main.js');      // DAQ monitor: corre server/daq.py (DAQ970A, 16 canales)
 const setValve = require('./setvalve_main.js'); // Set valve: PWM de las válvulas por slot
 const protector = require('./protector_main.js'); // avisos a pantalla completa (se quitan con la contraseña de root)
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)
@@ -1242,6 +1243,7 @@ function ocupadoAhora() {
   prueba('Generar test case', () => require('./testcase_main.js').ocupado());
   prueba('Set valve', () => setValve.ocupado());
   prueba('Instalador', () => require('./clonar_main.js').ocupado());
+  prueba('DAQ monitor', () => require('./daq_main.js').ocupado());
   prueba('un script de Configuración', () => require('./configuracion_main.js').ocupado());
   prueba('una consola de Izumi abierta', () => consolasIzumi.abiertas() > 0);
   return quien;
