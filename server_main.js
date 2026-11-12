@@ -536,12 +536,22 @@ ipcMain.handle('srv-tross-cero', () => {
   } catch (e) { return { ok: false, error: e.message }; }
 });
 /* Pestaña Script con contraseña: se revisa aquí (no en la ventana) y abre por 10 minutos.
-   En el código solo va la huella sha256 de la contraseña, no la contraseña. */
-const HUELLA_SCRIPT = '52d28c6524709972e82cfeff0ad4059eb5195631c8a95daf2d169833506cb41b';
+   La contraseña NO va en el código. Con la llave USB se compara con su campo "script";
+   sin llave se compara con una huella scrypt (con sal), de la que no se puede sacar la contraseña. */
+const SCRIPT_SAL = 'e2b3288943e2d05e02f3bad98ff1a552';
+const SCRIPT_HUELLA = 'a2a54cdee0d38b94e4fe096b7cb49aeda4434f6acc2b67a0e4fe1232b2a1822b';
 let scriptAbierto = 0;
 const scriptOk = () => Date.now() < scriptAbierto;
 ipcMain.handle('srv-script-clave', (_e, clave) => {
-  const ok = require('crypto').createHash('sha256').update(String(clave || '')).digest('hex') === HUELLA_SCRIPT;
+  const crypto = require('crypto');
+  const escrita = String(clave || '');
+  const deLlave = require('./llave_main.js').clave('script');
+  let ok;
+  if (deLlave) {
+    ok = crypto.timingSafeEqual(crypto.createHash('sha256').update(escrita).digest(), crypto.createHash('sha256').update(deLlave).digest());
+  } else {
+    ok = crypto.timingSafeEqual(crypto.scryptSync(escrita, Buffer.from(SCRIPT_SAL, 'hex'), 32), Buffer.from(SCRIPT_HUELLA, 'hex'));
+  }
   scriptAbierto = ok ? Date.now() + 10 * 60 * 1000 : 0;
   bitacora.registrar('Server', ok ? 'Abrió la pestaña Script' : 'Contraseña incorrecta en Script');
   return { ok };

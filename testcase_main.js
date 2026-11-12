@@ -684,7 +684,7 @@ ipcMain.handle('tc-set-path', async (e) => {
 });
 
 ipcMain.handle('tc-scan', () => { if (trabajo) return ocupado(); escanear(); return { ok: true }; });
-ipcMain.handle('tc-script-run', () => { if (trabajo) return ocupado(); correrScript(); return { ok: true }; });
+ipcMain.handle('tc-script-run', () => { if (trabajo) return ocupado(); escanear(); return { ok: true }; });   // ya no usa Python
 ipcMain.handle('tc-script-set', async (e) => {
   if (trabajo) return { ok: false, error: 'Espera a que termine el trabajo en curso.' };
   const win = BrowserWindow.fromWebContents(e.sender) || undefined;

@@ -1453,6 +1453,12 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .manual-box { border-radius: 14px; }
 .firma { font-size: 11.5px; color: var(--muted); padding-top: 8px; }
 .firma .familia { letter-spacing: .06em; }
+/* Firma más resaltada */
+.firma { font-size: 13px; font-weight: 600; color: var(--text); padding: 14px 24px 16px; }
+.firma .version { display: table; margin: 7px auto 0; padding: 3px 12px; border-radius: 999px; font-size: 11px; font-weight: 700;
+  letter-spacing: .03em; opacity: 1; color: var(--blue); background: rgba(29, 92, 207, .1); font-variant-numeric: tabular-nums; }
+.firma .familia { margin-top: 7px; font-size: 10.5px; font-weight: 800; letter-spacing: .16em; opacity: 1; color: var(--text); }
+@media (max-width: 900px) { .firma .version { display: table; margin-left: auto; } }
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 1100px) {
@@ -2561,7 +2567,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         </div>
 
         <div class="tcs-fuente">
-          <span>Script <b id="tc-script">—</b> <a href="#" id="tc-script-elegir" class="tcs-link">cambiar</a></span>
           <span>Archivo <b id="tc-ruta">—</b> <a href="#" id="tc-cambiar" class="tcs-link">cambiar</a></span>
         </div>
 
@@ -3428,7 +3433,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
   </main>
 
-  <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión 1.0 beta</span><span class="familia">An app from the Ort Engine software family</span></footer>
+  <footer class="firma">Desarrollado por el equipo de Philo Ort Team <span style="color: #d93025;">❤️</span><span class="version" id="version-app">Versión —</span><span class="familia">An app from the DRDT Engine software family</span></footer>
 
   <!-- Aviso de actualización -->
   <div id="upd-toast" class="upd-toast" role="status" aria-live="polite">
@@ -5575,7 +5580,14 @@ function pintarSeleccionIzumi() {
     if (!chArmado) { q('ch-hint').textContent = 'Primero sube el switch'; chSacudir(); return; }
     q('ch-hint').textContent = 'Iniciando…';
     if (typeof registrarAccion === 'function') registrarAccion('Chiller', 'Presionó Configurar', CH_NOMBRES[sel]);
-    const r = await window.sistema.chCorrer(sel).catch((e) => ({ ok: false, error: e.message }));
+    let r = await window.sistema.chCorrer(sel).catch((e) => ({ ok: false, error: e.message }));
+    if (r && r.ok === false && r.faltan) {   // no hay llave USB: se preguntan las contraseñas
+      q('ch-hint').textContent = 'Escribe las contraseñas';
+      const pass = await srvPedirPass(r.faltan, 'Para configurar ' + CH_NOMBRES[sel] + '.');
+      if (!pass) { q('ch-hint').textContent = 'Cancelado'; return; }
+      q('ch-hint').textContent = 'Iniciando…';
+      r = await window.sistema.chCorrer(sel, pass).catch((e) => ({ ok: false, error: e.message }));
+    }
     if (r && r.ok === false) { q('ch-hint').textContent = r.error || 'No se pudo iniciar'; chSacudir(); }
   }
   function chDetener() {
@@ -5832,7 +5844,9 @@ function pintarSeleccionIzumi() {
     vault: ['Contraseña del vault de Ansible', 'La que pide ansible-playbook --ask-vault-pass'],
     mirror: ['Contraseña del mirror', 'Usuario testusr en el mirror (172.24.125.2)'],
     juniper: ['Contraseña de root del Juniper', 'La que se le va a poner al Juniper'],
-    zpe: ['Contraseña del ZPE', 'Usuario admin del Nodegrid']
+    zpe: ['Contraseña del ZPE', 'Usuario admin del Nodegrid'],
+    chiller: ['Contraseña del Chiller monitor', 'scp al equipo del chiller (172.24.125.166). Vacía = la misma de sudo'],
+    script: ['Contraseña de la pestaña Script', 'Para ver o editar el script de Config Engine']
   };
   const VAL_GRUPO = { general: 'General', server: 'Servidor', equipos: 'Juniper y ZPE', tross: 'Tross' };
   const VAL_INFO = {
@@ -6145,7 +6159,7 @@ function pintarSeleccionIzumi() {
   q('srv-pass-ok').addEventListener('click', () => {
     const pass = {};
     let falta = null;
-    q('srv-pass-campos').querySelectorAll('input').forEach((i) => { if (!i.value && !falta) falta = i; pass[i.dataset.k] = i.value; });
+    q('srv-pass-campos').querySelectorAll('input').forEach((i) => { if (!i.value && !falta && i.dataset.k !== 'chiller') falta = i; pass[i.dataset.k] = i.value; });
     if (falta) { falta.focus(); srvSacudir('srv-pass-ok'); return; }
     srvCerrarPass(pass);
   });
@@ -6354,7 +6368,7 @@ function pintarSeleccionIzumi() {
       const probar = async () => {
         const r = await window.sistema.srvScriptClave(inp.value).catch(() => ({ ok: false }));
         if (r && r.ok) return cerrar(true);
-        msg.textContent = 'Contraseña incorrecta'; inp.select(); srvSacudir('sc-lock-ok');
+        msg.textContent = (r && r.error) || 'Contraseña incorrecta'; inp.select(); srvSacudir('sc-lock-ok');
       };
       q('sc-lock-ok').onclick = probar;
       q('sc-lock-cancelar').onclick = () => cerrar(false);
@@ -6577,7 +6591,7 @@ function pintarSeleccionIzumi() {
     const msg = q('llave-msg'); msg.className = 'srv-sc-msg'; msg.textContent = lista.length ? '' : 'Conecta una USB y vuelve a abrir esta ventana.';
     q('llave-crear').disabled = !lista.some((u) => u.escribible);
     const cont = q('llave-campos'); cont.textContent = '';
-    for (const k of ['sudo', 'vault', 'mirror']) {   // las de Juniper / ZPE / Tross van en Valores
+    for (const k of ['sudo', 'vault', 'mirror', 'chiller', 'script']) {   // las de Juniper / ZPE / Tross van en Valores
       const l = document.createElement('label');
       l.innerHTML = esc(PASS_INFO[k][0]) + ' <small>' + esc(PASS_INFO[k][1]) + '</small>';
       const i = document.createElement('input'); i.type = 'password'; i.autocomplete = 'off'; i.dataset.k = k;
@@ -7691,7 +7705,7 @@ function pintarSeleccionIzumi() {
     // Mientras trabaja solo se ve "Detener"
     q('tc-script-run').hidden = b;
     q('tc-run-all').hidden = b;
-    for (const id of ['tc-cambiar', 'tc-script-elegir']) q(id).classList.toggle('off', b);
+    q('tc-cambiar').classList.toggle('off', b);
     q('tc-all').disabled = b;
     for (const f of filas) { f.parte.disabled = b; f.serial.disabled = b; f.chk.disabled = b; }
     q('tc-stop').hidden = !b;
@@ -7707,9 +7721,7 @@ function pintarSeleccionIzumi() {
   }
 
   function aplicarRuta() {
-    q('tc-script').textContent = script ? script.split('/').pop() + (scriptExiste ? '' : ' (no existe)') : 'sin elegir';
-    q('tc-script').title = script || 'Elige el .py que genera el Test case';
-    q('tc-script-run').title = scriptExiste ? 'Corre ' + script.split('/').pop() + ' y llena la tabla' : 'Elige primero el script';
+    q('tc-script-run').title = 'Lee la EEPROM de los 16 slots y llena la tabla';
     q('tc-ruta').textContent = ruta ? ruta.split('/').pop() : '—';
     q('tc-ruta').title = ruta || '';
     const e = q('tc-existe');
@@ -8050,14 +8062,12 @@ function pintarSeleccionIzumi() {
     return false;
   }
   q('tc-script-run').addEventListener('click', async () => {
-    if (!scriptExiste && !(await elegirScript())) return;   // sin script: primero se elige
     const hay = existe || slots.some((s) => s.parte || s.serial);
     if (hay && !window.confirm('Se va a generar de nuevo ' + (ruta ? ruta.split('/').pop() : 'el Test case') + ' y la tabla se llenará con lo nuevo. ¿Continuar?')) return;
     iniciarGeneracion();
-    const res = await llamar(() => window.sistema.tcCorrerScript());
+    const res = await llamar(() => window.sistema.tcEscanear());   // lee la EEPROM con la app (JavaScript), sin Python
     if (res && res.ok === false) { generando = false; limpiarEstados(['det']); }
   });
-  q('tc-script-elegir').addEventListener('click', (e) => { e.preventDefault(); elegirScript(); });
   q('tc-run-all').addEventListener('click', () => correr(sel.size ? 'sel' : 'todos'));
   q('tc-stop').addEventListener('click', () => llamar(() => window.sistema.tcDetener()));
   q('tc-cambiar').addEventListener('click', async (e) => {
@@ -8797,8 +8807,8 @@ function pintarSeleccionIzumi() {
 
   /* ---- Instalable ---- */
   async function buscar() {
-    const r = await S.cloBuscar().catch(() => ({ debs: [], dir: '' }));
-    debs = r.debs || [];
+    const r = (await S.cloBuscar().catch(() => null)) || { debs: [], dir: '' };
+    debs = Array.isArray(r.debs) ? r.debs : [];
     const sel = $c('clo-deb'), antes = sel.value;
     sel.innerHTML = debs.map((d) => '<option value="' + esc(d.ruta) + '">' + esc(d.nombre) + '</option>').join('');
     if (debs.some((d) => d.ruta === antes)) sel.value = antes;
@@ -8838,7 +8848,7 @@ function pintarSeleccionIzumi() {
   function revisar() {
     clearTimeout(tRev);
     tRev = setTimeout(async () => {
-      const r = await S.cloIps(textoIps()).catch(() => ({ ips: [], malas: [] }));
+      const r = (await S.cloIps(textoIps()).catch(() => null)) || { ips: [], malas: [] };
       nIps = r.ips.length;
       const msg = $c('clo-msg');
       if (r.malas.length && !corriendo) { msg.hidden = false; msg.className = 'clo-msg'; msg.textContent = 'No son IPs válidas: ' + r.malas.slice(0, 5).join(', ') + (r.malas.length > 5 ? '…' : ''); }
@@ -8941,7 +8951,7 @@ function pintarSeleccionIzumi() {
   window.addEventListener('hashchange', () => { if (location.hash === '#clonar') alEntrar(); });
   document.querySelectorAll('a[data-section="clonar"]').forEach((a) => a.addEventListener('click', () => setTimeout(alEntrar, 50)));
   (async () => {
-    $c('clo-usuario').value = await S.cloUsuario().catch(() => '');
+    $c('clo-usuario').value = (await S.cloUsuario().catch(() => '')) || '';
     const e = await S.cloEstado().catch(() => null);
     if (e && e.corriendo) { $c('clo-res').hidden = false; ponerCorriendo(true); for (const [ip, f] of Object.entries(e.filas)) pintarFila({ ip, ...f }); }
     buscar();

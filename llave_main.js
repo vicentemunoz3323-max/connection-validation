@@ -6,7 +6,8 @@
 
    - El archivo vive SOLO en la USB:  <USB>/ghostfish-llave.json
    - Es texto normal (se puede abrir y editar con cualquier editor):
-       { "nombre": "Línea 3", "sudo": "...", "vault": "...", "mirror": "...", "juniper": "...", "zpe": "..." }
+       { "nombre": "Línea 3", "sudo": "...", "vault": "...", "mirror": "...", "juniper": "...", "zpe": "...",
+         "chiller": "...", "script": "..." }
      Un campo vacío ("") cuenta como que no está y la app lo pide.
    - Nunca se copia al servidor; se lee cuando se necesita y se descarta.
    ============================================================ */
@@ -19,7 +20,8 @@ const bitacora = require('./bitacora.js');
 
 const NOMBRE = 'ghostfish-llave.json';
 const NOMBRE_VIEJO = 'ghostfish-llave.gfk';   // versión cifrada anterior: se sigue leyendo
-const CAMPOS = ['sudo', 'vault', 'mirror', 'juniper', 'zpe'];
+const CAMPOS = ['sudo', 'vault', 'mirror', 'juniper', 'zpe', 'chiller', 'script'];
+// Si no traes la llave, la app te pregunta la contraseña que falte.
 const CLAVE = crypto.createHash('sha256').update('ghostfish·connection-validation·llave-usb·v1').digest();
 
 // Carpetas donde Ubuntu monta las USB (/media/<usuario>/<USB>, /run/media/<usuario>/<USB>)
@@ -120,5 +122,8 @@ ipcMain.handle('llave-crear', (_e, opc) => {
   return { ok: true, usb: u.nombre, campos: Object.keys(pass) };
 });
 
-module.exports = { leer, usbs, NOMBRE };
+// Una contraseña de la llave (o '' si no hay llave o no tiene ese campo)
+function clave(campo) { const r = leer(); return r.ok && r.pass[campo] ? r.pass[campo] : ''; }
+
+module.exports = { leer, usbs, clave, NOMBRE };
 console.log('[llave] llave USB lista');

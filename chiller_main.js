@@ -49,9 +49,13 @@ const SCRIPT_CHILLER = [
   "CYAN='\\033[0;36m'",
   "SIN_COLOR='\\033[0m' # Reset color",
   "",
-  "# CREDENCIALES Y RUTAS (Contraseña unificada: 55eed35fba)",
-  "MI_PASSWORD=\"55eed35fba\"",
-  "RED_PASSWORD=\"55eed35fba\"",
+  "# CREDENCIALES: las pone la app desde la llave USB (campos sudo y chiller). No van escritas aquí.",
+  "[ -n \"$CV_CLAVES\" ] && [ -f \"$CV_CLAVES\" ] && . \"$CV_CLAVES\"",
+  "rm -f \"$CV_CLAVES\"",
+  "if [ -z \"$MI_PASSWORD\" ] || [ -z \"$RED_PASSWORD\" ]; then",
+  "    echo -e \"${ROJO}[ERROR CRÍTICO] Faltan las contraseñas: conecta la llave USB (campos sudo y chiller).${SIN_COLOR}\"",
+  "    exit 1",
+  "fi",
   "ARCHIVO=\"/etc/systemd/system/chillermonitor.service\"",
   "REMOTE_IP=\"172.24.125.166\"",
   "",
@@ -311,9 +315,16 @@ function sello() {
   return d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + '_' + z(d.getHours()) + z(d.getMinutes()) + z(d.getSeconds());
 }
 
-async function correr(dev) {
+async function correr(dev, claves) {
   if (!DEVS[dev]) return { ok: false, error: 'Equipo desconocido' };
   if (trabajo) return { ok: false, error: 'Ya hay un script corriendo en ' + DEVS[trabajo.dev] };
+  // Contraseñas desde la llave USB (no van escritas en el código)
+  // (las de la ventana si las escribiste; si no, las de la llave USB)
+  const llave = require('./llave_main.js');
+  const cl = claves || {};
+  const miClave = cl.sudo || llave.clave('sudo');
+  const redClave = cl.chiller || llave.clave('chiller') || miClave;
+  if (!miClave) return { ok: false, faltan: ['sudo', 'chiller'], error: 'Faltan las contraseñas' };
   let ruta;
   try { ruta = prepararScript(); } catch (e) { return { ok: false, error: 'No se pudo preparar el script: ' + e.message }; }
 
@@ -332,7 +343,11 @@ async function correr(dev) {
   linea(dev, 'sys', '▶ ' + path.basename(ruta) + ' · ' + new Date().toLocaleString('es'));
   emitirEstado();
 
-  const env = { ...process.env, TERM: 'dumb', LANG: process.env.LANG || 'C.UTF-8' };
+  // Las contraseñas van en un archivo que solo puede leer este usuario; el script lo lee y lo borra
+  const archClaves = path.join(dir, '.cv_claves_' + Date.now());
+  try { fs.writeFileSync(archClaves, 'MI_PASSWORD=' + comillas(miClave) + '\nRED_PASSWORD=' + comillas(redClave) + '\n', { mode: 0o600 }); }
+  catch (e) { trabajo = null; return { ok: false, error: 'No se pudo preparar las contraseñas: ' + e.message }; }
+  const env = { ...process.env, TERM: 'dumb', LANG: process.env.LANG || 'C.UTF-8', CV_CLAVES: archClaves };
   let cmd, args;
   const sr = await compartido.systemdRun();          // la app tiene "no new privileges": se corre fuera con systemd-run
   if (sr) {
@@ -341,7 +356,7 @@ async function correr(dev) {
     for (const k of compartido.varsSesion || []) if (process.env[k]) vars.push('--setenv=' + k + '=' + process.env[k]);
     cmd = sr;
     args = ['--user', '--pipe', '--quiet', '--wait', '--collect', '--unit=' + t.unidad, '--working-directory=' + dir,
-      '-p', 'KillMode=process', ...vars, '--setenv=TERM=dumb', '--', '/bin/bash', ruta];
+      '-p', 'KillMode=process', ...vars, '--setenv=TERM=dumb', '--setenv=CV_CLAVES=' + archClaves, '--', '/bin/bash', ruta];
     linea(dev, 'sys', '(corre fuera de la app con systemd-run para que sudo funcione)');
   } else {
     cmd = '/bin/bash';
@@ -362,6 +377,7 @@ async function correr(dev) {
     p.on('close', (c) => { if (listo) return; listo = true; out.flush(); err.flush(); resolve(c === null ? -1 : c); });
   });
 
+  try { fs.unlinkSync(archClaves); } catch (e) {}   // por si el script no alcanzó a borrarlo
   const seg = Math.round((Date.now() - t.inicio) / 1000);
   const dur = Math.floor(seg / 60) + ':' + String(seg % 60).padStart(2, '0');
   const configurado = !t.abort && codigo === 0 && !t.errores;
@@ -419,9 +435,12 @@ ipcMain.handle('ch-elegir', async (e, dev) => {
   emitirEstado();
   return { ok: true, cambio: true };
 });
-ipcMain.handle('ch-run', (_e, dev) => {
+ipcMain.handle('ch-run', (_e, dev, claves) => {
   if (trabajo) return { ok: false, error: 'Ya hay un script corriendo en ' + DEVS[trabajo.dev] };
-  correr(dev);
+  // Sin llave ni contraseñas escritas: se avisa para que la ventana las pregunte
+  const llave = require('./llave_main.js');
+  if (!(claves && claves.sudo) && !llave.clave('sudo')) return { ok: false, faltan: ['sudo', 'chiller'] };
+  correr(dev, claves);
   return { ok: true };
 });
 ipcMain.handle('ch-stop', () => detener());

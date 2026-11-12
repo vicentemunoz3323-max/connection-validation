@@ -122,7 +122,7 @@ contextBridge.exposeInMainWorld('sistema', {
   llaveCrear: (opc) => ipcRenderer.invoke('llave-crear', opc),
   onLlaveEstado: (cb) => ipcRenderer.on('llave-estado', (_e, d) => cb(d)),
   chElegir: (dev) => ipcRenderer.invoke('ch-elegir', dev),
-  chCorrer: (dev) => ipcRenderer.invoke('ch-run', dev),
+  chCorrer: (dev, claves) => ipcRenderer.invoke('ch-run', dev, claves),
   chDetener: () => ipcRenderer.invoke('ch-stop'),
   chAbrirLog: (dev) => ipcRenderer.invoke('ch-open-log', dev),
   onChSalida: (cb) => ipcRenderer.on('ch-salida', (_e, d) => cb(d)),
