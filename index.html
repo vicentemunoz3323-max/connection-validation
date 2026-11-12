@@ -8094,16 +8094,12 @@ function pintarSeleccionIzumi() {
   aplicarJob();
   actualizarMeta();
 
-  async function elegirScript() {
-    const r = await llamar(() => window.sistema.tcElegirScript());
-    if (r && r.ok && r.cambio) { const e = await window.sistema.tcObtener(); aplicarEstado(e); return true; }
-    return false;
-  }
+
   q('tc-script-run').addEventListener('click', async () => {
     const hay = existe || slots.some((s) => s.parte || s.serial);
     if (hay && !window.confirm('Se va a generar de nuevo ' + (ruta ? ruta.split('/').pop() : 'el Test case') + ' y la tabla se llenará con lo nuevo. ¿Continuar?')) return;
     iniciarGeneracion();
-    const res = await llamar(() => window.sistema.tcEscanear());   // lee la EEPROM con la app (JavaScript), sin Python
+    const res = await llamar(() => window.sistema.tcEscanear());   // corre el script de seriales (fru_serial.py) en los 16 slots
     if (res && res.ok === false) { generando = false; limpiarEstados(['det']); }
   });
   q('tc-run-all').addEventListener('click', () => correr(sel.size ? 'sel' : 'todos'));

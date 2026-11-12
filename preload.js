@@ -136,7 +136,6 @@ contextBridge.exposeInMainWorld('sistema', {
   tcFruGuardar: (texto) => ipcRenderer.invoke('tc-fru-guardar', texto),
   tcFruRestaurar: () => ipcRenderer.invoke('tc-fru-restaurar'),
   tcCorrerScript: () => ipcRenderer.invoke('tc-script-run'),
-  tcElegirScript: () => ipcRenderer.invoke('tc-script-set'),
   tcCorrer: (slots, seleccion) => ipcRenderer.invoke('tc-run', slots, seleccion),
   tcDetener: () => ipcRenderer.invoke('tc-stop'),
   tcLeerArchivo: () => ipcRenderer.invoke('tc-read-file'),
