@@ -1359,6 +1359,24 @@ h1 { font-size: clamp(22px, 2.3vw, 28px); font-weight: 700; letter-spacing: -.02
 .tc-bar .tc-stop, .tc-bar .tc-stop:hover { background: var(--red); }
 .link-btn { border-radius: var(--r-s) !important; }
 
+/* ---------- Script de seriales (Generar test case) ---------- */
+.fru-velo { position: fixed; inset: 0; z-index: 80; background: rgba(16,24,40,.45); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.fru-velo[hidden] { display: none; }
+.fru-ventana { background: #fff; border-radius: 14px; width: min(1000px, 100%); height: min(760px, calc(100vh - 40px)); display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(16,24,40,.3); overflow: hidden; }
+.fru-head { display: flex; gap: 14px; align-items: flex-start; justify-content: space-between; padding: 16px 20px 10px; }
+.fru-head b { display: block; font-size: 16px; }
+.fru-sub { display: block; font-size: 12.5px; color: var(--muted); margin-top: 3px; max-width: 760px; line-height: 1.45; }
+.fru-x { border: 0; background: none; font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 2px 8px; border-radius: 6px; }
+.fru-x:hover { background: var(--bg-soft); color: var(--text); }
+.fru-meta { display: flex; align-items: center; gap: 10px; padding: 0 20px 10px; font-size: 12px; color: var(--muted); min-width: 0; }
+.fru-meta code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fru-texto { flex: 1; margin: 0 20px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; background: #11161d; color: #d3dbe5;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.55; resize: none; tab-size: 4; white-space: pre; overflow: auto; }
+.fru-texto:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,92,207,.15); }
+.fru-pie { display: flex; align-items: center; gap: 8px; padding: 12px 20px 16px; }
+.fru-msg { flex: 1; font-size: 12.5px; color: var(--muted); }
+.fru-msg.ok { color: var(--green); } .fru-msg.mal { color: var(--red); }
+
 /* ---------- Clonar ---------- */
 .clo-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 16px; align-items: start; }
 .clo-card .card-head { margin-bottom: 12px; }
@@ -2565,6 +2583,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <div class="tcs-acc">
             <button id="tc-script-run" class="btn tcs-generar" type="button">Generar</button>
             <button id="tc-run-all" class="btn btn-secundario tcs-correr" type="button">Correr todo</button>
+            <button id="tc-fru" class="btn btn-secundario" type="button" title="Ver o modificar el script que saca los seriales">Script</button>
             <button id="tc-ver" class="btn btn-secundario" type="button" title="Muestra el contenido del archivo del Test case">Ver archivo</button>
             <button id="tc-stop" class="btn tc-stop" type="button" hidden>Detener</button>
           </div>
@@ -3437,7 +3456,22 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 
   </main>
 
-  <footer class="firma"><span class="firma-v" title="V"><svg viewBox="0 0 32 29" width="16" height="14.5" aria-label="V"><path d="M16 28.2 13.8 26.2C5.9 19.1.8 14.5.8 8.8.8 4.2 4.4.6 9 .6c2.6 0 5.1 1.2 7 3.1C17.9 1.8 20.4.6 23 .6c4.6 0 8.2 3.6 8.2 8.2 0 5.7-5.1 10.3-13 17.4z" fill="#d93025"/><text x="16" y="17.6" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="800" fill="#fff">V</text></svg></span><span class="version" id="version-app">Versión 2026</span><span class="familia">An app from the DRDT Engine software family</span></footer>
+  <div id="fru-velo" class="fru-velo" hidden>
+  <div class="fru-ventana" role="dialog" aria-modal="true" aria-labelledby="fru-tit">
+    <div class="fru-head">
+      <div><b id="fru-tit">Script de seriales</b><span class="fru-sub">Generar lo corre en cada slot (8 a la vez) y le escribe el número de slot. Toma el serial de "El serial correcto es:" y la parte de "El part number correcto es:".</span></div>
+      <button type="button" class="fru-x" id="fru-cerrar" aria-label="Cerrar">×</button>
+    </div>
+    <div class="fru-meta"><code id="fru-ruta">—</code><span id="fru-estado" class="tc-badge"></span></div>
+    <textarea id="fru-texto" class="fru-texto" spellcheck="false" autocomplete="off" wrap="off"></textarea>
+    <div class="fru-pie">
+      <span id="fru-msg" class="fru-msg"></span>
+      <button type="button" class="btn btn-secundario" id="fru-restaurar">Restaurar original</button>
+      <button type="button" class="btn" id="fru-guardar">Guardar</button>
+    </div>
+  </div>
+</div>
+<footer class="firma"><span class="firma-v" title="V"><svg viewBox="0 0 32 29" width="16" height="14.5" aria-label="V"><path d="M16 28.2 13.8 26.2C5.9 19.1.8 14.5.8 8.8.8 4.2 4.4.6 9 .6c2.6 0 5.1 1.2 7 3.1C17.9 1.8 20.4.6 23 .6c4.6 0 8.2 3.6 8.2 8.2 0 5.7-5.1 10.3-13 17.4z" fill="#d93025"/><text x="16" y="17.6" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="800" fill="#fff">V</text></svg></span><span class="version" id="version-app">Versión 2026</span><span class="familia">An app from the DRDT Engine software family</span></footer>
 
   <!-- Aviso de actualización -->
   <div id="upd-toast" class="upd-toast" role="status" aria-live="polite">
@@ -7725,7 +7759,7 @@ function pintarSeleccionIzumi() {
   }
 
   function aplicarRuta() {
-    q('tc-script-run').title = 'Lee la EEPROM de los 16 slots y llena la tabla';
+    q('tc-script-run').title = 'Corre el script de seriales en los 16 slots (8 a la vez) y llena la tabla';
     q('tc-ruta').textContent = ruta ? ruta.split('/').pop() : '—';
     q('tc-ruta').title = ruta || '';
     const e = q('tc-existe');
@@ -8130,6 +8164,54 @@ function pintarSeleccionIzumi() {
       } catch (e) {}
     });
   });
+
+  /* ---- Script de seriales: ver y modificar ---- */
+  (() => {
+    const S = window.sistema;
+    if (!S || !S.tcFruLeer || !q('tc-fru')) return;
+    const velo = q('fru-velo'), txt = q('fru-texto'), msg = q('fru-msg');
+    let guardado = '';
+    const aviso = (t, c) => { msg.textContent = t; msg.className = 'fru-msg' + (c ? ' ' + c : ''); };
+    const pintarEstado = (esOriginal) => { const e = q('fru-estado'); e.textContent = esOriginal ? 'original' : 'modificado'; e.className = 'tc-badge ' + (esOriginal ? 'ok' : 'warn'); };
+    async function abrir() {
+      const r = await S.tcFruLeer().catch((e) => ({ ok: false, error: e.message }));
+      if (!r || !r.ok) { alert('No se pudo abrir el script: ' + ((r && r.error) || '')); return; }
+      txt.value = guardado = r.texto;
+      q('fru-ruta').textContent = r.ruta; q('fru-ruta').title = r.ruta;
+      pintarEstado(r.esOriginal); aviso('');
+      velo.hidden = false; txt.focus(); txt.setSelectionRange(0, 0); txt.scrollTop = 0;
+    }
+    function cerrar() {
+      if (txt.value !== guardado && !confirm('Tienes cambios sin guardar. ¿Cerrar de todos modos?')) return;
+      velo.hidden = true;
+    }
+    q('tc-fru').addEventListener('click', abrir);
+    q('fru-cerrar').addEventListener('click', cerrar);
+    velo.addEventListener('mousedown', (e) => { if (e.target === velo) cerrar(); });
+    document.addEventListener('keydown', (e) => {
+      if (velo.hidden) return;
+      if (e.key === 'Escape') { e.preventDefault(); cerrar(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); q('fru-guardar').click(); }
+    });
+    txt.addEventListener('keydown', (e) => {   // Tab mete 4 espacios (Python)
+      if (e.key !== 'Tab') return;
+      e.preventDefault();
+      const a = txt.selectionStart, b = txt.selectionEnd;
+      txt.setRangeText('    ', a, b, 'end');
+    });
+    txt.addEventListener('input', () => aviso(txt.value !== guardado ? 'Cambios sin guardar' : ''));
+    q('fru-guardar').addEventListener('click', async () => {
+      const r = await S.tcFruGuardar(txt.value).catch((e) => ({ ok: false, error: e.message }));
+      if (r && r.ok) { guardado = txt.value; aviso('Guardado. El siguiente Generar ya usa esta versión.', 'ok'); const l = await S.tcFruLeer().catch(() => null); if (l && l.ok) pintarEstado(l.esOriginal); }
+      else aviso((r && r.error) || 'No se pudo guardar', 'mal');
+    });
+    q('fru-restaurar').addEventListener('click', async () => {
+      if (!confirm('¿Regresar el script al original? Se pierden tus cambios.')) return;
+      const r = await S.tcFruRestaurar().catch((e) => ({ ok: false, error: e.message }));
+      if (r && r.ok) { txt.value = guardado = r.texto; pintarEstado(true); aviso('Se restauró el original.', 'ok'); }
+      else aviso((r && r.error) || 'No se pudo restaurar', 'mal');
+    });
+  })();
 
   if (hayApi()) {
     window.sistema.tcObtener().then((r) => {

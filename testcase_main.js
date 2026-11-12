@@ -30,7 +30,9 @@ const CONFIG = {
   BMC_PASSWORD: '0penBmc',
   COMANDO_EEPROM: 'hexdump -C -n256 /sys/bus/i2c/drivers/at24/150-0050/eeprom',
   PING_VENTANA_MS: 60000,                      // cuánto se insiste con el ping por slot
-  SCAN_CONCURRENCIA: 4                         // slots que se escanean a la vez (1 = uno por uno, como el original)
+  SCAN_CONCURRENCIA: 4,                        // slots que se escanean a la vez (lector interno, ya no se usa en Generar)
+  FRU_A_LA_VEZ: 8,                             // slots que corren el script de seriales al mismo tiempo
+  FRU_LIMITE_MS: 7 * 60 * 1000                 // un slot no puede tardar más de esto (el script espera hasta 5 min el ping)
 };
 // Para pruebas en otra PC:  CV_ZPE_IP=127.0.0.1 CV_ZPE_PUERTO_BASE=17000
 if (process.env.CV_ZPE_IP) CONFIG.ZPE_IP = process.env.CV_ZPE_IP;
@@ -520,6 +522,151 @@ async function escanear() {
   }
 }
 
+/* ---------- Script de seriales (el de siempre: fru_serial.py) ----------
+   Se puede ver y modificar desde la pantalla. La app trabaja con una copia en la carpeta de la app;
+   el original viene dentro de la app (server/fru_serial.py) y se puede restaurar. */
+const FRU_ORIGINAL = path.join(__dirname, 'server', 'fru_serial.py');
+const rutaFru = () => path.join(app.getPath('userData'), 'fru_serial.py');
+function scriptFru() {
+  const r = rutaFru();
+  if (!fs.existsSync(r)) fs.writeFileSync(r, fs.readFileSync(FRU_ORIGINAL), { mode: 0o755 });   // (se lee y escribe: el original vive dentro del paquete de la app)
+  return r;
+}
+const sinColores = (t) => String(t).replace(/\x1b\[[0-9;]*[A-Za-z]/g, '').replace(/\r/g, '');
+
+// Corre el script para UN slot: le escribe el número donde pregunta y lee lo que imprime
+function correrFru(n, t) {
+  return new Promise((res) => {
+    const nn = dos(n);
+    let texto = '', resto = '';
+    let p;
+    try {
+      p = spawn('python3', ['-u', scriptFru()], {
+        cwd: app.getPath('userData'), detached: process.platform !== 'win32',
+        env: { ...process.env, PYTHONUNBUFFERED: '1', PYTHONIOENCODING: 'utf-8', TERM: 'dumb' }
+      });
+    } catch (e) { return res({ error: 'No se pudo correr python3: ' + e.message }); }
+    t.procs.add(p);
+    const tomar = (b) => {
+      const s = sinColores(b.toString('utf8'));
+      texto += s;
+      const partes = (resto + s).split('\n');
+      resto = partes.pop();
+      for (const l of partes) {
+        const limpia = l.replace(/^Ingrese el numero de slot \(1-16\):\s*/, '');
+        if (limpia.trim()) { linea(/ERROR|No se pudo|Error|Traceback/.test(limpia) ? 'err' : 'out', 'Slot ' + nn + ' · ' + limpia); if (t.logStream) t.logStream.write('[Slot ' + nn + '] ' + limpia + '\n'); }
+      }
+    };
+    p.stdout.on('data', tomar);
+    p.stderr.on('data', tomar);
+    p.stdin.on('error', () => {});
+    p.stdin.write(n + '\n');
+    p.stdin.end();
+    const limite = setTimeout(() => { texto += '\n(el slot tardó demasiado y se detuvo)'; matarArbol(p); }, CONFIG.FRU_LIMITE_MS);
+    const fin = (codigo) => {
+      clearTimeout(limite);
+      t.procs.delete(p);
+      if (resto.trim()) tomar(Buffer.from('\n'));
+      res({ texto, codigo });
+    };
+    p.on('error', (e) => { clearTimeout(limite); t.procs.delete(p); res({ error: e.code === 'ENOENT' ? 'No está python3 en este equipo' : e.message }); });
+    p.on('close', fin);
+  });
+}
+
+// Lo que imprimió el script → parte y serial
+function leerSalidaFru(texto) {
+  const s = sinColores(texto);
+  const serial = (s.match(/El serial correcto es:\s*(\S+)/) || s.match(/\bFLG\d{4}-\d{5}\b/) || [])[1] || (s.match(/\bFLG\d{4}-\d{5}\b/) || [])[0] || '';
+  const parte = (s.match(/El part number correcto es:\s*(\d+)/) || [])[1] || '';
+  let motivo = '';
+  if (!serial && !parte) {
+    const mod = s.match(/No module named '([^']+)'/);
+    if (mod) motivo = 'Falta el módulo de Python "' + mod[1] + '" (pip install ' + mod[1] + ')';
+    else if (/Validacion por ping/.test(s)) motivo = 'Sin respuesta al ping (vacío o apagado)';
+    else motivo = (s.trim().split('\n').filter((l) => l.trim() && !/^Ingrese el numero/.test(l)).pop() || 'El script no imprimió el serial').slice(0, 160);
+  }
+  return { serial, parte, motivo };
+}
+
+async function escanearFru() {
+  const t = abrirTrabajo('escaneo', NUM_SLOTS);
+  if (!t) return ocupado();
+  t.procs = new Set();
+  linea('sys', '--- Generando ' + CONFIG.NOMBRE_ARCHIVO + ' con el script de seriales (' + CONFIG.FRU_A_LA_VEZ + ' slots a la vez) ---');
+  try { scriptFru(); } catch (e) { linea('err', 'No se encontró el script de seriales: ' + e.message); cerrarTrabajo(); return { ok: false, error: e.message }; }
+  const slots = Array.from({ length: NUM_SLOTS }, () => ({ parte: '', serial: '' }));
+  const nums = Array.from({ length: NUM_SLOTS }, (_, i) => i + 1);
+  try {
+    await pool(nums, CONFIG.FRU_A_LA_VEZ, async (n) => {
+      const nn = dos(n);
+      enviar('tc-slot', { n, estado: 'verificando', msg: 'Corriendo script…' });
+      const r = await correrFru(n, t);
+      if (t.abort) return enviar('tc-slot', { n, estado: 'detenido', msg: 'Detenido' });
+      let res;
+      if (r.error) {
+        res = { n, estado: 'fail', msg: r.error };
+        linea('err', 'Slot ' + nn + ': FAIL -> ' + r.error);
+      } else {
+        const d = leerSalidaFru(r.texto);
+        if (d.serial || d.parte) {
+          slots[n - 1] = { parte: d.parte, serial: d.serial };
+          res = { n, estado: 'ok', msg: 'SUCCESS', parte: d.parte, serial: d.serial };
+          linea('out', 'Slot ' + nn + ': SUCCESS -> Parte: ' + d.parte + ', Serial: ' + d.serial);
+        } else {
+          res = { n, estado: 'fail', msg: d.motivo };
+          linea('err', 'Slot ' + nn + ': FAIL -> ' + d.motivo);
+        }
+      }
+      enviar('tc-slot', res);
+      t.hechos++;
+      emitirEstado();
+    });
+    if (t.abort) {
+      linea('sys', '■ Detenido por el usuario. No se modificó el archivo.');
+      return { ok: true, detenido: true };
+    }
+    const ruta = escribirArchivo(slots);
+    linea('sys', '[ÉXITO] Archivo ' + ruta + ' guardado y actualizado.');
+    enviar('tc-slots', { slots });
+    t.resumen = slots.filter((s) => s.parte || s.serial).length + ' de 16 slots con unidad: ' + slots.map((s, i) => s.serial ? (i + 1) + '=' + s.parte + '/' + s.serial : null).filter(Boolean).join(', ');
+    return { ok: true, slots };
+  } catch (e) {
+    linea('err', 'Error al generar: ' + e.message);
+    return { ok: false, error: e.message };
+  } finally {
+    cerrarTrabajo(t.resumen);
+  }
+}
+
+ipcMain.handle('tc-fru-leer', () => {
+  try {
+    const r = scriptFru();
+    const texto = fs.readFileSync(r, 'utf8');
+    let original = '';
+    try { original = fs.readFileSync(FRU_ORIGINAL, 'utf8'); } catch (e) {}
+    return { ok: true, ruta: r, texto, esOriginal: texto === original };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+ipcMain.handle('tc-fru-guardar', (_e, texto) => {
+  const t = String(texto || '');
+  if (!t.trim()) return { ok: false, error: 'El script no puede quedar vacío.' };
+  if (trabajo) return { ok: false, error: 'Espera a que termine lo que está corriendo.' };
+  try {
+    fs.writeFileSync(rutaFru(), t.endsWith('\n') ? t : t + '\n', { mode: 0o755 });
+    bitacora.registrar('Test case', 'Modificó el script de seriales', rutaFru());
+    return { ok: true };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+ipcMain.handle('tc-fru-restaurar', () => {
+  if (trabajo) return { ok: false, error: 'Espera a que termine lo que está corriendo.' };
+  try {
+    fs.writeFileSync(rutaFru(), fs.readFileSync(FRU_ORIGINAL), { mode: 0o755 });
+    bitacora.registrar('Test case', 'Restauró el script de seriales original', rutaFru());
+    return { ok: true, texto: fs.readFileSync(rutaFru(), 'utf8') };
+  } catch (e) { return { ok: false, error: e.message }; }
+});
+
 /* ---------- Generar con el script de Python (en segundo plano) ---------- */
 async function correrScript() {
   const script = obtenerScript();
@@ -683,8 +830,8 @@ ipcMain.handle('tc-set-path', async (e) => {
   return { ok: true, cambio: true };
 });
 
-ipcMain.handle('tc-scan', () => { if (trabajo) return ocupado(); escanear(); return { ok: true }; });
-ipcMain.handle('tc-script-run', () => { if (trabajo) return ocupado(); escanear(); return { ok: true }; });   // ya no usa Python
+ipcMain.handle('tc-scan', () => { if (trabajo) return ocupado(); escanearFru(); return { ok: true }; });
+ipcMain.handle('tc-script-run', () => { if (trabajo) return ocupado(); escanearFru(); return { ok: true }; });   // Generar = script de seriales
 ipcMain.handle('tc-script-set', async (e) => {
   if (trabajo) return { ok: false, error: 'Espera a que termine el trabajo en curso.' };
   const win = BrowserWindow.fromWebContents(e.sender) || undefined;
@@ -754,6 +901,7 @@ ipcMain.handle('tc-stop', () => {
   linea('sys', '… Deteniendo ' + trabajo.tipo);
   bitacora.registrar('Test case', 'Presionó Detener', trabajo.tipo);
   if (trabajo.proc) trabajo.killTimer = matarArbol(trabajo.proc);
+  if (trabajo.procs) for (const p of trabajo.procs) matarArbol(p);
   flush();
   return { ok: true };
 });
@@ -769,5 +917,5 @@ ipcMain.handle('tc-open-log', () => {
 app.on('before-quit', () => { if (trabajo) { trabajo.abort = true; matarArbol(trabajo.proc); } });
 module.exports.escaneando = () => !!(trabajo && trabajo.tipo === 'escaneo');
 module.exports.ocupado = () => !!trabajo;   // para no actualizar a medio trabajo
-module.exports._prueba = { obtenerDatosHardware, extraerParteSerial, textoDeHexdump };
+module.exports._prueba = { obtenerDatosHardware, extraerParteSerial, textoDeHexdump, leerSalidaFru };
 console.log('[testcase] módulo de Test case cargado');
