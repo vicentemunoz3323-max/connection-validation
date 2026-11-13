@@ -213,6 +213,19 @@ function iniciar(opc = {}) {
     return { ok: true };
   });
   ipcMain.handle('lock:info', () => ({ equipo: os.hostname(), cuentas: cuentas(), ...letrero }));
+  // Lo que gasta la app (todos sus procesos de Electron), para el letrerito de la esquina
+  ipcMain.handle('lock:recursos', () => {
+    let cpu = 0, memKb = 0, procesos = 0;
+    try { for (const m of app.getAppMetrics()) { procesos++; cpu += (m.cpu && m.cpu.percentCPUUsage) || 0; memKb += (m.memory && m.memory.workingSetSize) || 0; } } catch (e) {}
+    const nucleos = (os.cpus() || []).length || 1;
+    return {
+      cpu: Math.min(100, Math.round((cpu / nucleos) * 10) / 10),
+      ramMb: Math.round(memKb / 1024),
+      ram: Math.round((memKb / (os.totalmem() / 1024)) * 1000) / 10,
+      procesos,
+      encendidaSeg: Math.round(process.uptime())
+    };
+  });
   ipcMain.handle('lock:listo', (e) => {
     const w = BrowserWindow.fromWebContents(e.sender);
     if (w) clearTimeout(w.__guardia);

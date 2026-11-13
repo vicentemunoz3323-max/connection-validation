@@ -58,6 +58,21 @@ form { display: none; margin-top: 16px; }
 #ayuda { margin-top: 8px; font-size: 12px; color: #b6d8ea; }
 #err { min-height: 18px; margin-top: 6px; font-size: 13px; font-weight: 600; color: #ffb4a6; }
 .mal { animation: sacudir .35s; }
+
+/* Lo que gasta la app: chiquito y discreto en la esquina */
+.recursos { position: absolute; right: 18px; bottom: 16px; z-index: 6; display: flex; gap: 16px; padding: 8px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, .12); background: rgba(2, 20, 42, .55); backdrop-filter: blur(4px); color: #cfe8f6; opacity: .78; transition: opacity .2s; pointer-events: auto; }
+.recursos:hover { opacity: 1; }
+.recursos[hidden] { display: none; }
+.rc { display: flex; flex-direction: column; gap: 3px; min-width: 52px; }
+.rc dt { font-size: 9.5px; font-weight: 700; letter-spacing: .14em; color: #8fc3dd; }
+.rc dd { margin: 0; font-size: 13px; font-weight: 600; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.rc dd small { font-size: 10.5px; font-weight: 400; color: #9fc6db; margin-left: 2px; }
+.rc .barra { height: 3px; border-radius: 2px; background: rgba(255, 255, 255, .14); overflow: hidden; }
+.rc .barra i { display: block; height: 100%; width: 0; border-radius: 2px; background: #5fd0a0; transition: width .6s ease, background .3s; }
+.rc .barra i.medio { background: #ffd166; }
+.rc .barra i.alto { background: #ff8a73; }
+.rc-sep { width: 1px; background: rgba(255, 255, 255, .12); }
+@media (max-width: 700px) { .recursos { right: 10px; left: 10px; justify-content: center; } }
 @keyframes sacudir { 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-5px); } }
 </style>
 </head>
@@ -65,6 +80,13 @@ form { display: none; margin-top: 16px; }
 <div class="rayos"></div>
 <div id="mar"></div>
 <div class="fondo"><svg viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 62C160 22 300 92 470 62S790 18 960 58 1120 80 1200 52V120H0Z" fill="#02142a"/><path d="M0 88C200 62 340 110 560 88S930 66 1200 92V120H0Z" fill="#010e1f"/></svg></div>
+<dl class="recursos" id="recursos" title="Lo que está gastando Connection Validation" hidden>
+  <div class="rc"><dt>CPU</dt><dd id="rc-cpu">—</dd><div class="barra"><i id="rc-cpu-b"></i></div></div>
+  <div class="rc"><dt>RAM</dt><dd id="rc-ram">—</dd><div class="barra"><i id="rc-ram-b"></i></div></div>
+  <span class="rc-sep"></span>
+  <div class="rc"><dt>PROCESOS</dt><dd id="rc-proc">—</dd></div>
+  <div class="rc"><dt>ENCENDIDA</dt><dd id="rc-up">—</dd></div>
+</dl>
 <div class="centro">
   <div class="tarjeta" id="tarjeta">
     <div class="marca">DRDT ENGINE</div>
@@ -226,6 +248,28 @@ $('caja').addEventListener('submit', async (e) => {
   programar();
 });
 pedirInfo();
+// Recursos de la app cada 3 s (si falla, el letrerito simplemente no sale)
+function barra(id, pct) {
+  const b = $(id); b.style.width = Math.max(2, Math.min(100, pct)) + '%';
+  b.className = pct >= 80 ? 'alto' : pct >= 50 ? 'medio' : '';
+}
+function tiempo(seg) {
+  const d = Math.floor(seg / 86400), h = Math.floor(seg / 3600) % 24, m = Math.floor(seg / 60) % 60;
+  return d ? d + ' d ' + h + ' h' : h ? h + ' h ' + m + ' min' : m + ' min';
+}
+async function recursos() {
+  try {
+    const r = window.lock.recursos && await window.lock.recursos();
+    if (!r) return;
+    $('rc-cpu').innerHTML = r.cpu.toFixed(1) + '<small>%</small>'; barra('rc-cpu-b', r.cpu);
+    $('rc-ram').innerHTML = (r.ramMb >= 1024 ? (r.ramMb / 1024).toFixed(1) + '<small>GB</small>' : r.ramMb + '<small>MB</small>'); barra('rc-ram-b', r.ram);
+    $('rc-ram').title = r.ram + '% de la RAM del equipo';
+    $('rc-proc').textContent = r.procesos;
+    $('rc-up').textContent = tiempo(r.encendidaSeg);
+    $('recursos').hidden = false;
+  } catch (e) {}
+}
+recursos(); setInterval(recursos, 3000);
 window.lock.listo();      // avisa que ya cargó: si no llega, la app quita el bloqueo sola
 </script>
 </body>

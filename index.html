@@ -2111,10 +2111,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 .mc-item select { padding: 5px 8px; font: 12.5px var(--font); border: 1px solid var(--line); border-radius: 6px; background: #fff; }
 /* ===== Campanita (Centro de notificaciones) ===== */
 .nav-inner { padding-right: 196px; }
-#btn-notif.nav-link { padding: 0; font-weight: 400; }
-#btn-notif.nav-link.active { color: var(--blue); border-color: var(--blue); background: var(--blue-tint); }
-#btn-notif:hover svg { animation: campana .6s ease-in-out; transform-origin: 50% 10%; }
-@keyframes campana { 25% { transform: rotate(14deg); } 50% { transform: rotate(-12deg); } 75% { transform: rotate(6deg); } }
 
 /* ===== EngineOut ===== */
 .btn.btn-rojo { background: var(--red); } .btn.btn-rojo:hover { background: #a91f17; }
@@ -2246,9 +2242,6 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <img class="brand-logo" src="icons/nav-46.png" srcset="icons/nav-46.png 1x, icons/nav-92.png 2x" width="46" height="46" alt="Connection Validation" title="Connection Validation">
       </span>
       <div class="upd">
-        <a href="#notificaciones" id="btn-notif" class="upd-btn nav-link" data-section="notificaciones" title="Centro de notificaciones" aria-label="Centro de notificaciones">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </a>
         <button id="btn-lock" class="upd-btn" type="button" title="Bloquear la pantalla (Lock)" aria-label="Bloquear la pantalla">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
         </button>
