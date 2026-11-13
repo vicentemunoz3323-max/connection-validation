@@ -1409,6 +1409,31 @@ select.clo-in { font-family: var(--mono); font-size: 12.5px; }
 .clo-body .cl b { color: #9cdcfe; font-weight: 600; }
 @media (max-width: 980px) { .clo-grid { grid-template-columns: 1fr; } }
 
+/* ---------- Lock (pantalla de bloqueo con peces, igual que ORT Engine) ---------- */
+.lk-velo { position: fixed; inset: 0; z-index: 90; background: rgba(16,24,40,.45); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.lk-velo[hidden] { display: none; }
+.lk-ventana { width: min(500px, 100%); background: #fff; border-radius: 16px; padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 24px 60px rgba(16,24,40,.3); }
+.lk-cab { display: flex; gap: 14px; align-items: flex-start; }
+.lk-cab b { display: block; font-size: 17px; }
+.lk-cab div span { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.lk-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(180deg, #0b6d93, #06345a); color: #fff; }
+.lk-ico svg { width: 20px; height: 20px; }
+.lk-rapidos { display: flex; flex-wrap: wrap; gap: 6px; }
+.lk-chip { height: 30px; padding: 0 12px; border: 1px solid var(--line); border-radius: 99px; background: #fff; color: var(--text); font: 600 12.5px var(--font); cursor: pointer; }
+.lk-chip:hover { background: var(--blue-tint); border-color: var(--blue); color: var(--blue); }
+.lk-campo { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.lk-campo em { font-style: normal; font-weight: 500; }
+.lk-campo input { height: 38px; padding: 0 12px; font: 400 14px var(--font); color: var(--text); border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+.lk-campo input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,92,207,.15); }
+.lk-error { min-height: 16px; font-size: 12.5px; font-weight: 600; color: var(--red); }
+.lk-acc { display: flex; justify-content: flex-end; gap: 8px; }
+.lk-acc .btn { padding: 9px 20px; font-size: 13px; font-weight: 600; }
+.lk-aviso { position: fixed; top: 66px; right: 24px; z-index: 210; width: 360px; display: grid; grid-template-columns: 1fr auto; gap: 2px 10px; padding: 12px 14px; background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--red); border-radius: var(--r); box-shadow: 0 12px 32px rgba(16,24,40,.18); font-size: 12.5px; }
+.lk-aviso[hidden] { display: none; }
+.lk-aviso b { color: var(--red); }
+.lk-aviso span { grid-column: 1; color: var(--muted); line-height: 1.4; }
+.lk-aviso button { grid-column: 2; grid-row: 1 / 3; align-self: start; border: 0; background: none; font-size: 20px; line-height: 1; color: var(--muted); cursor: pointer; }
+
 /* ---------- DAQ monitor ---------- */
 .dm-hero { display: grid; grid-template-columns: minmax(260px, 470px) minmax(0, 1fr); gap: 26px; align-items: center; }
 .dm-foto { background: #fff; padding: 4px 0; }
@@ -2224,6 +2249,9 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
         <a href="#notificaciones" id="btn-notif" class="upd-btn nav-link" data-section="notificaciones" title="Centro de notificaciones" aria-label="Centro de notificaciones">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </a>
+        <button id="btn-lock" class="upd-btn" type="button" title="Bloquear la pantalla (Lock)" aria-label="Bloquear la pantalla">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        </button>
         <button id="btn-manual" class="upd-btn" type="button" title="Manual de usuario" aria-label="Manual de usuario">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H19"/><path d="M9 7h6M9 10.5h4"/></svg>
         </button>
@@ -3629,6 +3657,31 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 <footer class="firma"><span class="firma-v" title="V"><svg viewBox="0 0 32 29" width="16" height="14.5" aria-label="V"><path d="M16 28.2 13.8 26.2C5.9 19.1.8 14.5.8 8.8.8 4.2 4.4.6 9 .6c2.6 0 5.1 1.2 7 3.1C17.9 1.8 20.4.6 23 .6c4.6 0 8.2 3.6 8.2 8.2 0 5.7-5.1 10.3-13 17.4z" fill="#d93025"/><text x="16" y="17.6" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-size="13" font-weight="800" fill="#fff">V</text></svg></span><span class="version" id="version-app">Versión 2026</span><span class="familia">An app from the DRDT Engine software family</span></footer>
 
   <!-- Aviso de actualización -->
+  <!-- Lock: letreros de la pantalla de bloqueo (la misma de ORT Engine) -->
+  <div class="lk-velo" id="lk-velo" hidden>
+    <div class="lk-ventana" role="dialog" aria-modal="true" aria-labelledby="lk-tit">
+      <div class="lk-cab">
+        <span class="lk-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span>
+        <div><b id="lk-tit">Bloquear la pantalla</b><span>Para desbloquear se pedirá la contraseña del usuario de esta PC. La app sigue trabajando abajo.</span></div>
+      </div>
+      <div class="lk-rapidos" aria-label="Letreros rápidos">
+        <button type="button" class="lk-chip" data-t="Pruebas en proceso" data-s="No tocar ni retirar unidades">Pruebas</button>
+        <button type="button" class="lk-chip" data-t="Equipo en mantenimiento" data-s="No ingresar unidades">Mantenimiento</button>
+        <button type="button" class="lk-chip" data-t="No tocar" data-s="Equipo en uso">No tocar</button>
+        <button type="button" class="lk-chip" data-t="Equipo fuera de servicio" data-s="Avisar al encargado">Fuera de servicio</button>
+      </div>
+      <label class="lk-campo"><span>Letrero grande</span><input id="lk-titulo" type="text" maxlength="60" placeholder="Pruebas en proceso"></label>
+      <label class="lk-campo"><span>Segundo letrero <em>(opcional)</em></span><input id="lk-subtitulo" type="text" maxlength="90" placeholder="No tocar ni retirar unidades"></label>
+      <label class="lk-campo"><span>Nombre del encargado</span><input id="lk-encargado" type="text" maxlength="50" placeholder="Nombre y apellido"></label>
+      <div class="lk-error" id="lk-error" role="alert"></div>
+      <div class="lk-acc">
+        <button class="btn btn-secundario" type="button" id="lk-cancelar">Cancelar</button>
+        <button class="btn" type="button" id="lk-ok">Bloquear</button>
+      </div>
+    </div>
+  </div>
+  <div class="lk-aviso" id="lk-aviso" role="alert" hidden><b>Se quitó el bloqueo</b><span id="lk-aviso-txt"></span><button type="button" id="lk-aviso-x" aria-label="Cerrar">×</button></div>
+
   <div id="upd-toast" class="upd-toast" role="status" aria-live="polite">
     <div class="upd-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 20h16"/></svg></div>
     <div class="upd-cuerpo">
@@ -9229,6 +9282,61 @@ function pintarSeleccionIzumi() {
     if (e && e.corriendo) { $c('clo-res').hidden = false; ponerCorriendo(true); for (const [ip, f] of Object.entries(e.filas)) pintarFila({ ip, ...f }); }
     buscar();
   })();
+})();
+</script>
+<script>
+/* ===== Lock: la misma pantalla de bloqueo de ORT Engine ===== */
+(() => {
+  const S = window.sistema;
+  const $l = (id) => document.getElementById(id);
+  if (!S || !S.lockActivar) { const b = $l('btn-lock'); if (b) b.hidden = true; return; }
+  const CAMPOS = ['titulo', 'subtitulo', 'encargado'];
+  const velo = $l('lk-velo');
+  function abrir() {
+    let g = {};
+    try { g = JSON.parse(localStorage.getItem('cv_lock') || '{}') || {}; } catch (e) {}
+    if (!g.titulo && !g.subtitulo) { g.titulo = 'Pruebas en proceso'; g.subtitulo = 'No tocar ni retirar unidades'; }
+    for (const k of CAMPOS) $l('lk-' + k).value = g[k] || '';
+    $l('lk-error').textContent = '';
+    velo.hidden = false;
+    setTimeout(() => { const e = $l('lk-encargado'); (e.value ? $l('lk-titulo') : e).focus(); }, 50);
+  }
+  function cerrar() { velo.hidden = true; }
+  async function activar() {
+    const b = $l('lk-ok');
+    if (b.disabled) return;
+    const datos = {};
+    for (const k of CAMPOS) datos[k] = $l('lk-' + k).value.trim();
+    if (!datos.titulo) { $l('lk-error').textContent = 'Escribe el letrero grande'; return $l('lk-titulo').focus(); }
+    try { localStorage.setItem('cv_lock', JSON.stringify(datos)); } catch (e) {}
+    b.disabled = true; b.textContent = 'Revisando…';
+    $l('lk-error').textContent = '';
+    let r = null;
+    try { r = await S.lockActivar(datos); } catch (e) {}
+    b.disabled = false; b.textContent = 'Bloquear';
+    if (r && r.ok) return cerrar();
+    $l('lk-error').textContent = (r && r.error) || 'No se pudo bloquear. Intenta de nuevo.';
+  }
+  $l('btn-lock').addEventListener('click', abrir);
+  $l('lk-cancelar').addEventListener('click', cerrar);
+  $l('lk-ok').addEventListener('click', activar);
+  velo.addEventListener('click', (e) => { if (e.target === velo) cerrar(); });
+  velo.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && e.target.tagName === 'INPUT') activar();
+    if (e.key === 'Escape') cerrar();
+  });
+  document.querySelectorAll('.lk-chip').forEach((c) => c.addEventListener('click', () => {
+    $l('lk-titulo').value = c.dataset.t;
+    $l('lk-subtitulo').value = c.dataset.s;
+  }));
+  let tAviso;
+  $l('lk-aviso-x').addEventListener('click', () => { $l('lk-aviso').hidden = true; });
+  S.onLockCambio((d) => {
+    if (!d || !d.motivo) return;
+    $l('lk-aviso-txt').textContent = d.motivo;
+    $l('lk-aviso').hidden = false;
+    clearTimeout(tAviso); tAviso = setTimeout(() => { $l('lk-aviso').hidden = true; }, 20000);
+  });
 })();
 </script>
 <script>

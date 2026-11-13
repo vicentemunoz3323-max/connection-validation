@@ -1086,6 +1086,10 @@ app.whenReady().then(() => {
   // su no funciona con "no new privileges": entonces se corre fuera de la app con systemd-run
   protector.configurar({ envolver: async (cmd) => ((await probarSystemdRun()) ? [SYSTEMD_RUN, '--user', '--pipe', '--wait', '--quiet', '--collect', '--', ...cmd] : cmd) });
   protector.iniciar();
+  // Lock: la misma pantalla de bloqueo con peces de ORT Engine
+  require('./lock_main.js').iniciar({
+    avisar: (activo, fallo, motivo) => { if (ventanaPrincipal && !ventanaPrincipal.isDestroyed()) ventanaPrincipal.webContents.send('lock:cambio', { activo, fallo: !!fallo, motivo: motivo || '' }); }
+  });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
@@ -1246,6 +1250,7 @@ function ocupadoAhora() {
   prueba('DAQ monitor', () => require('./daq_main.js').ocupado());
   prueba('un script de Configuración', () => require('./configuracion_main.js').ocupado());
   prueba('una consola de Izumi abierta', () => consolasIzumi.abiertas() > 0);
+  prueba('la pantalla bloqueada (Lock)', () => require('./lock_main.js').activo());
   return quien;
 }
 function instalarYa() {

@@ -1,6 +1,9 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('sistema', {
+  // Lock (pantalla de bloqueo con peces, igual que ORT Engine)
+  lockActivar: (datos) => ipcRenderer.invoke('lock:activar', datos),
+  onLockCambio: (cb) => ipcRenderer.on('lock:cambio', (_e, d) => cb(d)),
   // Protector de pantalla (avisos a pantalla completa)
   protAvisos: () => ipcRenderer.invoke('prot-avisos'),
   protEstado: () => ipcRenderer.invoke('prot-estado'),

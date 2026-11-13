@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; font-src 'self'">
+<title>Connection Validation · Bloqueado</title>
+<style>
+@font-face { font-family: "ORT Inter"; src: url("fonts/Inter-Regular.otf") format("opentype"); font-weight: 400; }
+@font-face { font-family: "ORT Inter"; src: url("fonts/Inter-SemiBold.otf") format("opentype"); font-weight: 600; }
+@font-face { font-family: "ORT Inter"; src: url("fonts/Inter-Bold.otf") format("opentype"); font-weight: 700; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; user-select: none; cursor: default; }
+body { position: relative; font-family: "ORT Inter", Arial, sans-serif; color: #eaf6ff; background: linear-gradient(180deg, #0b6d93 0%, #084f77 34%, #06345a 68%, #041f3b 100%); }
+.rayos { position: absolute; inset: 0 0 55%; background: repeating-linear-gradient(105deg, rgba(190, 240, 255, .05) 0 70px, transparent 70px 210px); pointer-events: none; }
+.fondo { position: absolute; left: 0; right: 0; bottom: 0; height: 14vh; pointer-events: none; }
+.fondo svg { width: 100%; height: 100%; display: block; }
+#mar { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+
+/* Burbujas */
+.burbuja { position: absolute; bottom: -40px; left: var(--x); width: var(--t); height: var(--t); border-radius: 50%; border: 1.5px solid rgba(220, 245, 255, .55); background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, .55), rgba(255, 255, 255, .04) 55%); animation: subir var(--d) linear infinite; animation-delay: var(--r); }
+@keyframes subir { to { transform: translate3d(var(--m), -112vh, 0); } }
+
+/* Peces azules: 4 imágenes por pez (aleta y ojos) que se alternan; se mueven por JS */
+.ser { position: absolute; left: 0; top: 0; will-change: transform; }
+.ser img { position: absolute; left: 0; top: 0; width: 100%; height: auto; visibility: hidden; }
+/* aleta de un lado / del otro (f2) × ojos abiertos / cerrados (parp) */
+.ser:not(.f2):not(.parp) img.k1.o, .ser.f2:not(.parp) img.k2.o, .ser.parp:not(.f2) img.k1.c, .ser.parp.f2 img.k2.c { visibility: visible; }
+.simple #mar, .simple .rayos { display: none; }
+.simple * { animation: none !important; }
+
+/* Centro */
+.centro { position: absolute; inset: 0; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; pointer-events: none; }
+.tarjeta { pointer-events: auto; width: min(1120px, 88vw); padding: clamp(22px, 3.4vh, 38px) clamp(26px, 4vw, 56px) clamp(20px, 3vh, 32px); border-radius: 26px; border: 1px solid rgba(255, 255, 255, .24); background: rgba(4, 34, 62, .9); box-shadow: 0 22px 60px rgba(0, 15, 35, .42); }
+.marca { font-size: 13px; font-weight: 700; letter-spacing: .24em; color: #9fdcf5; }
+#titulo { margin-top: clamp(8px, 1.4vh, 14px); font-size: clamp(38px, min(6.6vw, 10vh), 100px); font-weight: 700; line-height: 1.04; letter-spacing: -.025em; color: #fff; overflow-wrap: anywhere; }
+#subtitulo { margin-top: clamp(6px, 1.2vh, 12px); font-size: clamp(20px, min(2.8vw, 4.2vh), 42px); font-weight: 600; line-height: 1.16; color: #ffd166; overflow-wrap: anywhere; }
+#subtitulo:empty { display: none; }
+.tiempo { margin-top: clamp(12px, 2.2vh, 24px); padding-top: clamp(10px, 2vh, 20px); border-top: 1px solid rgba(255, 255, 255, .2); display: flex; align-items: baseline; justify-content: center; gap: clamp(14px, 2vw, 28px); flex-wrap: wrap; }
+#reloj { font-size: clamp(36px, min(4.6vw, 7vh), 68px); font-weight: 700; line-height: 1.05; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+#fecha { font-size: clamp(18px, min(2.2vw, 3.2vh), 32px); font-weight: 600; color: #cfe8f6; }
+#fecha::first-letter { text-transform: uppercase; }
+#caja-encargado { margin-top: clamp(10px, 1.8vh, 18px); font-size: clamp(16px, min(1.8vw, 2.8vh), 26px); color: #b6d8ea; overflow-wrap: anywhere; }
+#caja-encargado[hidden] { display: none; }
+#encargado { font-weight: 700; color: #fff; }
+.estado { margin-top: clamp(8px, 1.4vh, 14px); font-size: 13.5px; color: #b6d8ea; }
+#abrir { margin-top: clamp(10px, 1.8vh, 18px); height: 42px; padding: 0 20px; display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255, 255, 255, .34); border-radius: 21px; background: rgba(255, 255, 255, .14); color: #fff; font: 600 14px "ORT Inter", Arial, sans-serif; cursor: pointer; }
+#abrir:hover { background: rgba(255, 255, 255, .24); }
+#abrir svg { width: 16px; height: 16px; }
+form { display: none; margin-top: 16px; }
+.abierto #abrir { display: none; }
+.abierto form { display: block; animation: entrar .18s ease-out; }
+@keyframes entrar { from { opacity: 0; transform: translateY(6px); } }
+.fila { display: flex; gap: 8px; width: min(480px, 100%); margin: 0 auto; }
+#pass { flex: 1; min-width: 0; height: 44px; padding: 0 16px; border: 1px solid rgba(255, 255, 255, .42); border-radius: 12px; outline: none; background: rgba(255, 255, 255, .95); color: #10263a; font: 400 15px "ORT Inter", Arial, sans-serif; user-select: text; }
+#pass:focus { border-color: #fff; box-shadow: 0 0 0 3px rgba(130, 215, 250, .55); }
+#ok { flex: none; height: 44px; padding: 0 18px; border: 0; border-radius: 12px; background: #3db2e8; color: #05243c; font: 700 14px "ORT Inter", Arial, sans-serif; cursor: pointer; }
+#ok:disabled { opacity: .65; cursor: progress; }
+#ayuda { margin-top: 8px; font-size: 12px; color: #b6d8ea; }
+#err { min-height: 18px; margin-top: 6px; font-size: 13px; font-weight: 600; color: #ffb4a6; }
+.mal { animation: sacudir .35s; }
+@keyframes sacudir { 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-5px); } }
+</style>
+</head>
+<body>
+<div class="rayos"></div>
+<div id="mar"></div>
+<div class="fondo"><svg viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 62C160 22 300 92 470 62S790 18 960 58 1120 80 1200 52V120H0Z" fill="#02142a"/><path d="M0 88C200 62 340 110 560 88S930 66 1200 92V120H0Z" fill="#010e1f"/></svg></div>
+<div class="centro">
+  <div class="tarjeta" id="tarjeta">
+    <div class="marca">DRDT ENGINE</div>
+    <div id="titulo">Equipo bloqueado</div>
+    <div id="subtitulo"></div>
+    <div class="tiempo"><div id="reloj">--:--</div><div id="fecha"></div></div>
+    <div id="caja-encargado" hidden>Encargado: <span id="encargado"></span></div>
+    <div class="estado">Las pruebas siguen corriendo</div>
+    <button id="abrir" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>Desbloquear</button>
+    <form id="caja" autocomplete="off">
+      <div class="fila">
+        <input id="pass" type="password" placeholder="Contraseña" aria-label="Contraseña">
+        <button id="ok" type="submit">Entrar</button>
+      </div>
+      <div id="ayuda"></div>
+      <div id="err" role="alert"></div>
+    </form>
+  </div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+// Modo simple: si la pantalla con animaciones se cayó, solo letreros, sin peces
+const SIMPLE = new URLSearchParams(location.search).get('simple') === '1';
+if (SIMPLE) document.body.classList.add('simple');
+const LINEA = '#17213f';
+// Ojos: abiertos (con brillo) o cerrados (una curvita, como cuando parpadea)
+const ojos = (a, b, y, r, cerrado, piel) => `<g>${[a, b].map((x) => cerrado
+  ? `<path d="M${x - r * .85} ${y}Q${x} ${y + r * .9} ${x + r * .85} ${y}" fill="none" stroke="${LINEA}" stroke-width="3.2" stroke-linecap="round"/>`
+  : `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" stroke="${LINEA}" stroke-width="2.4"/><circle cx="${x - r * .2}" cy="${y + r * .1}" r="${r * .56}" fill="${LINEA}"/><circle cx="${x - r * .42}" cy="${y - r * .16}" r="${r * .2}" fill="#fff"/>`).join('')}</g>`;
+// El pez azul (el mismo de ORT Engine): cuerpo gordito, aleta larga arriba, ojos grandes y dos dientitos
+const pez = (c1, c2, f, k, cerrado) => `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-6 -6 142 98">
+    <path transform="rotate(${14 * k} 101 47)" d="M101 47C108 35 122 34 128 44 123 57 108 60 101 50Z" fill="${f}" stroke="${LINEA}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path d="M34 19C43 4 66 5 79 19 91 29 97 40 96 46 78 32 58 21 34 19Z" fill="${f}" stroke="${LINEA}" stroke-width="2.6" stroke-linejoin="round"/>
+    <path transform="rotate(${10 * k} 56 68)" d="M42 66C50 72 62 74 70 68 62 80 48 79 42 66Z" fill="${f}" stroke="${LINEA}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="M12 44C11 24 33 13 52 17 74 21 88 37 108 47 88 60 64 71 41 67 24 64 13 57 12 44Z" fill="${c1}" stroke="${LINEA}" stroke-width="2.8" stroke-linejoin="round"/>
+    <path d="M15 53C34 61 69 56 104 48 86 60 64 70 41 66 28 64 19 60 15 53Z" fill="${c2}"/>
+    <ellipse cx="58" cy="31" rx="5" ry="11" transform="rotate(-48 58 31)" fill="#fff" opacity=".82"/>
+    ${ojos(25, 44, 33, 9, cerrado, c1)}
+    <path d="M18 23Q24 18 30 22M39 22Q45 18 51 23" fill="none" stroke="${f}" stroke-width="3" stroke-linecap="round"/>
+    <path d="M19 49Q31 53 43 49" fill="none" stroke="${LINEA}" stroke-width="2.2" stroke-linecap="round"/>
+    <path d="M23 50L27 56 30 51ZM34 51L37 56 41 50Z" fill="#fff" stroke="${LINEA}" stroke-width="1.5" stroke-linejoin="round"/>
+    <path d="M68 49Q76 52 84 47" fill="none" stroke="${LINEA}" stroke-width="2" stroke-linecap="round"/>
+  </svg>`;
+
+// 20 peces azules: tamaño, alto (% de la pantalla), duración del cruce (s), dirección y desfase distintos
+const AZUL = ['#3aa0dc', '#1f75c4', '#e8421f'];
+const N_PECES = 20;
+const mar = $('mar');
+const imagen = (svg) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+// Las 4 imágenes (aleta de un lado / del otro × ojos abiertos / cerrados) se hacen una sola vez y las comparten todos
+const CUADROS = [[1, false, 'k1 o'], [-1, false, 'k2 o'], [1, true, 'k1 c'], [-1, true, 'k2 c']].map(([k, c, cls]) => ({ src: imagen(pez(AZUL[0], AZUL[1], AZUL[2], k, c)), cls }));
+const animales = [];
+if (!SIMPLE) for (let n = 0; n < N_PECES; n++) {
+  const tam = Math.round(80 + ((n * 37) % 100));          // 80 a 179 px
+  const el = document.createElement('div');
+  el.className = 'ser';
+  el.style.width = tam + 'px';
+  el.style.height = Math.round(tam * 98 / 142) + 'px';
+  for (const c of CUADROS) {
+    const img = document.createElement('img');
+    img.alt = ''; img.draggable = false; img.className = c.cls; img.src = c.src;
+    el.appendChild(img);
+  }
+  mar.appendChild(el);
+  const dur = 22 + ((n * 7) % 17);                       // 22 a 38 s por cruce
+  animales.push({
+    el, tam,
+    dir: n % 2 ? 1 : -1,
+    y0: (3 + ((n * 41) % 80)) / 100,                     // repartidos de arriba a abajo
+    dur,
+    avance: ((n * 0.618) % 1),                           // cada uno empieza en otro punto
+    fase: n * 1.7,
+    cuadro: n * .13,
+    ritmo: .24,
+    amp: 14,
+    giro: 4,
+    parpadeo: 1 + Math.random() * 5,                     // segundos para el siguiente parpadeo
+    cerrado: 0
+  });
+}
+let antes = performance.now();
+function nadar(t) {
+  const dt = Math.min(.1, (t - antes) / 1000); antes = t;
+  const W = innerWidth, H = innerHeight;
+  for (const a of animales) {
+    a.avance = (a.avance + dt / a.dur) % 1;
+    a.fase += dt * 1.6;
+    a.cuadro += dt;
+    if (a.cuadro >= a.ritmo) { a.cuadro = 0; a.el.classList.toggle('f2'); }
+    // Parpadeo: cierra los ojos ~0.15 s; a veces parpadea dos veces seguidas
+    if (a.cerrado > 0) {
+      a.cerrado -= dt;
+      if (a.cerrado <= 0) a.el.classList.remove('parp');
+    } else {
+      a.parpadeo -= dt;
+      if (a.parpadeo <= 0) {
+        a.el.classList.add('parp');
+        a.cerrado = .15;
+        a.parpadeo = Math.random() < .25 ? .25 : 2 + Math.random() * 5;
+      }
+    }
+    const vaiven = Math.sin(a.fase) * a.amp, giro = Math.cos(a.fase) * a.giro;
+    const recorrido = W + a.tam * 2;
+    const x = a.dir > 0 ? -a.tam + a.avance * recorrido : W + a.tam - a.avance * recorrido;
+    const y = a.y0 * H + vaiven;
+    a.el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) rotate(${giro.toFixed(2)}deg) scaleX(${a.dir > 0 ? -1 : 1})`;
+  }
+  requestAnimationFrame(nadar);
+}
+if (animales.length) requestAnimationFrame(nadar);
+if (!SIMPLE) for (let i = 0; i < 22; i++) {
+  const b = document.createElement('i');
+  b.className = 'burbuja';
+  const t = 6 + (i * 7) % 26;
+  b.style.cssText = `--x:${(i * 47) % 100}%;--t:${t}px;--d:${12 + (i * 5) % 16}s;--r:${-((i * 3.7) % 26)}s;--m:${(i % 2 ? 1 : -1) * (12 + i * 2)}px;`;
+  mar.appendChild(b);
+}
+
+function tic() {
+  const d = new Date();
+  $('reloj').textContent = d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false });
+  $('fecha').textContent = d.toLocaleDateString('es-MX', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+tic(); setInterval(tic, 1000);
+
+let ocultar;
+const tarjeta = $('tarjeta');
+function abrir() { tarjeta.classList.add('abierto'); $('err').textContent = ''; programar(); setTimeout(() => $('pass').focus(), 40); }
+function cerrar() { tarjeta.classList.remove('abierto'); $('pass').value = ''; $('err').textContent = ''; }
+function programar() { clearTimeout(ocultar); ocultar = setTimeout(cerrar, 45000); }
+$('abrir').onclick = abrir;
+$('pass').addEventListener('input', programar);
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') return cerrar();
+  if (!tarjeta.classList.contains('abierto') && e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) abrir();
+});
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('dragstart', (e) => e.preventDefault());
+// Primero el formulario, para que funcione aunque falle lo demás
+const pedirInfo = () => window.lock.info().then((i) => {
+  if (i && i.titulo) $('titulo').textContent = i.titulo;
+  $('subtitulo').textContent = (i && i.subtitulo) || '';
+  if (i && i.encargado) { $('encargado').textContent = i.encargado; $('caja-encargado').hidden = false; }
+  const c = (i && i.cuentas) || [];
+  $('ayuda').textContent = c.length ? 'Contraseña del usuario de la PC: ' + c[0] : 'Contraseña del usuario de la PC';
+}).catch(() => {});
+$('caja').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const p = $('pass').value;
+  if (!p) return $('pass').focus();
+  $('ok').disabled = true; $('ok').textContent = 'Revisando…'; $('err').textContent = '';
+  let r;
+  try { r = await window.lock.desbloquear(p); } catch (err) { r = { ok: false, error: 'No se pudo revisar la contraseña' }; }
+  $('ok').disabled = false; $('ok').textContent = 'Entrar';
+  if (r && r.ok) return;              // la ventana se cierra sola
+  $('pass').value = ''; $('pass').focus();
+  $('err').textContent = (r && r.error) || 'Contraseña incorrecta';
+  $('caja').classList.remove('mal'); void $('caja').offsetWidth; $('caja').classList.add('mal');
+  programar();
+});
+pedirInfo();
+window.lock.listo();      // avisa que ya cargó: si no llega, la app quita el bloqueo sola
+</script>
+</body>
+</html>
