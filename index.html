@@ -1414,8 +1414,8 @@ select.clo-in { font-family: var(--mono); font-size: 12.5px; }
 .lk-velo[hidden] { display: none; }
 .lk-ventana { width: min(500px, 100%); background: #fff; border-radius: 16px; padding: 22px 24px 20px; display: flex; flex-direction: column; gap: 12px; box-shadow: 0 24px 60px rgba(16,24,40,.3); }
 .lk-cab { display: flex; gap: 14px; align-items: flex-start; }
-.lk-cab b { display: block; font-size: 17px; }
-.lk-cab div span { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
+.lk-cab > div > b { display: block; font-size: 17px; }
+.lk-cab > div > span { display: block; margin-top: 3px; font-size: 12.5px; line-height: 1.45; color: var(--muted); }
 .lk-ico { flex: none; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: linear-gradient(180deg, #0b6d93, #06345a); color: #fff; }
 .lk-ico svg { width: 20px; height: 20px; }
 .lk-rapidos { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -1433,6 +1433,33 @@ select.clo-in { font-family: var(--mono); font-size: 12.5px; }
 .lk-aviso b { color: var(--red); }
 .lk-aviso span { grid-column: 1; color: var(--muted); line-height: 1.4; }
 .lk-aviso button { grid-column: 2; grid-row: 1 / 3; align-self: start; border: 0; background: none; font-size: 20px; line-height: 1; color: var(--muted); cursor: pointer; }
+
+/* ---------- Notificaciones al celular (ntfy) · BETA ---------- */
+#btn-ntfy { position: relative; }
+#btn-ntfy .punto-ntfy { display: none; position: absolute; top: 6px; right: 7px; width: 7px; height: 7px; border-radius: 50%; background: var(--green); box-shadow: 0 0 0 2px #fff; }
+#btn-ntfy.on .punto-ntfy { display: block; }
+.mini-beta { position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); padding: 0 4px; border-radius: 99px; background: #f59e0b; color: #1b1300; font: 800 7.5px/12px var(--font); letter-spacing: .06em; pointer-events: none; }
+.nf-ventana { width: min(540px, 100%); max-height: calc(100vh - 40px); overflow-y: auto; }
+.nf-ico { background: linear-gradient(180deg, #2f9e6a, #1f7a50); }
+.nf-sw { display: inline-flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 600; cursor: pointer; user-select: none; align-self: flex-start; }
+.nf-sw input { position: absolute; opacity: 0; width: 0; height: 0; }
+.nf-sw i { position: relative; width: 36px; height: 20px; border-radius: 99px; background: #c2c9d3; transition: background .2s; }
+.nf-sw i::after { content: ""; position: absolute; top: 3px; left: 3px; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: transform .2s; }
+.nf-sw input:checked + i { background: var(--green); }
+.nf-sw input:checked + i::after { transform: translateX(16px); }
+.nf-sw input:focus-visible + i { outline: 2px solid var(--blue); outline-offset: 2px; }
+.nf-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 10px 12px; }
+.nf-ancho { grid-column: 1 / -1; }
+.nf-eventos { margin: 0; border: 1px solid var(--line); border-radius: 12px; padding: 8px 14px 10px; display: flex; flex-direction: column; gap: 7px; }
+.nf-eventos legend { padding: 0 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.nf-eventos label { display: flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; }
+.nf-eventos em { font-style: normal; color: var(--muted); }
+.nf-eventos input { width: 16px; height: 16px; accent-color: var(--blue); cursor: pointer; }
+.nf-ventana.off .nf-grid, .nf-ventana.off .nf-eventos { opacity: .45; }
+.nf-nota { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+.nf-estado { min-height: 16px; font-size: 12.5px; font-weight: 600; }
+.nf-estado.ok { color: var(--green); } .nf-estado.err { color: var(--red); }
+@media (max-width: 560px) { .nf-grid { grid-template-columns: 1fr; } }
 
 /* ---------- DAQ monitor ---------- */
 .dm-hero { display: grid; grid-template-columns: minmax(260px, 470px) minmax(0, 1fr); gap: 26px; align-items: center; }
@@ -2132,6 +2159,54 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
 #engineout.fin-err .eo-barra i { background: var(--red); }
 .eo-acc { display: flex; gap: 8px; justify-content: flex-end; }
 .eo-go { min-width: 190px; font-size: 14px; padding: 10px 18px; }
+/* Catálogo de pasos */
+.ec-velo { position: fixed; inset: 0; z-index: 85; background: rgba(16,24,40,.45); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.ec-velo[hidden] { display: none; }
+.ec-ventana { width: min(860px, 100%); max-height: calc(100vh - 40px); background: #fff; border-radius: 16px; display: flex; flex-direction: column; box-shadow: 0 24px 60px rgba(16,24,40,.3); overflow: hidden; }
+.ec-cab { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; padding: 18px 22px 12px; border-bottom: 1px solid var(--line); }
+.ec-cab b { display: block; font-size: 17px; }
+.ec-cab span { display: block; margin-top: 3px; font-size: 12.5px; color: var(--muted); }
+.ec-x { border: 0; background: none; font-size: 24px; line-height: 1; color: var(--muted); cursor: pointer; padding: 2px 8px; border-radius: 6px; }
+.ec-x:hover { background: var(--bg-soft); color: var(--text); }
+.ec-cuerpo { flex: 1; min-height: 0; overflow-y: auto; padding: 12px 22px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; }
+.ec-cuerpo.editando { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.ec-lista { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.ec-fila { display: grid; grid-template-columns: 26px 58px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.ec-fila.sel { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-tint); }
+.ec-n { font: 700 11px var(--mono); color: var(--muted); text-align: center; }
+.ec-mini { height: 38px; border-radius: 7px; background: var(--bg-soft); color: #6b7685; display: grid; place-items: center; }
+.ec-mini svg { width: 52px; height: 33px; }
+.ec-txt { min-width: 0; }
+.ec-txt b { display: block; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ec-txt code { display: block; font: 10.5px var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ec-txt .ec-tag { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 99px; background: var(--blue-tint); color: var(--blue); font: 700 9px var(--font); letter-spacing: .05em; vertical-align: 1px; }
+.ec-bts { display: flex; gap: 2px; }
+.ec-bts button { width: 30px; height: 30px; border: 0; border-radius: 7px; background: none; color: var(--muted); cursor: pointer; display: grid; place-items: center; }
+.ec-bts button:hover:not(:disabled) { background: var(--bg-soft); color: var(--text); }
+.ec-bts button.quitar:hover { background: #fdeceb; color: var(--red); }
+.ec-bts button:disabled { opacity: .3; cursor: default; }
+.ec-bts svg { width: 16px; height: 16px; }
+.ec-form { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 12px; background: #fafbfc; align-self: start; position: sticky; top: 0; }
+.ec-form[hidden] { display: none; }
+.ec-form-tit { font-size: 14px; font-weight: 700; }
+.ec-campo { display: flex; flex-direction: column; gap: 5px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.ec-campo em { font-style: normal; font-weight: 500; }
+.ec-campo input, .ec-campo textarea { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--text); font: 400 13.5px var(--font); }
+.ec-campo textarea { font: 12px/1.45 var(--mono); resize: vertical; min-height: 80px; }
+.ec-campo input:focus, .ec-campo textarea:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(29,92,207,.15); }
+.ec-iconos { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; }
+.ec-iconos button { height: 46px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: #6b7685; cursor: pointer; display: grid; place-items: center; padding: 0; }
+.ec-iconos button svg { width: 50px; height: 32px; }
+.ec-iconos button:hover { border-color: var(--blue); color: var(--blue); }
+.ec-iconos button.on { border-color: var(--blue); background: var(--blue-tint); color: var(--blue); box-shadow: 0 0 0 2px var(--blue-tint); }
+.ec-form-msg { min-height: 16px; font-size: 12px; font-weight: 600; color: var(--red); }
+.ec-form-acc { display: flex; justify-content: flex-end; gap: 8px; }
+.ec-pie { display: flex; align-items: center; gap: 8px; padding: 12px 22px; border-top: 1px solid var(--line); flex-wrap: wrap; }
+.ec-pie .btn, .ec-form-acc .btn { padding: 8px 16px; font-size: 13px; font-weight: 600; }
+.ec-link { border: 0; background: none; color: var(--muted); font: 600 12.5px var(--font); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ec-link:hover { color: var(--red); }
+.ec-sep { flex: 1; }
+@media (max-width: 860px) { .ec-cuerpo.editando { grid-template-columns: 1fr; } .ec-form { position: static; } }
 .eo-grid { list-style: none; margin: 0 0 14px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 9px; }
 .eo-paso { position: relative; display: flex; flex-direction: column; gap: 6px; background: #fff; border: 1px solid var(--line); border-radius: 11px; padding: 8px 10px 10px; transition: border-color .2s, box-shadow .2s, background .2s; }
 .eo-paso-cab { display: flex; justify-content: space-between; align-items: center; }
@@ -2244,6 +2319,10 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       <div class="upd">
         <button id="btn-lock" class="upd-btn" type="button" title="Bloquear la pantalla (Lock)" aria-label="Bloquear la pantalla">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+        </button>
+        <button id="btn-ntfy" class="upd-btn" type="button" title="Notificaciones al celular (ntfy.sh) · BETA" aria-label="Notificaciones al celular">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg>
+          <i class="punto-ntfy"></i><span class="mini-beta">BETA</span>
         </button>
         <button id="btn-manual" class="upd-btn" type="button" title="Manual de usuario" aria-label="Manual de usuario">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5V5a2 2 0 0 1 2-2h13v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H19"/><path d="M9 7h6M9 10.5h4"/></svg>
@@ -3492,6 +3571,7 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <div class="eo-barra"><i id="eo-barra"></i></div>
         </div>
         <div class="eo-acc">
+          <button class="btn btn-secundario" type="button" id="eo-catalogo" title="Agregar, modificar o quitar pasos">Catálogo</button>
           <button class="btn btn-secundario" type="button" id="eo-reintentar" hidden>Reintentar los que fallaron</button>
           <button class="btn eo-go" type="button" id="eo-go">Iniciar</button>
         </div>
@@ -3528,6 +3608,38 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
           <button class="btn btn-secundario btn-mini" type="button" id="eo-ver-rep" hidden>Abrir último PDF</button>
           <button class="btn btn-secundario btn-mini" type="button" id="eo-carpeta">Carpeta de reportes</button>
           <button class="btn btn-secundario btn-mini" type="button" id="eo-log">Abrir log</button>
+        </div>
+      </div>
+
+      <div class="ec-velo" id="ec-velo" hidden>
+        <div class="ec-ventana" role="dialog" aria-modal="true" aria-labelledby="ec-tit">
+          <div class="ec-cab">
+            <div><b id="ec-tit">Catálogo de pasos</b><span>Agrega, modifica, acomoda o quita los recuadros de Liberar rack. Se guarda en esta PC.</span></div>
+            <button type="button" class="ec-x" id="ec-cerrar" aria-label="Cerrar">×</button>
+          </div>
+          <div class="ec-cuerpo">
+            <ol class="ec-lista" id="ec-lista"></ol>
+            <form class="ec-form" id="ec-form" hidden autocomplete="off">
+              <div class="ec-form-tit" id="ec-form-tit">Nuevo paso</div>
+              <label class="ec-campo">Nombre<input id="ec-nom" type="text" maxlength="48" placeholder="Ej.: Reinicio de nginx"></label>
+              <div class="ec-campo">Icono<div class="ec-iconos" id="ec-iconos" role="radiogroup" aria-label="Icono"></div></div>
+              <label class="ec-campo">Comando que se corre<textarea id="ec-cmd" rows="4" spellcheck="false" placeholder="sudo systemctl restart nginx && systemctl is-active nginx"></textarea></label>
+              <label class="ec-campo">Texto en el recuadro <em>(opcional; si lo dejas vacío sale el comando)</em><input id="ec-ver" type="text" maxlength="140" spellcheck="false"></label>
+              <label class="ec-campo">Si falla, decir <em>(opcional; ej. para pings: "El switch no contestó el ping")</em><input id="ec-sinred" type="text" maxlength="120"></label>
+              <div class="ec-form-msg" id="ec-form-msg"></div>
+              <div class="ec-form-acc">
+                <button type="button" class="btn btn-secundario" id="ec-form-cancelar">Cancelar</button>
+                <button type="submit" class="btn" id="ec-form-ok">Listo</button>
+              </div>
+            </form>
+          </div>
+          <div class="ec-pie">
+            <button type="button" class="btn btn-secundario" id="ec-agregar">+ Agregar paso</button>
+            <button type="button" class="ec-link" id="ec-fabrica">Restaurar los de fábrica</button>
+            <span class="ec-sep"></span>
+            <button type="button" class="btn btn-secundario" id="ec-cancelar">Cancelar</button>
+            <button type="button" class="btn" id="ec-guardar">Guardar cambios</button>
+          </div>
         </div>
       </div>
 
@@ -3670,6 +3782,37 @@ input[type="text"]:focus, input[type="number"]:focus, input[type="password"]:foc
       <div class="lk-acc">
         <button class="btn btn-secundario" type="button" id="lk-cancelar">Cancelar</button>
         <button class="btn" type="button" id="lk-ok">Bloquear</button>
+      </div>
+    </div>
+  </div>
+  <!-- Notificaciones al celular (ntfy.sh) · BETA -->
+  <div class="lk-velo" id="nf-velo" hidden>
+    <div class="lk-ventana nf-ventana" role="dialog" aria-modal="true" aria-labelledby="nf-tit">
+      <div class="lk-cab">
+        <span class="lk-ico nf-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="2.5" width="12" height="19" rx="2.5"/><path d="M10.5 18.5h3"/></svg></span>
+        <div><b id="nf-tit">Notificaciones al celular <span class="beta-tag">BETA</span></b><span>Te llegan a la app <b>ntfy</b> del celular. Suscríbete en la app al mismo tema que pongas aquí.</span></div>
+      </div>
+      <label class="nf-sw"><input type="checkbox" id="nf-activo"><i></i><span>Enviar notificaciones</span></label>
+      <div class="nf-grid">
+        <label class="lk-campo"><span>Tema</span><input id="nf-tema" type="text" maxlength="64" placeholder="cv-rack-12" autocomplete="off" spellcheck="false"></label>
+        <label class="lk-campo"><span>Servidor</span><input id="nf-servidor" type="text" maxlength="200" placeholder="https://ntfy.sh" autocomplete="off" spellcheck="false"></label>
+        <label class="lk-campo nf-ancho"><span>Token de acceso <em>(opcional, solo si tu tema está protegido)</em></span><input id="nf-token" type="password" maxlength="200" placeholder="tk_…" autocomplete="off"></label>
+      </div>
+      <fieldset class="nf-eventos">
+        <legend>Avisarme cuando…</legend>
+        <label><input type="checkbox" id="nf-liberar"> Liberar rack termina <em>(bien o con errores)</em></label>
+        <label><input type="checkbox" id="nf-daq"> Un canal del DAQ se sale de rango</label>
+        <label><input type="checkbox" id="nf-lock"> Lock: contraseña incorrecta, desbloqueo o falla</label>
+        <label><input type="checkbox" id="nf-testcase"> Generar test case termina</label>
+        <label><input type="checkbox" id="nf-instalador"> El Instalador termina</label>
+      </fieldset>
+      <div class="nf-nota">Los temas de ntfy.sh son públicos: usa un nombre difícil de adivinar. La configuración se guarda solo en esta PC.</div>
+      <div class="nf-estado" id="nf-estado"></div>
+      <div class="lk-acc">
+        <button class="btn btn-secundario" type="button" id="nf-probar">Enviar prueba</button>
+        <span class="ec-sep"></span>
+        <button class="btn btn-secundario" type="button" id="nf-cancelar">Cancelar</button>
+        <button class="btn" type="button" id="nf-guardar">Guardar</button>
       </div>
     </div>
   </div>
@@ -8628,7 +8771,8 @@ function pintarSeleccionIzumi() {
 </script>
 <script>
 /* ===================== ENGINEOUT =====================
-   12 pasos fijos. Se corren con la misma máquina de comandos de la app (terminal real,
+   Pasos del catálogo (los 12 de fábrica más los que agregue el usuario; se pueden
+   modificar, acomodar o quitar con el botón Catálogo; se guardan en esta PC). Se corren con la misma máquina de comandos de la app (terminal real,
    sudo con contraseña recordada o llave USB). Cada paso se palomea al terminar;
    si falla se marca en rojo con el motivo y se sigue con el siguiente.
    Al terminar se genera el reporte en PDF (~/Ghostfish-Logs/engineout). */
@@ -8667,6 +8811,30 @@ function pintarSeleccionIzumi() {
     joltsvc: G(`<g class="a-gira"><circle cx="50" cy="38" r="20"/><path d="M50 10v8M50 58v8M22 38h8M70 38h8M30 18l6 6M64 52l6 6M30 58l6-6M64 24l6-6"/></g><path d="M53 26l-8 13h9l-7 13" stroke-width="3"/>` + flechaGira(100, 22, 9))
   };
 
+  // Iconos extra para los pasos que agregue el usuario
+  const ICONOS_EXTRA = {
+    terminal: G(`<rect x="22" y="8" width="76" height="58" rx="5"/><path d="M22 20h76"/><circle cx="29" cy="14" r="1.4" fill="currentColor"/><circle cx="35" cy="14" r="1.4" fill="currentColor"/><path d="M32 34l8 7-8 7"/><path class="a-onda" d="M46 48h16"/>`),
+    script: G(`<path d="M34 6h36l16 16v48H34z"/><path d="M70 6v16h16"/><path class="a-corre" d="M42 34h30M42 42h24M42 50h28"/>${T(60, 64, 'py', 9)}`),
+    reinicio: G(servidor + flechaGira(94, 36, 13)),
+    ping: ping(`<rect x="78" y="18" width="40" height="28" rx="4"/><circle cx="98" cy="32" r="6"/><path d="M98 26v12M92 32h12"/>`, 'PING'),
+    red: G(`<circle cx="60" cy="14" r="8"/><circle cx="24" cy="58" r="8"/><circle cx="96" cy="58" r="8"/><path class="a-corre" d="M54 20L30 52M66 20l24 32M32 58h56"/>`),
+    disco: G(`<ellipse cx="60" cy="16" rx="30" ry="9"/><path d="M30 16v42c0 5 13 9 30 9s30-4 30-9V16"/><path class="a-onda" d="M30 30c0 5 13 9 30 9s30-4 30-9"/><path class="a-onda d2" d="M30 44c0 5 13 9 30 9s30-4 30-9"/>`),
+    usb: G(`<rect x="44" y="30" width="32" height="40" rx="4"/><path d="M50 30V12h20v18"/><path d="M55 18h3M62 18h3"/><g class="a-late"><path d="M60 40v18M54 50l6 8 6-8"/></g>`),
+    alerta: G(`<path d="M60 8L104 66H16z"/><path d="M60 28v18"/><circle class="a-late" cx="60" cy="55" r="2.4" fill="currentColor"/>`),
+    reloj: G(`<circle cx="60" cy="38" r="28"/><g class="a-gira"><path d="M60 38V20"/></g><path d="M60 38l12 8"/>`)
+  };
+  const ICONOS = {
+    dhcp: { t: 'DHCP', svg: dhcp(false) }, dhcp6: { t: 'DHCP6', svg: dhcp(true) },
+    zpe: { t: 'Ping ZPE', svg: ping(zpe, 'ZPE') }, juniper: { t: 'Ping Juniper', svg: ping(juniper, 'JUNIPER') }, daq: { t: 'Ping DAQ', svg: ping(daq, 'DAQ') },
+    jolt: { t: 'Jolt', svg: PASOS_IMG.jolt }, izumi: { t: 'Izumis', svg: PASOS_IMG.izumi }, servicios: { t: 'Servicios', svg: PASOS_IMG.servicios },
+    opentest: { t: 'OpenTest', svg: PASOS_IMG.opentest }, chiller: { t: 'Chiller', svg: PASOS_IMG.chiller }, preboot: { t: 'Preboot', svg: PASOS_IMG.preboot },
+    joltsvc: { t: 'Servicio Jolt', svg: PASOS_IMG.joltsvc },
+    terminal: { t: 'Terminal', svg: ICONOS_EXTRA.terminal }, script: { t: 'Script', svg: ICONOS_EXTRA.script }, reinicio: { t: 'Reinicio', svg: ICONOS_EXTRA.reinicio },
+    ping: { t: 'Ping', svg: ICONOS_EXTRA.ping }, red: { t: 'Red', svg: ICONOS_EXTRA.red }, disco: { t: 'Disco', svg: ICONOS_EXTRA.disco },
+    usb: { t: 'USB', svg: ICONOS_EXTRA.usb }, alerta: { t: 'Alerta', svg: ICONOS_EXTRA.alerta }, reloj: { t: 'Reloj', svg: ICONOS_EXTRA.reloj }
+  };
+  const imgDe = (ico) => (ICONOS[ico] || ICONOS.terminal).svg;
+
   /* ---------- Pasos ---------- */
   const tresVeces = (svc) => `for i in 1 2 3; do echo "— reinicio $i de 3"; sudo systemctl restart ${svc} || exit $?; sleep 2; done; systemctl is-active ${svc}`;
   const reinicio = (svc) => `sudo systemctl restart ${svc} && sleep 2 && systemctl is-active ${svc}`;
@@ -8674,36 +8842,56 @@ function pintarSeleccionIzumi() {
   const script = (f) => `cd ~ || exit 1; if [ ! -f ./${f} ]; then echo "No se encontró ~/${f}"; exit 127; fi; if [ -x ./${f} ]; then ./${f}; else python3 ./${f}; fi`;
   const jolt = `V=~/vrmu_util; if [ ! -x "$V" ]; then echo "No se encontró ~/vrmu_util"; exit 127; fi; for h in 10.254.128.3 10.254.128.2; do echo "— leyendo versión en $h"; if timeout 60 "$V" --hostname=$h --envelope_enabled=false | grep -a4 version; then exit 0; fi; done; echo "Ni la .3 ni la .2 regresaron la versión"; exit 1`;
 
-  const PASOS = [
-    { n: 'Reinicia el servidor DHCP', v: 'sudo systemctl restart isc-dhcp-server  ×3', c: tresVeces('isc-dhcp-server'), img: dhcp(false) },
-    { n: 'Reinicia el servidor DHCP6', v: 'sudo systemctl restart isc-dhcp-server6  ×3', c: tresVeces('isc-dhcp-server6'), img: dhcp(true) },
-    { n: 'Ping ZPE', v: 'ping 10.0.0.253', c: hacerPing('10.0.0.253'), sinRed: 'El ZPE (10.0.0.253) no contestó el ping', img: ping(zpe, 'ZPE') },
-    { n: 'Ping Juniper', v: 'ping 10.0.0.254', c: hacerPing('10.0.0.254'), sinRed: 'El Juniper (10.0.0.254) no contestó el ping', img: ping(juniper, 'JUNIPER') },
-    { n: 'Ping DAQ', v: 'ping 10.0.0.100', c: hacerPing('10.0.0.100'), sinRed: 'El DAQ (10.0.0.100) no contestó el ping', img: ping(daq, 'DAQ') },
-    { n: 'Valida versión de Jolt', v: '~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 version', c: jolt, img: PASOS_IMG.jolt },
-    { n: 'Reboot Izumis', v: './reboot.py', c: script('reboot.py'), img: PASOS_IMG.izumi },
-    { n: 'Valida servicios', v: './connection_validation.py', c: script('connection_validation.py'), img: PASOS_IMG.servicios },
-    { n: 'Reinicio opentest', v: 'sudo systemctl restart opentest', c: reinicio('opentest'), img: PASOS_IMG.opentest },
-    { n: 'Reinicio chillermonitor', v: 'sudo systemctl restart chillermonitor', c: reinicio('chillermonitor'), img: PASOS_IMG.chiller },
-    { n: 'Reinicio Preboot', v: 'sudo systemctl restart ist-screening', c: reinicio('ist-screening'), img: PASOS_IMG.preboot },
-    { n: 'Reinicio servicios Jolt', v: 'sudo systemctl restart vinsweepmonitor.service', c: reinicio('vinsweepmonitor.service'), img: PASOS_IMG.joltsvc }
+  const DE_FABRICA = [
+    { id: 'dhcp', ico: 'dhcp', n: 'Reinicia el servidor DHCP', v: 'sudo systemctl restart isc-dhcp-server  ×3', c: tresVeces('isc-dhcp-server') },
+    { id: 'dhcp6', ico: 'dhcp6', n: 'Reinicia el servidor DHCP6', v: 'sudo systemctl restart isc-dhcp-server6  ×3', c: tresVeces('isc-dhcp-server6') },
+    { id: 'ping-zpe', ico: 'zpe', n: 'Ping ZPE', v: 'ping 10.0.0.253', c: hacerPing('10.0.0.253'), sinRed: 'El ZPE (10.0.0.253) no contestó el ping' },
+    { id: 'ping-juniper', ico: 'juniper', n: 'Ping Juniper', v: 'ping 10.0.0.254', c: hacerPing('10.0.0.254'), sinRed: 'El Juniper (10.0.0.254) no contestó el ping' },
+    { id: 'ping-daq', ico: 'daq', n: 'Ping DAQ', v: 'ping 10.0.0.100', c: hacerPing('10.0.0.100'), sinRed: 'El DAQ (10.0.0.100) no contestó el ping' },
+    { id: 'jolt', ico: 'jolt', n: 'Valida versión de Jolt', v: '~/vrmu_util --hostname=10.254.128.3 --envelope_enabled=false | grep -a4 version', c: jolt },
+    { id: 'izumis', ico: 'izumi', n: 'Reboot Izumis', v: './reboot.py', c: script('reboot.py') },
+    { id: 'servicios', ico: 'servicios', n: 'Valida servicios', v: './connection_validation.py', c: script('connection_validation.py') },
+    { id: 'opentest', ico: 'opentest', n: 'Reinicio opentest', v: 'sudo systemctl restart opentest', c: reinicio('opentest') },
+    { id: 'chiller', ico: 'chiller', n: 'Reinicio chillermonitor', v: 'sudo systemctl restart chillermonitor', c: reinicio('chillermonitor') },
+    { id: 'preboot', ico: 'preboot', n: 'Reinicio Preboot', v: 'sudo systemctl restart ist-screening', c: reinicio('ist-screening') },
+    { id: 'jolt-svc', ico: 'joltsvc', n: 'Reinicio servicios Jolt', v: 'sudo systemctl restart vinsweepmonitor.service', c: reinicio('vinsweepmonitor.service') }
   ];
+  // Catálogo: los de fábrica más los que agregue el usuario (se guarda en esta PC)
+  const CAT_KEY = 'eo_catalogo_v1';
+  const limpiar = (p) => ({ id: String(p.id), n: String(p.n || '').slice(0, 48), v: String(p.v || '').slice(0, 140), c: String(p.c || ''), ico: ICONOS[p.ico] ? p.ico : 'terminal', sinRed: String(p.sinRed || '').slice(0, 120) });
+  function leerCatalogo() {
+    try {
+      const g = JSON.parse(lsGet(CAT_KEY) || 'null');
+      if (Array.isArray(g) && g.length) return g.filter((p) => p && p.id && p.n && p.c).map(limpiar);
+    } catch (e) {}
+    return DE_FABRICA.map(limpiar);
+  }
+  const conImagen = (lista) => lista.map((p) => ({ ...p, vGuardado: p.v, v: p.v || p.c.split('\n')[0], img: imgDe(p.ico) }));
+  let PASOS = conImagen(leerCatalogo());
   const LIMITE_MIN = 15;   // ningún paso se queda colgado para siempre
 
-  const pasos = PASOS.map(() => ({ est: 'pendiente', t: '', seg: 0, err: '', salida: [] }));
+  let pasos = PASOS.map(() => ({ est: 'pendiente', t: '', seg: 0, err: '', salida: [] }));
   let indices = [];        // en la corrida actual: posición → número de paso
   let fase = 'reposo', actual = -1, corriendo = false, logPath = null, preguntaHora = null;
   let inicio = null, fin = null, rutaReporte = null;
   let equipo = { hostname: '', ip: '', rack: '', usuario: '' };
 
-  // Pasos habilitados (se recuerdan en esta PC)
-  const habilitado = PASOS.map(() => true);
-  try { const g = JSON.parse(lsGet('eo_habilitados') || 'null'); if (Array.isArray(g)) g.forEach((v, i) => { if (i < habilitado.length) habilitado[i] = v !== false; }); } catch (e) {}
+  // Pasos habilitados (se recuerdan en esta PC, por paso)
+  let habPorId = {};
+  try { habPorId = JSON.parse(lsGet('eo_habilitados_v2') || 'null') || {}; } catch (e) { habPorId = {}; }
+  if (!lsGet('eo_habilitados_v2')) {
+    // los de antes se guardaban por posición (los 12 de fábrica)
+    try { const g = JSON.parse(lsGet('eo_habilitados') || 'null'); if (Array.isArray(g)) g.forEach((v, i) => { if (DE_FABRICA[i]) habPorId[DE_FABRICA[i].id] = v !== false; }); } catch (e) {}
+  }
+  let habilitado = PASOS.map((p) => habPorId[p.id] !== false);
+  const guardarHab = () => { PASOS.forEach((p, i) => { habPorId[p.id] = habilitado[i]; }); lsSet('eo_habilitados_v2', JSON.stringify(habPorId)); };
   const nHabilitados = () => habilitado.filter(Boolean).length;
   // Cuántos cuentan para el total: antes de correr los habilitados; después los que no se omitieron
   const totalPasos = () => (fase === 'reposo' && !inicio ? nHabilitados() : pasos.filter((d) => d.est !== 'omitido').length);
 
   const lista = $e('eo-lista');
+  function construirLista() {
+  lista.textContent = '';
   PASOS.forEach((p, i) => {
     const li = document.createElement('li');
     li.className = 'eo-paso pendiente';
@@ -8716,12 +8904,14 @@ function pintarSeleccionIzumi() {
     sw.checked = habilitado[i];
     sw.addEventListener('change', () => {
       habilitado[i] = sw.checked;
-      lsSet('eo_habilitados', JSON.stringify(habilitado));
+      guardarHab();
       if (typeof registrarAccion === 'function') registrarAccion('Liberar rack', (sw.checked ? 'Habilitó' : 'Deshabilitó') + ' paso', (i + 1) + '. ' + p.n);
       pintar();
     });
     lista.appendChild(li);
   });
+  }
+  construirLista();
 
   /* ---------- Datos del rack ---------- */
   const fechaTxt = (d) => d.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' });
@@ -8796,6 +8986,7 @@ function pintarSeleccionIzumi() {
     go.classList.toggle('btn-rojo', corriendo);
     $e('eo-reintentar').hidden = corriendo || !fallos;
     $e('eo-rack').disabled = corriendo;
+    $e('eo-catalogo').disabled = corriendo;
     pintarReporte();
   }
 
@@ -9101,6 +9292,15 @@ function pintarSeleccionIzumi() {
   async function terminado() {
     fin = new Date();
     pintar();
+    try {
+      const { ok, fallos } = cuenta();
+      const malos = PASOS.map((p, i) => (pasos[i].est === 'fallo' ? '✕ ' + (i + 1) + '. ' + p.n : null)).filter(Boolean);
+      if (window.sistema && window.sistema.ntfyEvento) window.sistema.ntfyEvento('liberar', {
+        title: 'Liberar rack ' + (rack() || '—') + ' · ' + (fallos ? fallos + (fallos === 1 ? ' paso falló' : ' pasos fallaron') : fase === 'detenido' ? 'detenido' : 'todo bien ✔'),
+        message: ok + ' de ' + totalPasos() + ' correctos · ' + duracion(fin - inicio) + (malos.length ? '\n' + malos.join('\n') : '') + ($e('eo-quien').value.trim() ? '\nHecho por: ' + $e('eo-quien').value.trim() : ''),
+        tags: [fallos ? 'x' : 'white_check_mark'], priority: fallos ? 4 : 3
+      }).catch(() => {});
+    } catch (e) {}
     await generarPdf(false);   // se guarda solo al terminar
     $e('eo-rep').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
@@ -9108,6 +9308,118 @@ function pintarSeleccionIzumi() {
   $e('eo-pdf').addEventListener('click', () => generarPdf(true));
   $e('eo-ver-rep').addEventListener('click', () => window.sistema && window.sistema.eoReporteAbrir(rutaReporte));
   $e('eo-carpeta').addEventListener('click', () => window.sistema && window.sistema.eoReporteAbrir(null));
+
+  /* ---------- Catálogo: agregar, modificar, acomodar y quitar pasos ---------- */
+  const SVG_ARR = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5M6 11l6-6 6 6"/></svg>';
+  const SVG_ABA = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M6 13l6 6 6-6"/></svg>';
+  const SVG_EDI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>';
+  const SVG_DUP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>';
+  const SVG_QUI = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>';
+  const fabricaPorId = Object.fromEntries(DE_FABRICA.map((p) => [p.id, p]));
+  let borrador = [], editando = null, icoSel = 'terminal';
+
+  function pintarCatalogo() {
+    const ol = $e('ec-lista');
+    ol.innerHTML = borrador.map((p, i) => {
+      const f = fabricaPorId[p.id];
+      const cambiado = f && (f.n !== p.n || f.c !== p.c || f.ico !== p.ico || (f.v || '') !== (p.v || ''));
+      return '<li class="ec-fila' + (editando === i ? ' sel' : '') + '" data-i="' + i + '">' +
+        '<span class="ec-n">' + String(i + 1).padStart(2, '0') + '</span>' +
+        '<span class="ec-mini">' + imgDe(p.ico) + '</span>' +
+        '<span class="ec-txt"><b>' + esc(p.n) + (f ? (cambiado ? '<span class="ec-tag">MODIFICADO</span>' : '') : '<span class="ec-tag">NUEVO</span>') + '</b><code>' + esc(p.v || p.c.split('\n')[0]) + '</code></span>' +
+        '<span class="ec-bts">' +
+          '<button type="button" data-a="sube" title="Subir"' + (i === 0 ? ' disabled' : '') + '>' + SVG_ARR + '</button>' +
+          '<button type="button" data-a="baja" title="Bajar"' + (i === borrador.length - 1 ? ' disabled' : '') + '>' + SVG_ABA + '</button>' +
+          '<button type="button" data-a="edita" title="Modificar">' + SVG_EDI + '</button>' +
+          '<button type="button" data-a="dup" title="Duplicar">' + SVG_DUP + '</button>' +
+          '<button type="button" data-a="quita" class="quitar" title="Quitar">' + SVG_QUI + '</button>' +
+        '</span></li>';
+    }).join('');
+    $e('ec-velo').querySelector('.ec-cuerpo').classList.toggle('editando', editando !== null);
+  }
+  function pintarIconos() {
+    $e('ec-iconos').innerHTML = Object.entries(ICONOS).map(([k, o]) => '<button type="button" role="radio" aria-checked="' + (k === icoSel) + '" data-ico="' + k + '" title="' + esc(o.t) + '" class="' + (k === icoSel ? 'on' : '') + '">' + o.svg + '</button>').join('');
+  }
+  function abrirForm(i) {
+    editando = i;
+    const p = i === -1 ? { n: '', c: '', v: '', ico: 'terminal', sinRed: '' } : borrador[i];
+    $e('ec-form-tit').textContent = i === -1 ? 'Nuevo paso' : 'Modificar paso ' + String(i + 1).padStart(2, '0');
+    $e('ec-nom').value = p.n; $e('ec-cmd').value = p.c; $e('ec-ver').value = p.v || ''; $e('ec-sinred').value = p.sinRed || '';
+    icoSel = p.ico; pintarIconos();
+    $e('ec-form-msg').textContent = '';
+    $e('ec-form').hidden = false;
+    pintarCatalogo();
+    setTimeout(() => $e('ec-nom').focus(), 30);
+  }
+  function cerrarForm() { editando = null; $e('ec-form').hidden = true; pintarCatalogo(); }
+  function abrirCatalogo() {
+    if (corriendo) return;
+    borrador = PASOS.map((p) => limpiar({ ...p, v: p.vGuardado }));
+    editando = null; $e('ec-form').hidden = true;
+    pintarCatalogo();
+    $e('ec-velo').hidden = false;
+  }
+  function cerrarCatalogo() { $e('ec-velo').hidden = true; editando = null; }
+  $e('eo-catalogo').addEventListener('click', abrirCatalogo);
+  $e('ec-cerrar').addEventListener('click', cerrarCatalogo);
+  $e('ec-cancelar').addEventListener('click', cerrarCatalogo);
+  $e('ec-velo').addEventListener('keydown', (e) => { if (e.key === 'Escape') { if (editando !== null) cerrarForm(); else cerrarCatalogo(); } });
+  $e('ec-agregar').addEventListener('click', () => abrirForm(-1));
+  $e('ec-form-cancelar').addEventListener('click', cerrarForm);
+  $e('ec-iconos').addEventListener('click', (e) => { const b = e.target.closest('button[data-ico]'); if (b) { icoSel = b.dataset.ico; pintarIconos(); } });
+  $e('ec-lista').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const i = Number(b.closest('.ec-fila').dataset.i);
+    const a = b.dataset.a;
+    if (a === 'sube' && i > 0) { [borrador[i - 1], borrador[i]] = [borrador[i], borrador[i - 1]]; if (editando === i) editando--; else if (editando === i - 1) editando++; }
+    else if (a === 'baja' && i < borrador.length - 1) { [borrador[i + 1], borrador[i]] = [borrador[i], borrador[i + 1]]; if (editando === i) editando++; else if (editando === i + 1) editando--; }
+    else if (a === 'edita') return abrirForm(i);
+    else if (a === 'dup') {
+      let n = borrador[i].n + ' (copia)', k = 2;
+      while (borrador.some((p) => p.n.toLowerCase() === n.toLowerCase())) n = borrador[i].n + ' (copia ' + k++ + ')';
+      borrador.splice(i + 1, 0, { ...borrador[i], id: 'u' + Date.now().toString(36), n: n.slice(0, 48) });
+    } else if (a === 'quita') {
+      if (!confirm('¿Quitar "' + borrador[i].n + '" de Liberar rack?')) return;
+      borrador.splice(i, 1);
+      if (editando === i) { editando = null; $e('ec-form').hidden = true; } else if (editando > i) editando--;
+    }
+    pintarCatalogo();
+  });
+  $e('ec-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const n = $e('ec-nom').value.replace(/\s+/g, ' ').trim(), c = $e('ec-cmd').value.trim();
+    const msg = (t, el) => { $e('ec-form-msg').textContent = t; if (el) $e(el).focus(); };
+    if (!n) return msg('Escribe el nombre del paso.', 'ec-nom');
+    if (borrador.some((p, k) => k !== editando && p.n.toLowerCase() === n.toLowerCase())) return msg('Ya hay un paso con ese nombre.', 'ec-nom');
+    if (!c) return msg('Escribe el comando que se va a correr.', 'ec-cmd');
+    const datos = { n, c, v: $e('ec-ver').value.trim(), ico: icoSel, sinRed: $e('ec-sinred').value.trim() };
+    if (editando === -1) borrador.push({ id: 'u' + Date.now().toString(36), ...datos });
+    else borrador[editando] = { ...borrador[editando], ...datos };
+    cerrarForm();
+  });
+  $e('ec-fabrica').addEventListener('click', () => {
+    if (!confirm('¿Regresar a los 12 pasos de fábrica? Se pierden los pasos que agregaste y los cambios.')) return;
+    borrador = DE_FABRICA.map(limpiar); editando = null; $e('ec-form').hidden = true; pintarCatalogo();
+  });
+  $e('ec-guardar').addEventListener('click', () => {
+    if (corriendo) return;
+    if (editando !== null && !confirm('Tienes un paso abierto sin terminar. ¿Guardar sin ese cambio?')) return;
+    if (!borrador.length) return alert('Deja al menos un paso.');
+    const antes = PASOS.map((p) => p.n).join('|');
+    const fabrica = JSON.stringify(DE_FABRICA.map(limpiar));
+    const nuevo = borrador.map(limpiar);
+    if (JSON.stringify(nuevo) === fabrica) { try { localStorage.removeItem(CAT_KEY); } catch (e) {} }
+    else lsSet(CAT_KEY, JSON.stringify(nuevo));
+    guardarHab();
+    PASOS = conImagen(nuevo);
+    habilitado = PASOS.map((p) => habPorId[p.id] !== false);
+    pasos = PASOS.map(() => ({ est: 'pendiente', t: '', seg: 0, err: '', salida: [] }));
+    indices = []; fase = 'reposo'; inicio = null; fin = null; actual = -1;
+    construirLista();
+    pintar();
+    cerrarCatalogo();
+    if (typeof registrarAccion === 'function') registrarAccion('Liberar rack', 'Cambió el catálogo de pasos', PASOS.length + ' pasos' + (antes !== PASOS.map((p) => p.n).join('|') ? '' : ' (mismos nombres)'));
+  });
 
   cargarEquipo();
   pintar();
@@ -9322,6 +9634,57 @@ function pintarSeleccionIzumi() {
     $l('lk-titulo').value = c.dataset.t;
     $l('lk-subtitulo').value = c.dataset.s;
   }));
+  /* ---- Notificaciones al celular (ntfy) · BETA ---- */
+  const NF = ['activo', 'tema', 'servidor', 'token', 'liberar', 'daq', 'lock', 'testcase', 'instalador'];
+  const nfVelo = $l('nf-velo');
+  function nfForm() {
+    const n = {};
+    for (const k of NF) { const el = $l('nf-' + k); n[k] = el.type === 'checkbox' ? el.checked : el.value.trim(); }
+    if (!n.servidor) n.servidor = 'https://ntfy.sh';
+    return n;
+  }
+  function nfMarcar(n) {
+    const on = !!(n && n.activo && n.tema);
+    $l('btn-ntfy').classList.toggle('on', on);
+    $l('btn-ntfy').title = (on ? 'Notificaciones al celular: tema "' + n.tema + '"' : 'Notificaciones al celular (apagadas)') + ' · BETA';
+  }
+  function nfEstado(t, tipo) { const e = $l('nf-estado'); e.textContent = t || ''; e.className = 'nf-estado ' + (tipo || ''); }
+  if (S.ntfyLeer) {
+    S.ntfyLeer().then(nfMarcar).catch(() => {});
+    $l('btn-ntfy').addEventListener('click', async () => {
+      let n = null;
+      try { n = await S.ntfyLeer(); } catch (e) {}
+      n = n || { activo: false, servidor: 'https://ntfy.sh', tema: '', token: '', liberar: true, daq: true, lock: true, testcase: false, instalador: true };
+      for (const k of NF) { const el = $l('nf-' + k); if (el.type === 'checkbox') el.checked = !!n[k]; else el.value = n[k] || ''; }
+      nfVelo.querySelector('.nf-ventana').classList.toggle('off', !n.activo);
+      nfEstado('');
+      nfVelo.hidden = false;
+      setTimeout(() => $l(n.tema ? 'nf-activo' : 'nf-tema').focus(), 40);
+    });
+    $l('nf-activo').addEventListener('change', (e) => nfVelo.querySelector('.nf-ventana').classList.toggle('off', !e.target.checked));
+    const nfCerrar = () => { nfVelo.hidden = true; };
+    $l('nf-cancelar').addEventListener('click', nfCerrar);
+    nfVelo.addEventListener('click', (e) => { if (e.target === nfVelo) nfCerrar(); });
+    nfVelo.addEventListener('keydown', (e) => { if (e.key === 'Escape') nfCerrar(); });
+    $l('nf-guardar').addEventListener('click', async () => {
+      const n = nfForm();
+      if (n.activo && !n.tema) { nfEstado('Escribe el tema (el mismo que pongas en la app ntfy).', 'err'); return $l('nf-tema').focus(); }
+      if (n.tema && !/^[\w-]{1,64}$/.test(n.tema)) { nfEstado('El tema solo puede llevar letras, números, - y _.', 'err'); return $l('nf-tema').focus(); }
+      const r = await S.ntfyGuardar(n).catch((e) => ({ ok: false, mensaje: e.message }));
+      if (r && r.ok) { nfMarcar(r.config); nfCerrar(); }
+      else nfEstado('No se pudo guardar: ' + ((r && r.mensaje) || 'error'), 'err');
+    });
+    $l('nf-probar').addEventListener('click', async () => {
+      const n = nfForm();
+      if (!n.tema) { nfEstado('Escribe el tema primero.', 'err'); return $l('nf-tema').focus(); }
+      const b = $l('nf-probar'); b.disabled = true; nfEstado('Enviando…');
+      const r = await S.ntfyPrueba(n).catch(() => null);
+      b.disabled = false;
+      if (r && r.ok) nfEstado('✔ Enviada al tema "' + n.tema + '". Revisa tu celular.', 'ok');
+      else nfEstado('✖ No se pudo enviar: ' + ((r && r.mensaje) || 'error desconocido') + '.', 'err');
+    });
+  } else $l('btn-ntfy').hidden = true;
+
   let tAviso;
   $l('lk-aviso-x').addEventListener('click', () => { $l('lk-aviso').hidden = true; });
   S.onLockCambio((d) => {
@@ -9449,6 +9812,19 @@ function pintarSeleccionIzumi() {
     $d('dm-fw').textContent = p[3] || '—';
   }
 
+  /* ---- Aviso al celular: cada canal avisa una vez al salirse y otra vez solo si regresó y se volvió a salir ---- */
+  const yaAvisados = new Set();
+  function avisarFuera() {
+    const nuevos = [];
+    canales.forEach((c) => {
+      if (fuera(c)) { if (!yaAvisados.has(c.n)) { yaAvisados.add(c.n); nuevos.push(c); } }
+      else yaAvisados.delete(c.n);
+    });
+    if (!nuevos.length || !S.ntfyEvento) return;
+    const txt = nuevos.map((c) => { const L = lim(c.n); return 'Canal ' + String(c.n).padStart(2, '0') + ' (' + c.canal + '): ' + (c.ovl ? 'OVLD' : fmt(c.v) + ' V') + ' · rango ' + (L.min == null ? '−∞' : L.min) + ' a ' + (L.max == null ? '+∞' : L.max) + ' V'; });
+    S.ntfyEvento('daq', { title: 'DAQ · ' + (nuevos.length === 1 ? 'canal fuera de rango' : nuevos.length + ' canales fuera de rango'), message: txt.join('\n'), tags: ['warning'], priority: 4 }).catch(() => {});
+  }
+
   /* ---- Una lectura ---- */
   async function leer() {
     if (leyendo) return;
@@ -9468,6 +9844,7 @@ function pintarSeleccionIzumi() {
       lecturas++; ultimaBuena = r.t || Date.now();
       $d('dm-tabla').classList.remove('viejo');
       pintarTabla(lecturas > 1 ? cambiados : null);
+      avisarFuera();
     }
     $d('dm-pip').hidden = !r.falta;
     if (r.ok) {

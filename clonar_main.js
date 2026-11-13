@@ -221,6 +221,13 @@ async function clonar(datos) {
   const resumen = { ok, mal, cancelado, filas };
   bitacora.registrar('Instalador', cancelado ? 'Cancelado' : 'Terminó', ok + ' instalados, ' + mal + ' con falla');
   enviar('clo-fin', resumen);
+  try {
+    require('./ntfy_main.js').avisar('instalador', {
+      title: 'Instalador · ' + (cancelado ? 'cancelado' : mal ? 'terminó con fallas' : 'terminó'),
+      message: ok + ' instalado(s), ' + mal + ' con falla' + (deb && deb.nombre ? '\nPaquete: ' + deb.nombre : ''),
+      tags: [mal ? 'warning' : 'white_check_mark'], priority: mal ? 4 : 3
+    });
+  } catch (e) {}
   return { ok: true, ...resumen };
 }
 

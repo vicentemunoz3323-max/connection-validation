@@ -348,6 +348,10 @@ async function escanearFru() {
     const ruta = escribirArchivo(slots);
     linea('sys', '[ÉXITO] Archivo ' + ruta + ' guardado y actualizado.');
     enviar('tc-slots', { slots });
+    try {
+      const con = slots.map((s, i) => (s.serial || s.parte ? 'Slot ' + String(i + 1).padStart(2, '0') + ': ' + (s.parte || '—') + ' / ' + (s.serial || '—') : null)).filter(Boolean);
+      require('./ntfy_main.js').avisar('testcase', { title: 'Test case · seriales listos', message: con.length + ' de 16 slots con unidad' + (con.length ? '\n' + con.join('\n') : ''), tags: ['clipboard'], priority: 3 });
+    } catch (e) {}
     t.resumen = slots.filter((s) => s.parte || s.serial).length + ' de 16 slots con unidad: ' + slots.map((s, i) => s.serial ? (i + 1) + '=' + s.parte + '/' + s.serial : null).filter(Boolean).join(', ');
     return { ok: true, slots };
   } catch (e) {

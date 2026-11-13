@@ -1,6 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('sistema', {
+  // Notificaciones al celular (ntfy.sh, BETA)
+  ntfyLeer: () => ipcRenderer.invoke('ntfy-leer'),
+  ntfyGuardar: (n) => ipcRenderer.invoke('ntfy-guardar', n),
+  ntfyPrueba: (n) => ipcRenderer.invoke('ntfy-prueba', n),
+  ntfyEvento: (tipo, aviso) => ipcRenderer.invoke('ntfy-evento', tipo, aviso),
   // Lock (pantalla de bloqueo con peces, igual que ORT Engine)
   lockActivar: (datos) => ipcRenderer.invoke('lock:activar', datos),
   onLockCambio: (cb) => ipcRenderer.on('lock:cambio', (_e, d) => cb(d)),

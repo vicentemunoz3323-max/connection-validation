@@ -38,6 +38,7 @@ require('./recursos_main.js'); // ventana Recursos: CPU / RAM / DISCO
 require('./clonar_main.js');   // Clonar: instala el .deb de Música en otros racks
 require('./daq_main.js');      // DAQ monitor: corre server/daq.py (DAQ970A, 16 canales)
 const setValve = require('./setvalve_main.js'); // Set valve: PWM de las válvulas por slot
+const ntfy = require('./ntfy_main.js');           // notificaciones al celular (ntfy.sh, BETA)
 const protector = require('./protector_main.js'); // avisos a pantalla completa (se quitan con la contraseña de root)
 // Revisión de Izumis por telnet (independiente del script de los rectificadores)
 const revisionIzumis = require('./izumi_check.js');
@@ -1088,7 +1089,13 @@ app.whenReady().then(() => {
   protector.iniciar();
   // Lock: la misma pantalla de bloqueo con peces de ORT Engine
   require('./lock_main.js').iniciar({
-    avisar: (activo, fallo, motivo) => { if (ventanaPrincipal && !ventanaPrincipal.isDestroyed()) ventanaPrincipal.webContents.send('lock:cambio', { activo, fallo: !!fallo, motivo: motivo || '' }); }
+    avisar: (activo, fallo, motivo) => {
+      if (ventanaPrincipal && !ventanaPrincipal.isDestroyed()) ventanaPrincipal.webContents.send('lock:cambio', { activo, fallo: !!fallo, motivo: motivo || '' });
+      const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+      if (motivo) ntfy.avisar('lock', { title: 'Lock · se quitó el bloqueo', message: 'Algo falló y se quitó solo: ' + motivo + '\nHora: ' + hora, tags: ['warning'], priority: 4 });
+      else if (fallo) ntfy.avisar('lock', { title: 'Lock · contraseña incorrecta', message: 'Alguien intentó desbloquear la pantalla con una contraseña incorrecta.\nHora: ' + hora, tags: ['lock'], priority: 4 });
+      else if (!activo) ntfy.avisar('lock', { title: 'Lock · pantalla desbloqueada', message: 'Se desbloqueó la pantalla.\nHora: ' + hora, tags: ['unlock'], priority: 2 });
+    }
   });
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
